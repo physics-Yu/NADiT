@@ -1,0 +1,238 @@
+# NADiT Architecture
+
+Date: 2026-10-19
+Status: Discussion baseline; implementation has not started.
+
+This document records the agreed direction and the questions that remain open.
+**Confirmed** records decisions accepted in the discussion.
+**Proposed** records suggestions awaiting a design decision.
+**Open** records details that have not been selected.
+Engineering rules are preserved in [agent.md](agent.md).
+
+## 1. Purpose and configuration
+
+**Confirmed.** Start from a logical circuit and simulate its execution on a
+configurable neutral-atom platform. The central output is the actual atom-action
+record for one execution case, including movement and pulse operations.
+
+Configuration includes the QEC code and protocol, compiler and scheduling
+strategies, fake experiment backend, device parameters and constraints, and
+physical noise models. Device configuration must represent the relevant AOD,
+SLM, movement, gate, measurement, and control limitations.
+
+The initial system uses a fake backend. Its execution and feedback interfaces
+must leave room for a future real-device backend. Noise backends should be able
+to consume the atom-action record.
+
+## 2. Overall structure and build order
+
+**Confirmed.** Build the physical compiler first so that the logical QEC
+compiler can use compiled components. QEC protocols define the physical
+circuits that implement those components.
+
+The component preparation path is:
+
+```text
+QEC protocol / basic-operation definition
+    -> physical circuit and Physical DAG
+    -> physical compiler: gate grouping, placement, movement, and timing
+    -> reusable compiled component / Atom IR
+```
+
+The feedback-driven execution path is:
+
+```text
+Logical circuit -> Logical DAG -> logical QEC compiler
+                                      |
+                       select and instantiate components
+                                      |
+                      physical compilation / scheduling
+                                      |
+                            executable atom actions
+                                      |
+                           fake experiment backend
+                                      |
+                       measurement and completion events
+                                      |
+                      update execution state and continue
+```
+
+Compilation and execution advance as feedback becomes available. The complete
+action record is accumulated over the run.
+
+**Open.** The exact boundary between runtime component binding, additional
+physical compilation, and scheduling remains to be specified.
+
+## 3. Logical QEC compilation and components
+
+**Confirmed.** The Logical DAG expresses dependencies between logical
+operations. The logical QEC compiler decides which operation to perform next
+and how to realize it using available components, feedback, placement, and
+resource information.
+
+The motivating examples include Pauli-based computation (PBC), magic-state
+distillation, and measurement-conditioned corrections.
+
+Basic gate units, including the S correction used in the discussion, are
+prepared in advance. Runtime work selects, binds, and schedules those units
+for the current case.
+
+The QEC protocol must account for syndrome extraction (SE) and the chosen
+atom-refresh and leakage-handling operations. Their physical implementations
+are inputs to the physical compiler.
+
+**Proposed.** Describe each compiled component by its physical circuit,
+required entry conditions, resources, measurement outputs, and exit state or
+layout. The exact component contract is still open.
+
+**Open.** Select the SE circuit, refresh protocol, leakage-detection protocol,
+and rules for inserting them. No particular code distance, SE frequency,
+distillation circuit, or leakage-handling sequence has been selected.
+
+A leakage-handling component must define how detection produces an erasure
+record as well as how it refreshes or replaces the physical carrier.
+SWAP-based leakage detection is a relevant protocol example; the detailed
+implementation is not yet chosen.
+
+## 4. Physical DAG and gate layers
+
+**Confirmed.** The next layer discussion concerns the Physical DAG. It contains
+the physical operations and dependencies supplied by the component or QEC
+protocol. Physical compilation must preserve the required ordering.
+
+**Proposed terminology:**
+
+- A candidate set, or frontier, contains operations whose required
+  predecessors and classical conditions permit them to be considered.
+- A gate layer or stage contains operations selected for joint execution.
+- A movement batch contains compatible atom movements. One gate stage may
+  require several movement batches.
+
+**Open.** Define how the candidate set and layers are maintained and updated,
+what counts as operation completion, how measurements unlock successors, and
+whether work is submitted as complete layers or as smaller ready subsets.
+The Logical DAG's own progress and layer rules also remain open.
+
+The ZAC and Enola studies inform this physical-layer discussion. Their gate
+stages are formed during compilation; they do not supply the feedback-driven
+logical execution mechanism proposed for NADiT.
+
+## 5. Feedback and execution cases
+
+**Confirmed.** A seed belongs to the fake measurement backend. One seed
+identifies a reproducible execution case and drives a sequence of simulated
+measurement outcomes.
+
+The compiler receives measurement events through the backend interface. It
+then chooses and compiles or schedules the required continuation. For example,
+a measurement can select a component that applies an S correction.
+
+Each case produces its own complete executed action record. Branches do not
+have to reconverge to a previously fixed schedule. The compiler should learn
+a result when the backend reports it, rather than receive all future outcomes
+at the start of the run.
+
+**Open.** Specify fake measurement-generation rules, result identifiers,
+feedback timing, and how logical measurement results are derived from
+physical measurement records.
+
+## 6. Mapping and placement
+
+**Confirmed.** Mapping assigns circuit-qubit roles to concrete code blocks or
+physical qubits. Placement describes where those carriers are located.
+
+Initial mapping is an optimization decision. A solver should use logical
+interaction and dependency requirements together with physical feasibility
+and execution-cost information to choose it.
+
+The system must retain the adopted mapping, code-block placement, and current
+atom positions. Their update rules must support the chosen refresh and
+replacement protocols.
+
+**Open.** The optimizer, cost function, initial-placement strategy, and later
+movement decisions are deferred. A specific optimization algorithm or fixed
+mapping policy has not been selected.
+
+## 7. Execution state, time, and resources
+
+**Confirmed requirement.** Execution needs logical progress, received
+measurement results, current mappings and positions, time information, and
+resource availability. Time and resource management need an explicit design.
+
+**Proposed mechanism.** A runtime manager maintains:
+
+- A simulation clock.
+- Resource reservations and occupation intervals.
+- Events such as movement completion, gate completion, and result availability.
+
+The compiler proposes work using the current state. The manager checks and
+records resource use; the backend supplies execution events; those events
+update the state used by the next compiler decision.
+
+Measurement completion and result availability may occur at different times.
+A dependent branch waits for the result-availability event. For example, a
+measurement ending at 100 microseconds and reporting at 120 microseconds
+would unlock its conditional successor at 120 microseconds. These numbers
+illustrate semantics, not device parameters.
+
+**Proposed implementation.** Discrete-event simulation advances the clock to
+the next event. A later hardware backend would supply actual completion and
+measurement events through the corresponding interface.
+
+**Open.** Decide scheduler and runtime-manager ownership, resource granularity,
+compatibility rules, reservation semantics, and whether compilation or
+classical processing latency contributes to simulated execution time.
+
+## 8. Atom-action records and noise
+
+**Confirmed.** Preserve the actual atom-action sequence for each case so that
+noise backends can analyze its physical execution.
+
+**Proposed record content.** Include atom identities, movement trajectories,
+operation timing, pulse or gate descriptions, measurement events, and the
+connection between feedback and selected actions. Waiting intervals should
+be recoverable from the timeline.
+
+**Proposed extension.** Start with a noise backend that reads completed action
+records. If noise must affect measurements and later branches, a state-aware
+noisy simulation backend can provide measurement events during execution.
+
+**Open.** Select the action schema, noise representation, required outputs,
+and quantum-state simulation method, if needed. Fake random measurement
+feedback alone does not define a physical measurement distribution.
+
+## 9. Reference findings
+
+These findings were checked against the papers and official source during
+the discussion. They inform the design without selecting an implementation.
+
+- **Enola**, commit `2944dbf4e163e8d2eeeec607add0d9139edce689`:
+  dependency-respecting circuits use ASAP gate staging; commuting gate
+  groups can use interaction-graph edge coloring. Placement and routing
+  follow staging, and routing can create several movement batches per stage.
+  See [paper Section III](https://arxiv.org/html/2405.15095v2#S3) and
+  [compiler source](https://github.com/UCLA-VAST/Enola/blob/2944dbf4e163e8d2eeeec607add0d9139edce689/enola/enola.py).
+- **ZAC**, commit `e5083362f99e6915f20c2bd0eaa88b6d1cdcecac`:
+  the scheduler supports ASAP with dependencies and edge coloring when the
+  input is declared dependency-free. It splits stages to respect
+  entanglement-zone capacity. Subsequent instruction scheduling considers
+  qubit, site, and AOD dependencies and assigns start and end times.
+  See [scheduler source](https://github.com/UCLA-VAST/ZAC/blob/e5083362f99e6915f20c2bd0eaa88b6d1cdcecac/zac/scheduler/scheduler.py)
+  and [paper Section VI](https://arxiv.org/html/2411.11784v2#S6).
+- **SWAP-LDU** is a circuit-based example of leakage detection and carrier
+  refresh. See [Circuit-Based Leakage-to-Erasure Conversion in a
+  Neutral-Atom Quantum Processor](https://arxiv.org/abs/2405.10434).
+
+## 10. Next discussion and collaboration scope
+
+**Proposed next step.** Select one SE component, specify its Physical DAG,
+and use it to discuss candidate selection and physical gate layers.
+Implementation starts only after its requirements and plan are agreed.
+
+Keep discussions small enough to review and absorb. Analyze and revise the
+idea before expanding it into detailed content. Include statements that
+advance the reasoning; avoid defensive filler.
+
+For this documentation baseline only, the user approved content, consistency,
+and diff checks as the commit gate because the workspace has no test suite.
+This exception does not change the standing rules in `agent.md`.
