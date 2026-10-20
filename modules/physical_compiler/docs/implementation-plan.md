@@ -1,8 +1,9 @@
 # Physical Compiler Implementation Plan
 
 Date: 2026-10-20.
-Status: Step 1 implemented for flexible AOD. The QASM frontend, Physical DAG,
-fake results, and feedback reference tester are also implemented.
+Status: Step 1 and the Atom IR structures/text output in step 2 are implemented.
+The QASM frontend, Physical DAG, fake results, and feedback reference tester
+are also implemented.
 
 ## Compilation contract
 
@@ -39,17 +40,20 @@ their implementation step begins.
 
 | Path | Responsibility |
 | --- | --- |
+| `src/nadit_physical_compiler/physical_ir.py` | Physical operations, dependencies, conditions, and stable result references |
 | `src/nadit_physical_compiler/device.py` | Geometry, traps, operation capabilities, timing, configuration loading |
 | `src/nadit_physical_compiler/state.py` | Qubit-to-atom mapping, atom positions and holders, occupancy |
 | `src/nadit_physical_compiler/motion.py` | Flexible AOD movement and line-controlled transfer checks; rigid rules follow in step 6 |
 | `src/nadit_physical_compiler/atom_ir.py` | Atom actions, parallel steps, source links, Stim-style text output |
-| `src/nadit_physical_compiler/validation.py` | Action replay, state transitions, parallel legality, timing and source coverage |
+| `src/nadit_physical_compiler/validation.py` | Explicit test/debug validation of action legality and source coverage |
+| `src/nadit_physical_compiler/replay.py` | Action state transitions and timing |
 | `src/nadit_physical_compiler/lowering.py` | Native gate decomposition with source operation and condition provenance |
 | `src/nadit_physical_compiler/compiler.py` | Compilation context, ready set, measurement records, strategy contract and result |
 | `src/nadit_physical_compiler/strategies/search_smarter.py` | First strategy: scheduling, reuse, placement, routing, action generation |
 | `configs/zoned_flexible.json`, `configs/zoned_rigid_16.json` | Flexible reference and rigid-device study configurations |
 | `tests/fixtures/devices/zoned_small.json` | Small geometry shared by device and compilation tests |
 | `examples/compile_study.py` | QASM-to-Atom-IR study and compilation metrics |
+| `examples/atom_ir_example.py` | Manually constructed atom program and text output |
 | `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
 | `tests/test_atom_ir.py`, `tests/test_lowering.py`, `tests/test_compiler.py` | Action, native-gate, feedback and pipeline checks |
 
@@ -66,7 +70,8 @@ target capabilities.
 
 `validate_layout` checks an entry state. `check_load`, `check_move`, and
 `check_store` evaluate proposed target grids and atom bindings against that
-state, returning `ConstraintResult`. The checks preserve their inputs.
+state, returning `ConstraintResult`. They are reference checks for testing
+and debugging, outside the default compilation path, and preserve their inputs.
 LOAD adds lines, MOVE repositions existing lines, and STORE removes lines.
 
 Acceptance:
@@ -85,15 +90,21 @@ Rigid constraints are implemented with the rigid profile in step 6.
 
 ## 2. Atom IR and action replay
 
-Implement structured LOAD, MOVE, STORE, CZ_PULSE, ROT, reset, and measurement
-actions, then their Stim-style text output. Actions in a step start together;
-the next step starts after the longest action completes.
+Implemented: `atom_ir.py` defines transport, pulse, rotation, reset,
+measurement, and wait actions, parallel steps, and a program with timing and
+Stim-style text output. Physical circuit records live in `physical_ir.py`.
+Actions in a step start together; the next step starts after the longest
+action completes.
 
 `CZ_PULSE` carries its control binding and coverage. Expected source gates
 are provenance used to check the interactions produced by the occupied
 geometry. `M` carries atom targets and source result identities.
 
-Acceptance:
+Remaining: implement action replay and Device pulse/readout policies.
+Replay applies constructed actions; explicit validation is available to tests
+and debugging. Action construction does not run full Device checks.
+
+Replay acceptance:
 
 - Replay transfer, parallel movement, pulse, addressed rotation, and readout
   into a consistent exit state and timeline.
@@ -126,10 +137,11 @@ gate layering, reuse analysis, routing-aware placement with IDS, transport
 batching, and action generation. Start from the pinned reference implementation
 linked in the device design.
 
-Routing builds conflicts using Device motion rules and current occupancy.
-Pairwise conflicts guide batch selection; the grouped-move check establishes
-legality for the complete batch. Loading, offsets, movement, and unloading
-are expanded into explicit steps.
+Routing constructs compatible batches using Device rules and current occupancy.
+Pairwise conflicts guide selection; incremental resource accounting handles
+batch capacity. The strategy expands selected batches using legal loading,
+offset, movement, and unloading rules. Reference checks test the construction
+rules rather than rechecking every candidate in the default search path.
 
 Reuse analysis supplies placement preferences; placement selects final
 positions and holders. Occupancy and pulse coverage determine whether retained
@@ -186,4 +198,4 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is step 2.
+The next work item is action replay and the pulse/readout policies in step 2.

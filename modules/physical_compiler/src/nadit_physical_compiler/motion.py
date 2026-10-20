@@ -1,8 +1,8 @@
-"""Pure checks for flexible AOD motion and line-controlled transfers.
+"""Reference checks for flexible AOD transport tests and explicit debugging.
 
-Call ``validate_layout`` once on entry state. Each check evaluates a candidate
-target grid without mutating that state. Coordinates describe endpoints;
-movement trajectories and pulse scheduling belong to later stages.
+Each check evaluates a concrete target grid against validated entry state.
+The default compiler construction path does not call these full-state checks.
+Coordinates describe endpoints; routing supplies intermediate movements.
 """
 
 from bisect import bisect_left

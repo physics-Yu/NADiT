@@ -11,7 +11,7 @@ from nadit_physical_compiler.execution import (
     OperationEvent,
     execute,
 )
-from nadit_physical_compiler.ir import (
+from nadit_physical_compiler.physical_ir import (
     Condition,
     PhysicalDAG,
     PhysicalOperation,

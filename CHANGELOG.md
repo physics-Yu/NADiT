@@ -4,12 +4,20 @@
 
 ### Changed
 
+- Renamed the physical circuit module to `physical_ir.py` and its tests to
+  `test_physical_ir.py`; package-level circuit exports remain available.
+- Positioned full transport checks as test/debug reference tools, with legal
+  construction as the default compiler route.
 - Clarified the physical compiler route: compiler-owned DAG progress and
   planned state, with fake results sampled during measurement compilation.
   The existing event executor remains the DAG feedback reference tester.
 
 ### Added
 
+- Immutable Atom IR actions, parallel steps, program timing, and Stim-style
+  text output, with source-operation links and stable measurement references.
+- A concrete atom program example covering transfer, movement, pulse,
+  rotation, AOD-held readout, and feedback waiting.
 - Flexible device geometry and JSON loading, explicit atom/holder and active
   AOD line state, and collective loading, movement, and unloading checks.
 - A small zoned device fixture with 5 um storage spacing, paired gate sites,

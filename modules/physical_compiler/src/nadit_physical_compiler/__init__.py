@@ -1,5 +1,18 @@
 """Physical circuit compilation for NADiT."""
 
+from .atom_ir import (
+    AtomAction,
+    AtomProgram,
+    AtomStep,
+    CZPulse,
+    Load,
+    Measure,
+    Move,
+    Reset,
+    Rotation,
+    Store,
+    Wait,
+)
 from .device import (
     AOD,
     Device,
@@ -20,8 +33,8 @@ from .execution import (
     OperationEvent,
     execute,
 )
-from .ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
 from .motion import ConstraintResult, check_load, check_move, check_store
+from .physical_ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
 from .qasm import load_qasm, loads_qasm
 from .state import (
     AODGrid,
@@ -39,25 +52,36 @@ __all__ = [
     "AODGrid",
     "AODHolder",
     "AODLine",
+    "AtomAction",
     "AtomLayout",
+    "AtomProgram",
     "AtomState",
+    "AtomStep",
+    "CZPulse",
     "Condition",
     "ConstraintResult",
     "Device",
     "ExecutionTrace",
     "FakeBackend",
+    "Load",
+    "Measure",
     "MeasurementBackend",
     "MeasurementEvent",
+    "Move",
     "OperationEvent",
     "PhysicalDAG",
     "PhysicalOperation",
     "Position",
     "Region",
     "Register",
+    "Reset",
     "ResultRef",
+    "Rotation",
     "SLMHolder",
     "SLMSite",
+    "Store",
     "Timing",
+    "Wait",
     "Zone",
     "check_load",
     "check_move",

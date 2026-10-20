@@ -18,6 +18,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Seeded fake measurement backend | Implemented |
 | DAG feedback reference tester (`execute`) | Implemented |
 | Flexible Device geometry, atom state, and transport constraints | Implemented |
+| Atom IR structures, step timing, and text output | Implemented |
+| Atom-action replay | Next |
 | Device-aware DAG-to-Atom-IR compilation | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
@@ -53,6 +55,12 @@ execution events. See [ADR 0005](docs/decisions/0005-case-driven-physical-compil
 A gate group is a set of selected circuit operations. A transport batch is a
 set of compatible movements. An AtomStep is a set of actions scheduled to
 start together. A gate group can require several transport batches and steps.
+
+`physical_ir.py` defines the source circuit; `atom_ir.py` defines concrete
+atom actions. Strategies construct legal groups from Device rules.
+Reference validators serve tests and explicit debugging, outside the default
+construction path. [ADR 0007](docs/decisions/0007-explicit-physical-and-atom-ir.md)
+records these contracts.
 
 ## Device requirements
 
@@ -98,7 +106,7 @@ will consume the generated action program in a later step.
 ## Development order
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
-2. Implement Atom IR and action replay.
+2. Implement Atom IR structures and text output (complete), then action replay.
 3. Connect native gate lowering and case compilation for a one-pair circuit.
 4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
@@ -109,7 +117,7 @@ specifies file ownership and acceptance criteria for these steps.
 
 Device-aware compilation must emit the chosen source operations as legal atom
 actions, preserve their dependencies and case decisions, and return the
-resulting layout and planned timeline. Validation checks source-operation
+resulting layout and planned timeline. Test/debug validation checks source-operation
 coverage, movement legality, pulse addressing, and dependency timing.
 
 ## Components and logical compilation

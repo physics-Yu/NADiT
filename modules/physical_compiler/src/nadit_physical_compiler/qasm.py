@@ -19,7 +19,7 @@ from qiskit.converters import circuit_to_dag
 from qiskit.dagcircuit import DAGOpNode
 from qiskit.exceptions import QiskitError
 
-from .ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
+from .physical_ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
 
 # Detect only the version header. Qiskit parses and validates the language.
 _VERSION_HEADER = re.compile(

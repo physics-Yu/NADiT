@@ -8,7 +8,7 @@ from heapq import heappop, heappush
 from math import isfinite
 from typing import Literal, Protocol
 
-from .ir import PhysicalDAG, ResultRef
+from .physical_ir import PhysicalDAG, ResultRef
 
 
 class MeasurementBackend(Protocol):

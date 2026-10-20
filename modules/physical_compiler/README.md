@@ -6,13 +6,15 @@ Implemented: the OpenQASM 2.0 / 3.0 frontend, Physical DAG with measurement
 conditions, seeded `FakeBackend`, and `execute` as a feedback reference tester.
 The flexible device foundation provides geometry, atom holders, active AOD
 lines, and loading, movement, and unloading constraint checks.
+`physical_ir.py` defines circuit operations and dependencies. `atom_ir.py`
+provides atom actions, parallel steps, program timing, and text output.
 The frontend uses Qiskit for parsing, custom-gate expansion, and wire
-dependencies. The tester produces an abstract execution trace; Atom IR
-generation and replay are not implemented.
+dependencies. The tester produces an abstract physical-circuit trace.
+Physical-DAG-to-Atom-IR compilation and atom-action replay are not implemented.
 
 ## Next step
 
-Next, implement Atom IR and action replay on the flexible device foundation.
+Next, implement atom-action replay and Device pulse/readout policies.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -38,14 +40,15 @@ physical_compiler/
 ├── uv.lock
 ├── src/nadit_physical_compiler/
 │   ├── __init__.py
-│   ├── qasm.py       # QASM parsing and DAG adaptation
-│   ├── ir.py         # Operations, dependencies, and result references
-│   ├── execution.py  # Feedback reference tester
-│   ├── device.py     # Static geometry, timing, and JSON loading
-│   ├── state.py      # Atom holders, active AOD lines, entry-state validation
-│   ├── motion.py     # Flexible transport constraint checks
-│   └── py.typed      # Package typing marker
-├── examples/     # Reproducible feedback study
+│   ├── qasm.py         # QASM parsing and DAG adaptation
+│   ├── physical_ir.py  # Circuit operations, dependencies, result references
+│   ├── atom_ir.py      # Atom actions, parallel steps, timing, text output
+│   ├── execution.py    # Physical DAG feedback reference tester
+│   ├── device.py       # Static geometry, timing, and JSON loading
+│   ├── state.py        # Atom holders, active AOD lines, entry-state validation
+│   ├── motion.py       # Reference transport checks for tests/debugging
+│   └── py.typed        # Package typing marker
+├── examples/     # Feedback study and concrete Atom IR example
 ├── tests/        # Frontend, IR, and execution tests
 ├── docs/         # Module design notes
 └── configs/      # Example device configurations
@@ -158,7 +161,8 @@ spacing, and timing are explicit study values.
 
 The three transport checks return `ConstraintResult` with `ok`, `rule`, and
 `message`; `ok` is a derived property. They leave the layout unchanged.
-Validate the entry layout once, then evaluate candidate transports.
+Use them in tests and explicit debugging of constructed transports. The
+default compiler path constructs legal actions from the selected strategy.
 
 MOVE preserves active line identities and spatial order; omitted atoms must
 remain stationary. LOAD preserves existing line coordinates and checks the
@@ -170,6 +174,63 @@ Coordinates use an absolute comparison tolerance of `1e-9` um. Motion checks
 evaluate endpoints; later routing supplies intermediate movements. Transport
 checks enforce AOD geometry and occupancy. Zone operation permissions are
 available for the action compiler to query.
+
+## Atom IR
+
+The public types are `Load`, `Move`, `Store`, `CZPulse`, `Rotation`, `Reset`,
+`Measure`, `Wait`, `AtomStep`, and `AtomProgram`. `AtomAction` is their action
+type union. Each action has a duration in microseconds and optional source
+physical-operation IDs.
+
+```python
+from nadit_physical_compiler import (
+    AtomProgram,
+    AtomStep,
+    CZPulse,
+    Measure,
+    Region,
+    ResultRef,
+    Wait,
+)
+
+program = AtomProgram(
+    (
+        AtomStep((CZPulse("rydberg", Region(0, 119, 10, 121), duration_us=0.5),)),
+        AtomStep(
+            (
+                Measure(
+                    "camera",
+                    ((0, ResultRef(9)),),
+                    retain_atoms=True,
+                    duration_us=10,
+                    source_ids=(9,),
+                ),
+            )
+        ),
+        AtomStep((Wait(duration_us=3),)),
+    )
+)
+assert program.duration_us == 13.5
+assert [start for start, _ in program.timeline()] == [0.0, 0.5, 10.5]
+print(program.to_text())
+```
+
+All actions within a step use the same entry state and start together.
+The next step starts after the longest action completes. Constructors and
+text output do not call Device or transport checks.
+
+`CZPulse` describes illumination, not gate pairs. `Measure` preserves
+atom-to-result identity and records whether readout retains the atoms.
+Transport actions contain complete target AOD frames and atom bindings.
+`to_text()` serializes these records using NADiT's Stim-style syntax.
+
+See the [Atom IR specification](docs/atom-ir-and-components.md) for all fields
+and the distinction between source result IDs and Stim record offsets.
+Print a complete manually constructed transport/readout example with:
+
+```text
+uv run --locked python examples/atom_ir_example.py
+```
 
 ## Input scope
 
@@ -305,7 +366,9 @@ quantum-state simulation.
   compiler-owned progress and case-specific feedback.
 - [ADR 0006](../../docs/decisions/0006-device-zones-and-interaction-sites.md):
   zones, interaction positions, and holder-dependent operations.
+- [ADR 0007](../../docs/decisions/0007-explicit-physical-and-atom-ir.md):
+  separate circuit and atom representations, with construction outside validators.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):
-  confirmed requirements, proposals, and open details.
+  implemented atom-action contract and proposed component packaging.

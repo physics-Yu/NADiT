@@ -40,8 +40,8 @@ Expose two loading functions:
 - `load_qasm(path) -> PhysicalDAG`
 
 Keep parsing, profile validation, and adaptation in `qasm.py`. Keep the
-device-independent records in `ir.py` and export the public interface through
-`__init__.py`.
+device-independent records in `physical_ir.py` (originally `ir.py`) and export
+the public interface through `__init__.py`.
 
 The Physical DAG contains:
 
