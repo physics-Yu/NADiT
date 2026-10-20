@@ -10,6 +10,12 @@ generation and replay are not implemented.
 
 ## Next step
 
+Start with Device geometry, atom state, and grouped movement capabilities.
+The [device design](docs/device-and-zones.md) records the accepted zoning,
+interaction-position, and AOD measurement requirements. The
+[implementation plan](docs/implementation-plan.md) gives the file paths and
+acceptance criteria through the flexible pipeline and rigid-device comparison.
+
 The accepted [compilation design](../../docs/decisions/0005-case-driven-physical-compilation.md)
 places DAG progress, the ready set, predicted atom positions and holders, and
 planned time inside the physical compiler. Device capabilities determine
@@ -229,6 +235,8 @@ quantum-state simulation.
   result references, conditions, and the feedback reference tester.
 - [ADR 0005](../../docs/decisions/0005-case-driven-physical-compilation.md):
   compiler-owned progress and case-specific feedback.
+- [ADR 0006](../../docs/decisions/0006-device-zones-and-interaction-sites.md):
+  zones, interaction positions, and holder-dependent operations.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

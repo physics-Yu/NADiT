@@ -58,16 +58,24 @@ start together. A gate group can require several transport batches and steps.
 
 | Capability | Requirement |
 | --- | --- |
-| AOD motion | Support rigid grid translation and row/column-order-preserving models. Each intermediate move follows the selected model. |
+| AOD motion | Configure workspace, row/column capacity, and line spacing. Support rigid translation and order-preserving motion for every intermediate move. |
 | AOD intersections | Account for every atom affected by activated row/column intersections. |
-| SLM sites | Represent fixed trapping sites and SLM/AOD ownership transfers. |
-| Zoning | Support separated storage/entanglement regions and layouts where they overlap. |
-| CZ pulses | Configure illumination regions or local addressing; emit pulses after arranging interaction geometry. |
+| SLM sites | Represent fixed trapping sites; track holders and transfer feasibility and cost during planning. |
+| Zoning | Configure bounds and operation capabilities for storage, entanglement, and measurement; allow overlapping regions. |
+| CZ pulses | Configure interaction distances separately from illumination. Support SLM-SLM, AOD-SLM, and AOD-AOD holder pairs. |
 | Single-qubit operations | Address explicit atoms. |
+| Measurement | Configure readout positions, addressing, holders, and retention. Permit measurement in AOD without STORE. |
 | Timing | Configure transfer, pulse, reset, measurement, and feedback times; compute movement time from distance. |
 
 Device capabilities constrain placement, transport grouping, and action
 expansion. The compiler uses a distance-to-time model for motion.
+
+The first strategy assigns atoms dynamically to fixed candidate interaction
+pairs. Device legality also supports strategies that generate candidate
+coordinates. The [device design](modules/physical_compiler/docs/device-and-zones.md)
+defines the single-row gate geometry, 5 um storage grid, and flexible and
+rigid profiles. [ADR 0006](docs/decisions/0006-device-zones-and-interaction-sites.md)
+records this separation.
 
 The complete compiler strategy is replaceable. Strategies share input and
 Atom IR contracts and implement the Device models they support. Device
@@ -89,11 +97,15 @@ will consume the generated action program in a later step.
 
 ## Development order
 
-1. Define Device capabilities, the compilation context, and Atom IR.
-2. Implement one complete DAG-to-atom-action strategy, using the Search
-   Smarter compilation stages as the starting point.
-3. Compare compiler strategies across AOD models and zoned/non-zoned layouts.
-4. Package reusable components and connect logical QEC compilation.
+1. Implement Device, atom state, and grouped movement capabilities.
+2. Implement Atom IR and action replay.
+3. Connect native gate lowering and case compilation for a one-pair circuit.
+4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
+5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
+6. Package reusable components and connect logical QEC compilation.
+
+The [implementation plan](modules/physical_compiler/docs/implementation-plan.md)
+specifies file ownership and acceptance criteria for these steps.
 
 The next implementation must emit the chosen source operations as legal atom
 actions, preserve their dependencies and case decisions, and return the

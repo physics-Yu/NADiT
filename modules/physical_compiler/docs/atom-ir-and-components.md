@@ -6,8 +6,8 @@ Status: Atom IR syntax and component contracts are proposed.
 The physical compiler core comes first. It produces an atom-action program
 for one measurement case as defined in
 [ADR 0005](../../../docs/decisions/0005-case-driven-physical-compilation.md).
-Device and compilation requirements are in the
-[root architecture](../../../architecture.md).
+Device requirements are in the [device design](device-and-zones.md);
+the [implementation plan](implementation-plan.md) defines the next steps.
 
 ## Atom actions
 
@@ -20,6 +20,11 @@ for translation to experimental device commands.
 A CZ action denotes the pulse applied to an illumination region or locally
 addressed atoms. The compiler arranges the interaction geometry before that
 pulse. Single-qubit actions address explicit atoms.
+
+CZ supports the holder combinations permitted by Device: SLM-SLM, AOD-SLM,
+and AOD-AOD. A pulse preserves the atoms' holders. Measurement can operate on
+AOD-held atoms in a readout region without STORE; its retention rule determines
+whether the atom remains in place or is removed.
 
 ## Proposed notation
 

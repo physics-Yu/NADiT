@@ -10,6 +10,11 @@
 
 ### Added
 
+- Device and zoning design separating fixed SLM sites, interaction candidates,
+  AOD motion, pulse coverage, and AOD-held measurement.
+- A staged physical compiler implementation plan with file ownership and
+  acceptance criteria, starting with the flexible zoned pipeline and then
+  the rigid 16-by-16 variant.
 - A Python 3.12 physical compiler package with OpenQASM 2.0 and 3.0 loading
   functions for static operations and single-bit measurement feedback.
 - A device-independent Physical DAG with operation records, quantum and
