@@ -12,7 +12,7 @@ from .physical_ir import PhysicalDAG, ResultRef
 
 
 class MeasurementBackend(Protocol):
-    """Supply a measurement bit when the execution makes its result available."""
+    """Supply a bit for a stable source measurement identity."""
 
     def measure(self, result: ResultRef) -> int:
         """Return the bit for a particular measurement occurrence."""

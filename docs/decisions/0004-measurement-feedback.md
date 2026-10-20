@@ -89,4 +89,5 @@ reuse the result and condition semantics.
 The tester follows circuit dependencies and abstract time. The planned physical
 compiler owns compilation progress and samples fake results while compiling
 measurements, as defined in [ADR 0005](0005-case-driven-physical-compilation.md).
-That compiler loop and Atom IR replay remain to be implemented.
+The one-pair compiler and retained-readout replay now implement that path;
+see [ADR 0009](0009-one-pair-compilation.md).

@@ -12,12 +12,14 @@ The frontend uses Qiskit for parsing, custom-gate expansion, native translation,
 and wire dependencies. Native translation finishes before PhysicalDAG
 construction. Small records and protocols define module handoffs.
 The tester produces an abstract physical-circuit trace.
-Physical-DAG-to-Atom-IR compilation and atom-action replay are not implemented.
+The one-pair compiler connects ready-layer selection, fixed-pair placement,
+legal transport construction, and Atom IR emission, including measurement
+feedback. Direct action replay reconstructs the exit layout.
 
 ## Next step
 
-Next, connect one-pair compilation through the module handoffs, with
-atom-action replay and Device pulse/readout policies.
+Next, extend the flexible strategy with reuse analysis, routing-aware placement,
+and transport batching for multiple gate pairs.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -49,6 +51,14 @@ physical_compiler/
 │   │   ├── native.py   # GateSet translation with source provenance
 │   │   └── dag.py      # Native circuit to PhysicalDAG
 │   ├── contracts.py    # Gate-layer, placement, and Atom IR fragment handoffs
+│   ├── compiler.py     # DAG progress, planned time, and case-specific results
+│   ├── capabilities.py # CZ, local control, and readout capabilities
+│   ├── scheduling/    # Ready-layer selection
+│   ├── placement/     # Fixed-pair and readout placement
+│   ├── transport/     # Constructed AOD transfers and movement
+│   ├── emission/      # Bind gates to existing Atom IR actions
+│   ├── strategies/    # Compose stage implementations
+│   ├── replay.py      # Apply atom actions to positions and holders
 │   ├── physical_ir.py  # Circuit operations, dependencies, result references
 │   ├── atom_ir.py      # Atom actions, parallel steps, timing, text output
 │   ├── execution.py    # Physical DAG feedback reference tester
@@ -137,7 +147,78 @@ DAG, Atom IR, and atom state types:
 `Transporter.construct` are typing protocols for interchangeable helpers.
 Each implementation owns its options. Transport returns existing AtomSteps;
 emission binds action parameters and durations. These interfaces do not
-implement scheduling, placement, routing, or a compiler loop.
+own compilation state. The initial implementations live in `scheduling/`,
+`placement/`, `transport/`, and `emission/`.
+
+## One-pair compilation
+
+`compile_physical(dag, device, *, strategy, entry_state, measurement_backend=None)`
+returns a `CompilationResult`. The input DAG must already use RX/RY/RZ/CZ,
+measurement, reset, barrier, and phase metadata. The entry state supplies the
+physical-qubit-to-atom binding.
+
+```python
+from nadit_physical_compiler import AtomLayout, AtomState, SLMHolder, compile_physical
+from nadit_physical_compiler import load_device, load_qasm, replay
+from nadit_physical_compiler.placement import PairPlacer
+from nadit_physical_compiler.scheduling import ReadyScheduler
+from nadit_physical_compiler.strategies import SearchSmarterStrategy
+from nadit_physical_compiler.transport import PairTransport
+
+device = load_device("configs/one_pair_flexible.json")
+dag = load_qasm("examples/pair_feedback.qasm3")
+entry = AtomLayout(
+    tuple(
+        AtomState(atom, device.site(site).position, SLMHolder(site))
+        for atom, site in ((7, "storage_r0_c0"), (11, "storage_r0_c1"))
+    ),
+    qubit_to_atom=(7, 11),
+)
+strategy = SearchSmarterStrategy(
+    ReadyScheduler(), PairPlacer("transport"), PairTransport("transport")
+)
+result = compile_physical(dag, device, strategy=strategy, entry_state=entry)
+assert replay(result.program, entry, device) == result.exit_state
+print(result.program.to_text())
+```
+
+The compiler owns the ready set. It resolves conditions, selects a layer,
+commits the strategy's constructed steps and exit layout, and releases
+successors. Each measurement samples its stable result identity once.
+Independent ready operations can fill feedback latency; otherwise the compiler
+inserts WAIT until the required result is available.
+
+| Result field | Meaning |
+| --- | --- |
+| `program` | AtomProgram with selected global phase and a step timeline |
+| `exit_state` | Final atom positions, holders, and qubit binding |
+| `operations` | Native-ID-ordered `emitted`, `skipped`, or `metadata` decisions with action start/end times in us |
+| `measurements` | Stable result references, fake bits, and availability times in us |
+| `layers` | GateLayer records selected for action construction |
+| `duration_us` | Completion time including any final pending readout result |
+
+The initial strategy supports at most two atoms and one flexible AOD. CZ uses
+fixed SLM pairs in a common CZ zone. The shortest-distance assignment is
+selected, and atoms remain at that gate layout for following operations.
+Same-row, order-preserving pair transfers run together; other transfers use
+singleton batches. Local rotations on distinct atoms can share a step.
+
+Readout moves one atom into the measurement region while held by the AOD,
+measures it there, and returns it to its previous SLM site. This frees the AOD
+and supports later operations on either atom. Readout retains atoms. Cyclic
+swaps requiring a temporary site, parked AOD control groups, destructive
+readout, IDS search, and multi-pair routing are subsequent work.
+
+Run both feedback branches and print their actions:
+
+```text
+uv run --locked python examples/compile_pair.py --bit 0
+uv run --locked python examples/compile_pair.py --bit 1
+```
+
+The example's pulse/readout times are explicit study parameters. Tests check
+each emitted transport with the reference constraints, reconstruct the exit
+state, and check conditional selection, timing, and branch phase equivalence.
 
 ## Flexible device foundation
 
@@ -146,6 +227,12 @@ transfer/movement timing. `AtomLayout` records atom identities, positions,
 holders, active lines, and the optional physical-qubit-to-atom mapping.
 An AOD holder binds an atom to one row and one column. Empty active lines
 are retained because their intersections can affect other atoms.
+
+Optional `Device.cz`, `Device.local`, and `Device.readout` records provide
+control channels, durations, allowed holders, interaction radius, readout
+spacing, retention, and result latency. Their JSON keys use the same names.
+The one-pair placer enforces zone and holder permissions while selecting
+positions. The current CZ placer uses the SLM-SLM capability.
 
 ```python
 from nadit_physical_compiler import (
@@ -246,6 +333,11 @@ print(program.to_text())
 All actions within a step use the same entry state and start together.
 The next step starts after the longest action completes. Constructors and
 text output do not call Device or transport checks.
+
+`apply_step(layout, step, device)` and `replay(program, entry_state, device)`
+apply the constructed state transitions without full transport checks. Empty
+AOD grids are omitted from the resulting layout. Replay currently supports
+retained readout; destructive measurement raises `NotImplementedError`.
 
 `CZPulse` describes illumination, not gate pairs. `Measure` preserves
 atom-to-result identity and records whether readout retains the atoms.
@@ -408,6 +500,8 @@ quantum-state simulation.
 - [ADR 0008](../../docs/decisions/0008-native-frontend-and-module-contracts.md):
   native translation before DAG construction, stable source identities, and
   module handoffs.
+- [ADR 0009](../../docs/decisions/0009-one-pair-compilation.md):
+  one-pair stage composition, AOD readout, and compile-time feedback.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

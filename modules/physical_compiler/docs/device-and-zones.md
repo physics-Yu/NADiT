@@ -1,8 +1,9 @@
 # Device Geometry and Capabilities
 
 Date: 2026-10-20.
-Status: Flexible geometry, state, and transport checks implemented.
-CZ and readout policies, Atom IR, and rigid support follow the
+Status: Flexible geometry, state, transport checks, operation capabilities,
+and the one-pair compiler are implemented. Multi-pair placement/routing,
+AOD-held CZ strategies, and rigid support follow the
 [implementation plan](implementation-plan.md).
 
 ## Device and compiler responsibilities
@@ -135,6 +136,13 @@ The remaining device values are zone bounds and positions, storage dimensions,
 gate pair separation and pitch, AOD workspace and line spacing, illumination
 limits, readout conditions and retention, and operation timing. Study fixtures
 will supply explicit values for these fields.
+
+`configs/one_pair_flexible.json` supplies those values for the initial
+two-atom study. `CZCapability`, `LocalControl`, and `ReadoutCapability` bind
+channels, timing, and permitted holders. The initial placer uses SLM-SLM CZ,
+performs retained readout in AOD, and returns the read atom to its previous
+SLM site. Readout spacing in this profile separates the measured atom from
+the other atom. General readout grouping is later work.
 
 ## References
 

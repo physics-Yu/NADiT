@@ -1,8 +1,8 @@
 # Atom IR and Reusable Components
 
 Date: 2026-10-20.
-Status: Atom IR structures and text output implemented. Action replay,
-physical compilation, and component contracts are subsequent work.
+Status: Atom IR, retained-readout replay, and one-pair physical compilation
+are implemented. Multi-pair compilation and component packaging follow.
 
 The physical compiler core comes first. It produces an atom-action program
 for one measurement case as defined in

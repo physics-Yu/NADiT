@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from math import isfinite
 from pathlib import Path
 
+from .capabilities import CZCapability, LocalControl, ReadoutCapability
+
 
 @dataclass(frozen=True, slots=True)
 class Position:
@@ -162,7 +164,7 @@ class Timing:
 
 @dataclass(frozen=True, slots=True)
 class Device:
-    """Static geometry and transport capabilities used by a compiler.
+    """Static geometry, transport, and operation capabilities used by a compiler.
 
     Args:
         name: Configuration name.
@@ -170,6 +172,9 @@ class Device:
         slm_sites: Fixed traps, with unique site IDs.
         aods: Transport devices, with unique AOD IDs.
         timing: Transfer and movement timing.
+        cz: Optional CZ channel and interaction capability.
+        readout: Optional readout channel and result timing.
+        local: Optional addressed rotation and reset channel.
 
     Raises:
         ValueError: If a zone, site, or AOD ID is empty or duplicated.
@@ -180,6 +185,9 @@ class Device:
     slm_sites: tuple[SLMSite, ...]
     aods: tuple[AOD, ...]
     timing: Timing
+    cz: CZCapability | None = None
+    readout: ReadoutCapability | None = None
+    local: LocalControl | None = None
     _sites_by_id: dict[str, SLMSite] = field(init=False, repr=False, compare=False)
     _aods_by_id: dict[str, AOD] = field(init=False, repr=False, compare=False)
 
@@ -254,12 +262,14 @@ def slm_grid(
 
 
 def loads_device(source: str) -> Device:
-    """Load device geometry from a JSON string.
+    """Load device geometry and optional operation capabilities from JSON.
 
     Args:
         source: JSON using the Device field names. Positions use ``x`` and
             ``y``; regions use ``x_min``, ``y_min``, ``x_max``, ``y_max``.
             Optional ``slm_grids`` entries use the arguments of slm_grid.
+            Optional ``cz``, ``readout``, and ``local`` entries use the fields
+            of the corresponding capability records.
 
     Returns:
         A device containing explicit sites followed by generated grid sites.
@@ -270,6 +280,14 @@ def loads_device(source: str) -> Device:
         TypeError: If constructor fields do not match the data records.
     """
     data = json.loads(source)
+    cz = data.get("cz")
+    if cz is not None and "holder_pairs" in cz:
+        cz["holder_pairs"] = tuple((pair[0], pair[1]) for pair in cz["holder_pairs"])
+    readout = data.get("readout")
+    local = data.get("local")
+    for capability in (readout, local):
+        if capability is not None and "holders" in capability:
+            capability["holders"] = tuple(capability["holders"])
     sites = [
         SLMSite(entry["id"], Position(**entry["position"]))
         for entry in data.get("slm_sites", [])
@@ -302,6 +320,9 @@ def loads_device(source: str) -> Device:
             for entry in data["aods"]
         ),
         timing=Timing(**data["timing"]),
+        cz=CZCapability(**cz) if cz is not None else None,
+        readout=ReadoutCapability(**readout) if readout is not None else None,
+        local=LocalControl(**local) if local is not None else None,
     )
 
 

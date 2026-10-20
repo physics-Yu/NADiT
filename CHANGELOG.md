@@ -19,6 +19,14 @@
 
 ### Added
 
+- One-pair native-DAG-to-Atom-IR compilation, connecting ready-layer selection,
+  fixed SLM pair placement, grouped/singleton AOD transport, and pulse emission.
+- Compile-time measurement sampling with stable identities, conditional action
+  selection, preserved phase, and explicit feedback waits.
+- Device CZ, local-control, and readout capability records with optional JSON
+  fields, plus direct atom-state replay for retained readout.
+- An executable two-atom QASM study, explicit device configuration, and tests
+  comparing constructed transport, replayed exit state, and selected branches.
 - Separate parsing, native translation, and DAG adaptation modules, using the
   existing Qiskit dependency and a per-import gate-translation cache.
 - Gate-layer, placement, and Atom IR fragment records with small scheduling,

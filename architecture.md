@@ -21,8 +21,9 @@ program for one measurement case under a selected Device and compiler strategy.
 | DAG feedback reference tester (`execute`) | Implemented |
 | Flexible Device geometry, atom state, and transport constraints | Implemented |
 | Atom IR structures, step timing, and text output | Implemented |
-| Atom-action replay | Next |
-| Device-aware DAG-to-Atom-IR compilation | Next |
+| Atom-action state replay with retained readout | Implemented |
+| One-pair DAG-to-Atom-IR compilation with feedback | Implemented |
+| Multi-pair placement, reuse, and routing | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
 The module [README](modules/physical_compiler/README.md) defines the implemented API.
@@ -68,7 +69,7 @@ A gate group is a set of selected circuit operations. A transport batch is a
 set of compatible movements. An AtomStep is a set of actions scheduled to
 start together. A gate group can require several transport batches and steps.
 
-`physical_ir.py` defines the source circuit; `atom_ir.py` defines concrete
+`physical_ir.py` defines the native circuit; `atom_ir.py` defines concrete
 atom actions. Strategies construct legal groups from Device rules.
 Reference validators serve tests and explicit debugging, outside the default
 construction path. [ADR 0007](docs/decisions/0007-explicit-physical-and-atom-ir.md)
@@ -112,15 +113,21 @@ The implemented IR uses `0/1`. A provider using `+1/-1` maps `+1` to `0` and
 
 The existing `execute` function checks DAG conditions and dependency timing
 with abstract completion and result events. It remains a reference tester.
-The planned compiler consumes the result provider directly. Atom IR replay
-will consume the generated action program in a later step.
+The compiler consumes the result provider directly. Atom IR replay applies
+the generated transfers and movement to reconstruct the exit state.
+
+The first strategy supports at most two atoms: fixed SLM CZ pairs, grouped
+same-row transport or singleton transfers, and retained readout in AOD.
+Readout returns the atom to its preceding SLM site. This leaves a common
+SLM boundary for subsequent layers. See
+[ADR 0009](docs/decisions/0009-one-pair-compilation.md).
 
 ## Development order
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
-2. Implement Atom IR structures and text output (complete), then action replay.
-3. Implement native frontend translation and module handoffs (complete), then
-   connect case compilation for a one-pair circuit.
+2. Implement Atom IR structures, text output, and retained-readout replay (complete).
+3. Implement native frontend translation, module handoffs, and one-pair case
+   compilation (complete).
 4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
 6. Package reusable components and connect logical QEC compilation.

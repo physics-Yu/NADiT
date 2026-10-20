@@ -13,6 +13,14 @@ from .atom_ir import (
     Store,
     Wait,
 )
+from .capabilities import CZCapability, LocalControl, ReadoutCapability
+from .compiler import (
+    CompilationResult,
+    CompilationStrategy,
+    CompiledOperation,
+    MeasurementRecord,
+    compile_physical,
+)
 from .contracts import AtomFragment, GateLayer, PlacementPlan
 from .device import (
     AOD,
@@ -38,6 +46,7 @@ from .frontend import DEFAULT_GATE_SET, GateSet
 from .motion import ConstraintResult, check_load, check_move, check_store
 from .physical_ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
 from .qasm import load_qasm, loads_qasm
+from .replay import apply_step, replay
 from .state import (
     AODGrid,
     AODHolder,
@@ -60,7 +69,11 @@ __all__ = [
     "AtomProgram",
     "AtomState",
     "AtomStep",
+    "CZCapability",
     "CZPulse",
+    "CompilationResult",
+    "CompilationStrategy",
+    "CompiledOperation",
     "Condition",
     "ConstraintResult",
     "DEFAULT_GATE_SET",
@@ -70,15 +83,18 @@ __all__ = [
     "GateLayer",
     "GateSet",
     "Load",
+    "LocalControl",
     "Measure",
     "MeasurementBackend",
     "MeasurementEvent",
+    "MeasurementRecord",
     "Move",
     "OperationEvent",
     "PhysicalDAG",
     "PhysicalOperation",
     "PlacementPlan",
     "Position",
+    "ReadoutCapability",
     "Region",
     "Register",
     "Reset",
@@ -90,14 +106,17 @@ __all__ = [
     "Timing",
     "Wait",
     "Zone",
+    "apply_step",
     "check_load",
     "check_move",
     "check_store",
+    "compile_physical",
     "execute",
     "load_device",
     "load_qasm",
     "loads_device",
     "loads_qasm",
+    "replay",
     "slm_grid",
     "validate_grid",
     "validate_layout",

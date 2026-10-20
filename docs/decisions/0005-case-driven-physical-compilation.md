@@ -1,6 +1,7 @@
 # 0005: Physical Compilation for One Measurement Case
 
-Status: Accepted on 2026-10-20. Next implementation step.
+Status: Accepted on 2026-10-20. Implemented for one-pair compilation in
+[ADR 0009](0009-one-pair-compilation.md).
 
 ## Context
 

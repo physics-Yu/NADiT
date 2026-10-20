@@ -1,9 +1,9 @@
 # Physical Compiler Implementation Plan
 
 Date: 2026-10-20.
-Status: Step 1 and the Atom IR structures/text output in step 2 are implemented.
-The QASM frontend, Physical DAG, fake results, and feedback reference tester
-are also implemented. Step 3's native frontend and module handoffs are complete.
+Status: Step 1, retained-readout replay and operation capabilities from step 2,
+and the one-pair compilation path in step 3 are implemented. The next increment
+is the multi-pair flexible strategy.
 
 ## Compilation contract
 
@@ -46,6 +46,7 @@ their implementation step begins.
 | --- | --- |
 | `src/nadit_physical_compiler/physical_ir.py` | Physical operations, dependencies, conditions, and stable result references |
 | `src/nadit_physical_compiler/device.py` | Geometry, traps, operation capabilities, timing, configuration loading |
+| `src/nadit_physical_compiler/capabilities.py` | CZ, local control, and readout channel/holder/timing records |
 | `src/nadit_physical_compiler/state.py` | Qubit-to-atom mapping, atom positions and holders, occupancy |
 | `src/nadit_physical_compiler/motion.py` | Flexible AOD movement and line-controlled transfer checks; rigid rules follow in step 6 |
 | `src/nadit_physical_compiler/atom_ir.py` | Atom actions, parallel steps, source links, Stim-style text output |
@@ -63,6 +64,8 @@ their implementation step begins.
 | `tests/fixtures/devices/zoned_small.json` | Small geometry shared by device and compilation tests |
 | `examples/compile_study.py` | QASM-to-Atom-IR study and compilation metrics |
 | `examples/atom_ir_example.py` | Manually constructed atom program and text output |
+| `examples/compile_pair.py`, `examples/pair_feedback.qasm3` | Executable one-pair compilation and feedback example |
+| `configs/one_pair_flexible.json` | Explicit geometry and operation capabilities for the one-pair study |
 | `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
 | `tests/test_atom_ir.py`, `tests/test_native_frontend.py`, `tests/test_contracts.py`, `tests/test_compiler.py` | Action, frontend, handoff, feedback, and pipeline checks |
 
@@ -94,7 +97,7 @@ Acceptance:
 - Detect an unintended release when an unloaded atom shares a deactivated line.
 - Keep region membership independent of holder type.
 
-CZ pulse policies, readout policies, and action replay begin in step 2.
+CZ, local-control, and readout capability records are implemented in step 2.
 Rigid constraints are implemented with the rigid profile in step 6.
 
 ## 2. Atom IR and action replay
@@ -109,17 +112,20 @@ action completes.
 are provenance used to check the interactions produced by the occupied
 geometry. `M` carries atom targets and source result identities.
 
-Remaining: implement action replay and Device pulse/readout policies.
-Replay applies constructed actions; explicit validation is available to tests
-and debugging. Action construction does not run full Device checks.
+Implemented: direct action replay and Device CZ/local/readout capability records.
+The one-pair placer uses zones, holder permissions, interaction radius, and
+readout spacing while constructing placements. Replay applies constructed
+actions; full transport checks remain in tests and debugging.
 
-Replay acceptance:
+Current replay and construction acceptance:
 
 - Replay transfer, parallel movement, pulse, addressed rotation, and readout
   into a consistent exit state and timeline.
-- Validate all three supported CZ holder combinations.
-- Measure an atom while it remains in AOD, without inserting STORE.
-- Reject unintended illuminated pairings and incompatible actions in a step.
+- Measure in AOD without a preceding STORE, then return to the previous SLM site.
+- Check each constructed transport and intended SLM-SLM pulse geometry in tests.
+
+Remaining: general pulse/parallel-action validation, AOD-held CZ strategies,
+and destructive-readout lifecycle handling. Replay supports retained atoms.
 
 ## 3. Native frontend, module handoffs, and one-pair compilation
 
@@ -129,13 +135,15 @@ IDs are separate from final node IDs, and conditioned phase contributions keep
 their guards. `contracts.py` defines gate-layer, placement, and AtomStep
 fragment records, with scheduler, reuse, placement, and transport protocols.
 
-Remaining: implement `compiler.py` and compose the scheduling, placement, transport,
-and emission modules through `strategies/search_smarter.py`. Each module owns
-its options. Reuse existing AtomSteps for generated action fragments.
+Implemented: `compiler.py` owns the ready set, predicted state, time, and
+measurement records. `strategies/search_smarter.py` composes the scheduling,
+placement, transport, and emission modules through the existing handoffs.
+Each module owns its options and fragments contain existing AtomSteps.
 
-Complete a small one-pair circuit through placement, transport, CZ, readout,
-and a conditional single-qubit operation. This establishes the full input and
-output path before optimizing larger layers.
+`examples/compile_pair.py` compiles a two-atom QASM circuit through placement,
+transport, CZ, AOD readout, and conditional single-qubit operations. It checks
+replay against the compiler's exit state. Both forced measurement branches are
+covered in integration tests.
 
 Acceptance:
 
@@ -212,5 +220,5 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is one-pair compilation through the module handoffs.
-Action replay can be developed alongside the compiler modules.
+The next work item is reuse, placement search, and transport batching for
+multiple simultaneous gate pairs.
