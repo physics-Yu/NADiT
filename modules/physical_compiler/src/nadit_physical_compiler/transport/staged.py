@@ -161,15 +161,13 @@ class _StagedGroups:
         for seed in self.requests:
             if seed not in pending or seed not in self.region_pairs:
                 continue
-            selected = self._admit({seed}, pending, self.region_pairs[seed])
+            selected = self._admit({seed}, pending)
             if selected is None:
                 continue
             for candidate in self.requests:
                 if candidate not in pending or candidate in selected:
                     continue
-                enlarged = self._admit(
-                    selected | {candidate}, pending, self.region_pairs[seed]
-                )
+                enlarged = self._admit(selected | {candidate}, pending)
                 if enlarged is not None:
                     selected = enlarged
             return tuple(
@@ -177,14 +175,11 @@ class _StagedGroups:
             )
         return ()
 
-    def _admit(
-        self, selected: set[int], pending: set[int], regions: tuple[str, str]
-    ) -> set[int] | None:
+    def _admit(self, selected: set[int], pending: set[int]) -> set[int] | None:
         selected = set(selected)
         while True:
             if any(
-                self.region_pairs.get(atom) != regions
-                or self.conflicts[atom] & selected
+                atom not in self.region_pairs or self.conflicts[atom] & selected
                 for atom in selected
             ):
                 return None

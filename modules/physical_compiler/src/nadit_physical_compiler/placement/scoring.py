@@ -8,17 +8,18 @@
 from collections.abc import Iterator
 from dataclasses import dataclass
 from math import hypot, isfinite, sqrt
-from typing import Literal
+from typing import Literal, Self
 
 from ..device import Position, SLMSite
 from ..state import COORDINATE_TOLERANCE
 from ..transport.rules import MoveRequest, StrictRules
+from .astar import a_star_tree_search
 from .ids import iterative_diving_search
 
 
 @dataclass(frozen=True, slots=True)
 class PlacementConfig:
-    """Reference IDS budgets, lookahead weights, and deepening parameters.
+    """Reference search budgets, lookahead weights, and deepening parameters.
 
     Args:
         deepening_factor: Weight of group displacement deviation.
@@ -31,6 +32,8 @@ class PlacementConfig:
         window_min_width: Initial source window width in lattice columns.
         window_ratio: Window height divided by width.
         window_share: Candidate target count relative to the number of jobs.
+        method: Select IDS or A* with the same candidate tree and score.
+        max_nodes: A* open-set size limit, checked after each expansion.
 
     Raises:
         ValueError: If window dimensions or the candidate share are invalid.
@@ -48,6 +51,8 @@ class PlacementConfig:
     window_min_width: int = 16
     window_ratio: float = 1.0
     window_share: float = 0.8
+    method: Literal["ids", "astar"] = "ids"
+    max_nodes: int = 10_000_000
 
     def __post_init__(self) -> None:
         if self.window_min_width < 0:
@@ -56,6 +61,22 @@ class PlacementConfig:
             raise ValueError("Window aspect ratio must be finite and positive.")
         if not isfinite(self.window_share) or self.window_share < 0:
             raise ValueError("Window share must be finite and nonnegative.")
+
+    @classmethod
+    def for_method(cls, method: Literal["ids", "astar"]) -> Self:
+        """Return the upstream factory defaults for a search method.
+
+        The paper's evaluation overrides the A* deepening factor and value
+        with 0.9 and 8.0; the source class factory uses 0.8 and 0.2.
+        """
+        if method == "astar":
+            return cls(
+                method=method,
+                deepening_factor=0.8,
+                deepening_value=0.2,
+                lookahead_factor=0.2,
+            )
+        return cls(method=method)
 
 
 @dataclass(frozen=True, slots=True)
@@ -287,7 +308,7 @@ def search_placement(
     stage: Literal["gate", "storage"] = "gate",
     coordinates: PlacementCoordinates | None = None,
 ) -> tuple[PlacementOption, ...]:
-    """Select complete site assignments with routing-aware bounded IDS.
+    """Select complete site assignments with routing-aware IDS or A*.
 
     Args:
         jobs: Placement jobs in the candidate generator's search order.
@@ -306,13 +327,23 @@ def search_placement(
     when the selected layouts are translated into transport actions.
     """
     search = _Search(jobs, rules, config, stage, coordinates)
-    result = iterative_diving_search(
-        _Node(),
-        expand=search.expand,
-        is_goal=lambda node: len(node.chosen) == len(jobs),
-        cost=search.cost,
-        heuristic=search.heuristic,
-        trials=config.trials,
-        queue_capacity=config.queue_capacity,
-    )
+    if config.method == "astar":
+        result = a_star_tree_search(
+            _Node(),
+            expand=search.expand,
+            is_goal=lambda node: len(node.chosen) == len(jobs),
+            cost=search.cost,
+            heuristic=search.heuristic,
+            max_nodes=config.max_nodes,
+        )
+    else:
+        result = iterative_diving_search(
+            _Node(),
+            expand=search.expand,
+            is_goal=lambda node: len(node.chosen) == len(jobs),
+            cost=search.cost,
+            heuristic=search.heuristic,
+            trials=config.trials,
+            queue_capacity=config.queue_capacity,
+        )
     return result.chosen

@@ -62,7 +62,6 @@ class RelaxedAdmission:
     def _shape_fits(self, group: tuple[MoveRequest, ...]) -> bool:
         if not group or not self.rules.can_fit(group):
             return False
-        pair = self.pairs.get(group[0].atom_id)
-        if pair is None or any(self.pairs.get(move.atom_id) != pair for move in group):
+        if any(move.atom_id not in self.pairs for move in group):
             return False
         return self.plans.fits(group)

@@ -1,0 +1,1223 @@
+{
+  "commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "units": "integer micrometres",
+  "cases": [
+    {
+      "name": "single_pair_local_rotations",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 2,
+      "operations": [
+        {
+          "type": "RY",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.25
+          ]
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            1
+          ],
+          "parameters": [
+            0.5
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RX",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            -0.75
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            1.25
+          ]
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "routing": "strict"
+      }
+    },
+    {
+      "name": "explicit_rydberg_extent",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 2,
+      "operations": [
+        {
+          "type": "RY",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.25
+          ]
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            1
+          ],
+          "parameters": [
+            0.5
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RX",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            -0.75
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            1.25
+          ]
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "routing": "strict"
+      },
+      "rydberg_range": [
+        [
+          [
+            0,
+            70
+          ],
+          [
+            60,
+            100
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "parallel_pairs_partner_change",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 4,
+      "operations": [
+        {
+          "type": "U",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.2,
+            0.3,
+            0.4
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.6
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RY",
+          "targets": [
+            3
+          ],
+          "parameters": [
+            -0.3
+          ]
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8
+      }
+    },
+    {
+      "name": "source_endpoint_priority_reuse",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 4,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            3
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "routing": "strict"
+      },
+      "expected_source_difference": "Original else-if shared-endpoint graph retains only one atom between crossed pairs."
+    },
+    {
+      "name": "capacity_one_pair",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 6,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            5
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.2
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "max_filling_factor": 0.4
+      }
+    },
+    {
+      "name": "global_ry_and_barrier",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 4,
+      "operations": [
+        {
+          "type": "RY",
+          "targets": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "parameters": [
+            1.5707963267948966
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "Barrier",
+          "targets": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "RY",
+          "targets": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "parameters": [
+            -1.5707963267948966
+          ]
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            3
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8
+      },
+      "expected_source_difference": "Original global RY zone covers storage extent while selected atoms can remain in gate zones."
+    },
+    {
+      "name": "astar_strict",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 4,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            2
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "method": "astar",
+        "routing": "strict",
+        "deepening_factor": 0.8,
+        "deepening_value": 0.2,
+        "lookahead_factor": 0.2
+      }
+    },
+    {
+      "name": "local_only",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 3,
+      "operations": [
+        {
+          "type": "RX",
+          "targets": [
+            0
+          ],
+          "parameters": [
+            0.1
+          ]
+        },
+        {
+          "type": "RY",
+          "targets": [
+            1
+          ],
+          "parameters": [
+            0.2
+          ]
+        },
+        {
+          "type": "RZ",
+          "targets": [
+            2
+          ],
+          "parameters": [
+            0.3
+          ]
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8
+      }
+    },
+    {
+      "name": "two_gate_zones",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            20,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        },
+        {
+          "id": 3,
+          "pair_group": 1,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            100,
+            80
+          ]
+        },
+        {
+          "id": 4,
+          "pair_group": 1,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            102,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 8,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            5
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            6,
+            7
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            6
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            5,
+            7
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": false,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "max_filling_factor": 1.0
+      }
+    },
+    {
+      "name": "source_initial_slm_row_reset",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 2,
+          "columns": 2,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 3,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 4,
+          "pitch": [
+            8,
+            8
+          ],
+          "origin": [
+            32,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 4,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 6,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            5
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8
+      },
+      "expected_source_difference": "Initial placement crosses a storage SLM and starts next SLM at row zero."
+    },
+    {
+      "name": "source_exhausted_multizone_window",
+      "slms": [
+        {
+          "id": 0,
+          "pair_group": -1,
+          "rows": 3,
+          "columns": 8,
+          "pitch": [
+            20,
+            8
+          ],
+          "origin": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            0,
+            80
+          ]
+        },
+        {
+          "id": 2,
+          "pair_group": 0,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            2,
+            80
+          ]
+        },
+        {
+          "id": 3,
+          "pair_group": 1,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            100,
+            80
+          ]
+        },
+        {
+          "id": 4,
+          "pair_group": 1,
+          "rows": 1,
+          "columns": 2,
+          "pitch": [
+            12,
+            12
+          ],
+          "origin": [
+            102,
+            80
+          ]
+        }
+      ],
+      "n_qubits": 8,
+      "operations": [
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            1
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            2,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            5
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            6,
+            7
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            0,
+            2
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            1,
+            3
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            4,
+            6
+          ],
+          "parameters": []
+        },
+        {
+          "type": "CZ",
+          "targets": [
+            5,
+            7
+          ],
+          "parameters": []
+        }
+      ],
+      "config": {
+        "use_window": true,
+        "window_min_width": 2,
+        "window_share": 0.8,
+        "max_filling_factor": 1.0
+      },
+      "expected_source_difference": "Original placement window cannot terminate after the nearest gate array is exhausted in the next layer."
+    }
+  ]
+}

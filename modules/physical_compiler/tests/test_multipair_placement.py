@@ -13,6 +13,7 @@ from nadit_physical_compiler.capabilities import (
     ReadoutCapability,
 )
 from nadit_physical_compiler.contracts import GateLayer
+from nadit_physical_compiler.coverage import RegionSet
 from nadit_physical_compiler.device import (
     AOD,
     Device,
@@ -82,7 +83,7 @@ def _cz_dag(pairs: tuple[tuple[int, int], ...], num_qubits: int = 4) -> Physical
 
 
 def _interaction_edges(
-    layout: AtomLayout, coverage: Region, radius: float
+    layout: AtomLayout, coverage: Region | RegionSet, radius: float
 ) -> set[frozenset[int]]:
     illuminated = [atom for atom in layout.atoms if coverage.contains(atom.position)]
     return {

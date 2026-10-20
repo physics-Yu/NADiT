@@ -1,9 +1,10 @@
-"""Emit one region pulse for a complete placed CZ layer."""
+"""Emit one pulse over all configured regions for a complete placed CZ layer."""
 
 from dataclasses import dataclass
 
 from ..atom_ir import AtomStep, CZPulse
 from ..contracts import AtomFragment, GateLayer
+from ..coverage import RegionSet
 from ..device import Device, Region
 from ..physical_ir import PhysicalDAG
 from ..state import AtomLayout
@@ -12,14 +13,14 @@ from .actions import emit_layer
 
 @dataclass(frozen=True, slots=True)
 class WholeLayerEmitter:
-    """Bind a placed CZ layer to one configured illumination region.
+    """Bind a placed CZ layer to its configured illumination regions.
 
     Args:
         coverage: Region supplied by the fixed interaction-site catalog.
             Placement establishes which atoms occupy the illuminated positions.
     """
 
-    coverage: Region
+    coverage: Region | RegionSet
 
     def __call__(
         self, dag: PhysicalDAG, layer: GateLayer, layout: AtomLayout, device: Device

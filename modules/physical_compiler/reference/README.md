@@ -1,5 +1,9 @@
 # Pinned QMAP rearrangement reference
 
+The [complete static pipeline comparison](pipeline_README.md) executes original
+scheduling, reuse, multi-layer placement, routing, and complete code generation.
+The [benchmark study](benchmark_README.md) compares the three paper configurations.
+
 The additional [relaxed-router comparison](relaxed_README.md) executes original
 compatibility, group-merging, and reversed-axis staging code.
 The [placement comparison](placement_README.md) executes original initial

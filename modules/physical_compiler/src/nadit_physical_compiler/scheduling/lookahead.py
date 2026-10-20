@@ -78,7 +78,7 @@ def next_cz_layer(
         names = tuple(dag.nodes[index].name for index in selected.operation_ids)
         if all(name == "cz" for name in names):
             return selected
-        if not all(name in ("rx", "ry", "rz") for name in names):
+        if not all(name in ("rx", "ry", "rz", "u", "global_ry") for name in names):
             return None
         for index in selected.operation_ids:
             finish(index)

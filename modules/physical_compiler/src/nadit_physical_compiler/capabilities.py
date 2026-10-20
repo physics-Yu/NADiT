@@ -60,3 +60,21 @@ class LocalControl:
     rotation_us: float
     reset_us: float
     holders: tuple[str, ...] = ("slm", "aod")
+
+
+@dataclass(frozen=True, slots=True)
+class GlobalControl:
+    """A global Y-rotation channel illuminating the computation region.
+
+    Args:
+        channel: Global optical control channel.
+        rotation_us: Duration of one global rotation.
+        holders: Allowed holder types.
+        region: Optional illuminated bounds (x_min, y_min, x_max, y_max).
+            If omitted, use the bounding region of the device's zones.
+    """
+
+    channel: str
+    rotation_us: float
+    holders: tuple[str, ...] = ("slm", "aod")
+    region: tuple[float, float, float, float] | None = None

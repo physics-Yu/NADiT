@@ -1,6 +1,6 @@
 # Physical Compiler Implementation Plan
 
-Date: 2026-10-20.
+Date: 2026-10-21.
 Status: Steps 1 and 3, retained-readout replay and operation capabilities from
 step 2, and the multi-pair correctness baseline in step 4 are implemented.
 Step 4's shared rules and direct strict batching are also implemented.
@@ -10,6 +10,11 @@ This connects a pure next-CZ preview, maximum matching, and retained gate-site
 anchors to the existing strict transporter.
 Source-aligned candidate generation, compatibility-group scoring, optional
 retention, and bounded IDS are implemented in step 4.
+Staged strict and relaxed transport, automatic source layout, and candidate
+windows are implemented. ADR 0019 adds complete static source-stage comparison,
+the original scheduling/reuse policies, multiple gate regions, source controls,
+A*, and paper timing. Its benchmark evidence records the execution budget and
+first differing stage; passing tests alone does not complete source reproduction.
 
 ## Compilation contract
 
@@ -177,11 +182,11 @@ Implement this stage in five increments, as defined in
 4. IDS placement search.
 5. Relaxed routing and its staged action construction.
 
-Items 1 through 4 are implemented. Integration tests cover both forced feedback
+Items 1 through 5 are implemented. Integration tests cover both forced feedback
 branches, actual illuminated interaction pairs, capacity splitting, spectator
 clearing, and replay. Strict transport constructs simultaneous LOAD/MOVE/STORE
 batches; capacity, source ghosts, and target occupancy can split a batch.
-Staged pickup and offsets are subsequent constructors. Gate participants return
+Staged pickup and offsets are available constructors. Gate participants return
 to storage after CZ unless selected for following-layer reuse. Matching keeps
 compatible gate-site anchors. Preview uses compiled measurement records and
 stops at uncompiled measurements or unknown branches. Planned conditional
@@ -259,4 +264,5 @@ It adds full candidate generation, compatible-group proxy scoring, partner
 lookahead, and optional reuse. Final strict transport supplies the measured
 batch counts and predicted time; no complete two-layer transport evaluator
 is used during search.
-The next work item is staged/relaxed routing.
+The complete source comparison and benchmark route is specified in
+[ADR 0019](../../../docs/decisions/0019-full-source-pipeline.md).

@@ -5,7 +5,9 @@ from .atom_ir import (
     AtomProgram,
     AtomStep,
     CZPulse,
+    GlobalRY,
     Load,
+    LocalU,
     Measure,
     Move,
     Reset,
@@ -13,7 +15,7 @@ from .atom_ir import (
     Store,
     Wait,
 )
-from .capabilities import CZCapability, LocalControl, ReadoutCapability
+from .capabilities import CZCapability, GlobalControl, LocalControl, ReadoutCapability
 from .compiler import (
     CompilationResult,
     CompilationStrategy,
@@ -22,6 +24,7 @@ from .compiler import (
     compile_physical,
 )
 from .contracts import AtomFragment, GateLayer, PlacementPlan
+from .coverage import RegionSet
 from .device import (
     AOD,
     Device,
@@ -82,8 +85,11 @@ __all__ = [
     "FakeBackend",
     "GateLayer",
     "GateSet",
+    "GlobalControl",
+    "GlobalRY",
     "Load",
     "LocalControl",
+    "LocalU",
     "Measure",
     "MeasurementBackend",
     "MeasurementEvent",
@@ -96,6 +102,7 @@ __all__ = [
     "Position",
     "ReadoutCapability",
     "Region",
+    "RegionSet",
     "Register",
     "Reset",
     "ResultRef",

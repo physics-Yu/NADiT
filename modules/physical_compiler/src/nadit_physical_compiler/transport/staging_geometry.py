@@ -37,9 +37,17 @@ class StagingGeometry:
     Args:
         sites: Recognized SLM site IDs and their subarray geometry. Callers may
             provide this mapping directly when fixed sites omit lattice pitches.
+        coordinate_quantum: Optional coordinate unit for the source generator's
+            integer divisions. None retains continuous geometry; 1 uses the
+            original micrometre integer arithmetic.
     """
 
     sites: Mapping[str, SiteStagingGeometry]
+    coordinate_quantum: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.coordinate_quantum is not None and self.coordinate_quantum <= 0:
+            raise ValueError("Staging coordinate quantum must be positive.")
 
     @classmethod
     def from_device(cls, device: Device, aod_id: str) -> Self:

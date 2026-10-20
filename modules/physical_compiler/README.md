@@ -24,8 +24,13 @@ Routing-aware placement adds source-aligned candidate generation, compatible
 movement-group scoring, optional reuse, and bounded Iterative Diving Search.
 Its layout path includes automatic storage initialization, nearest-SLM/site
 queries, and the source candidate windows and expansion.
+The static source profile adds the original capacity-based ASAP layers,
+endpoint-priority reuse, A* alongside IDS, integer-unit staging offsets,
+multi-region CZ, LocalU, GlobalRY, and the paper's distance-to-time function.
+The complete original C++ stages can be compared on the same native inputs;
+see [the pipeline reference](reference/pipeline_README.md).
 
-## Next step
+## Source pipeline and application profiles
 
 Staged strict routing provides row/column pickup,
 offsets, and release; see
@@ -37,6 +42,41 @@ The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
 acceptance criteria through the flexible pipeline and rigid-device comparison.
+
+The [full-pipeline decision](../../docs/decisions/0019-full-source-pipeline.md)
+records the implementation and evidence boundaries. The
+[benchmark runner](reference/benchmark_README.md) prepares the paper's 26
+circuits and compares A* strict, IDS strict, and IDS relaxed using saved
+native inputs. Its execution budget and first differing stage are recorded
+separately from correctness tests.
+
+`SourceASAPScheduler(dag, geometry, max_filling_factor=0.9)` precomputes the
+source's static single-qubit and CZ phases and implements the same read-only
+`select` protocol as `ReadyScheduler`. It does not own DAG progress.
+`SourceReuseAnalyzer` preserves the source's first-endpoint matching graph;
+`MatchingReuseAnalyzer` remains the complete-shared-edge application policy.
+The online scheduler remains available for measurement feedback.
+
+`PlacementConfig.for_method("astar")` selects the source class defaults and
+`max_nodes` bounds its open set. The benchmark runner applies the paper's
+explicit A* overrides. IDS and A* share candidate generation and score functions.
+
+`GatePairCatalog.from_zones(device, ((zone_id, pair_ids), ...))` joins multiple
+gate arrays. Its `RegionSet` coverage illuminates their union, excluding gaps.
+Placement, spectator clearing, and `WholeLayerEmitter` share that coverage.
+`PlacementGeometry.from_device` builds one paired array per region.
+
+`GlobalControl(channel, rotation_us, region=...)` configures a global Y pulse.
+An omitted region uses the bounding region of Device zones; the source profile
+explicitly selects the storage-only bounds used by original code generation.
+`LocalU` retains the OpenQASM U(theta, phi, lambda) convention. The frontend can
+retain U gates with `GateSet(("u", "rz", "cz"))`; existing RX/RY/RZ defaults remain.
+
+`Timing(..., move_profile="paper")` applies the original piecewise distance
+function; `"linear"` remains the default. Explicit
+`StagingGeometry(..., coordinate_quantum=1.0)` reproduces the original integer
+micrometre division for intermediate offsets. Its default `None` retains
+continuous coordinates. Neither setting introduces a dynamics simulation.
 
 The accepted [compilation design](../../docs/decisions/0005-case-driven-physical-compilation.md)
 places DAG progress, the ready set, predicted atom positions and holders, and

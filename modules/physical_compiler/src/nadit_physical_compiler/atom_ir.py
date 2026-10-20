@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Literal, assert_never
 
+from .coverage import RegionSet
 from .device import Position, Region
 from .physical_ir import ResultRef
 from .state import AODGrid
@@ -84,7 +85,7 @@ class CZPulse(_TimedAction):
 
     Args:
         channel: Device control channel used for the pulse.
-        coverage: Illuminated region or ordered addressed atom IDs.
+        coverage: Illuminated region, union of regions, or addressed atom IDs.
         duration_us: Pulse duration in microseconds.
         source_ids: Physical operation IDs served by this action.
 
@@ -93,7 +94,7 @@ class CZPulse(_TimedAction):
     """
 
     channel: str
-    coverage: Region | tuple[int, ...]
+    coverage: Region | RegionSet | tuple[int, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +124,50 @@ class Rotation(_TimedAction):
         _TimedAction.__post_init__(self)
         if not isfinite(self.angle):
             raise ValueError("Rotation angle must be finite.")
+
+
+@dataclass(frozen=True, slots=True)
+class LocalU(_TimedAction):
+    """Apply addressed U(theta, phi, lambda) in the OpenQASM convention.
+
+    Args:
+        channel: Addressed control channel.
+        atoms: Target atom identities.
+        theta: Polar angle in radians.
+        phi: First phase angle in radians.
+        lam: Second phase angle in radians.
+    """
+
+    channel: str
+    atoms: tuple[int, ...]
+    theta: float
+    phi: float
+    lam: float
+
+    def __post_init__(self) -> None:
+        _TimedAction.__post_init__(self)
+        if not all(isfinite(value) for value in (self.theta, self.phi, self.lam)):
+            raise ValueError("Local U angles must be finite.")
+
+
+@dataclass(frozen=True, slots=True)
+class GlobalRY(_TimedAction):
+    """Apply one global Y rotation to every atom in the illuminated region.
+
+    Args:
+        channel: Global control channel.
+        coverage: Illuminated computation region.
+        angle: Rotation angle in radians.
+    """
+
+    channel: str
+    coverage: Region | RegionSet
+    angle: float
+
+    def __post_init__(self) -> None:
+        _TimedAction.__post_init__(self)
+        if not isfinite(self.angle):
+            raise ValueError("Global rotation angle must be finite.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,7 +224,18 @@ class Wait(_TimedAction):
     """
 
 
-type AtomAction = Load | Move | Store | CZPulse | Rotation | Reset | Measure | Wait
+type AtomAction = (
+    Load
+    | Move
+    | Store
+    | CZPulse
+    | Rotation
+    | LocalU
+    | GlobalRY
+    | Reset
+    | Measure
+    | Wait
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,21 +329,28 @@ def _transport_text(action: Load | Move | Store, parameters: str) -> str:
 
 
 def _pulse_text(
-    action: CZPulse | Rotation | Reset | Measure | Wait, parameters: str
+    action: CZPulse | Rotation | LocalU | GlobalRY | Reset | Measure | Wait,
+    parameters: str,
 ) -> str:
     if isinstance(action, Wait):
         return f"WAIT({parameters})"
     parameters += f",channel={_json(action.channel)}"
     targets: list[str]
-    if isinstance(action, CZPulse):
-        name = "CZ_PULSE"
-        if isinstance(action.coverage, Region):
-            region = action.coverage
-            bounds = [region.x_min, region.y_min, region.x_max, region.y_max]
-            parameters += f",region={_json(bounds)}"
+    if isinstance(action, CZPulse | GlobalRY):
+        name = "CZ_PULSE" if isinstance(action, CZPulse) else "GLOBAL_RY"
+        if isinstance(action, GlobalRY):
+            parameters += f",angle={action.angle!r}"
+        if isinstance(action.coverage, Region | RegionSet):
+            parameters += _coverage_parameters(action.coverage)
             targets = []
         else:
             targets = [str(atom) for atom in action.coverage]
+    elif isinstance(action, LocalU):
+        name = "U"
+        parameters += (
+            f",theta={action.theta!r},phi={action.phi!r},lambda={action.lam!r}"
+        )
+        targets = [str(atom) for atom in action.atoms]
     elif isinstance(action, Rotation):
         name = "ROT"
         parameters += f",axis={_json(action.axis)},angle={action.angle!r}"
@@ -304,6 +367,14 @@ def _pulse_text(
     else:
         assert_never(action)
     return " ".join((f"{name}({parameters})", *targets))
+
+
+def _coverage_parameters(coverage: Region | RegionSet) -> str:
+    regions = (coverage,) if isinstance(coverage, Region) else coverage.regions
+    bounds = [[r.x_min, r.y_min, r.x_max, r.y_max] for r in regions]
+    if isinstance(coverage, Region):
+        return f",region={_json(bounds[0])}"
+    return f",regions={_json(bounds)}"
 
 
 def _action_text(action: AtomAction) -> str:

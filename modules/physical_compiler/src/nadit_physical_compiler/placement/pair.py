@@ -68,7 +68,15 @@ class PairPlacer:
             atom_id = layout.qubit_to_atom[operation.qubits[0]]
             execution = self._place_measurement(layout, device, atom_id)
             return PlacementPlan(execution, layout)
-        elif operation.name in ("rx", "ry", "rz", "reset"):
+        elif operation.name == "global_ry":
+            if device.global_control is None:
+                raise ValueError("Global RY requires a global-control capability.")
+            for atom in layout.atoms:
+                holder = "slm" if isinstance(atom.holder, SLMHolder) else "aod"
+                if holder not in device.global_control.holders:
+                    raise ValueError("Global RY does not support an occupied holder.")
+            execution = layout
+        elif operation.name in ("rx", "ry", "rz", "u", "reset"):
             execution = self._place_local(dag, layer, layout, device)
         else:
             raise ValueError(f"Unsupported placement operation {operation.name!r}.")

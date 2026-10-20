@@ -41,6 +41,14 @@
 
 ### Added
 
+- Complete pinned C++ static-stage traces and first-divergence comparison,
+  preserving original source failures separately from matching executions.
+- Original capacity-based ASAP scheduling and endpoint-priority reuse policies,
+  alongside the existing measurement-feedback and complete-edge policies.
+- Multi-region gate catalogues, union CZ coverage, global RY and addressed U,
+  source integer-unit staging offsets, and cross-zone transport batches.
+- A* using shared placement candidates/scores, the paper's distance-to-time
+  profile, and a saved-input 26-circuit benchmark and ablation runner.
 - Source-layout SLM geometry, cached nearest-SLM/site queries, automatic initial
   storage placement, and configurable candidate windows with source expansion.
 - Original gate-option score-distance metadata and full-free-array score ranks,

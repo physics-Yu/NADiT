@@ -4,8 +4,9 @@ import json
 from dataclasses import dataclass, field
 from math import isfinite
 from pathlib import Path
+from typing import Literal
 
-from .capabilities import CZCapability, LocalControl, ReadoutCapability
+from .capabilities import CZCapability, GlobalControl, LocalControl, ReadoutCapability
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,12 +128,13 @@ class AOD:
 
 @dataclass(frozen=True, slots=True)
 class Timing:
-    """Transfer durations and a linear movement-time model.
+    """Transfer durations and a selectable distance-to-time function.
 
     Args:
         load_us: SLM-to-AOD transfer duration in microseconds.
         store_us: AOD-to-SLM transfer duration in microseconds.
-        move_us_per_um: Movement duration per micrometer.
+        move_us_per_um: Linear-profile movement duration per micrometer.
+        move_profile: Linear timing or the Search Smarter evaluation profile.
 
     Raises:
         ValueError: If a timing parameter is nonfinite or negative.
@@ -141,6 +143,7 @@ class Timing:
     load_us: float
     store_us: float
     move_us_per_um: float
+    move_profile: Literal["linear", "paper"] = "linear"
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -150,6 +153,8 @@ class Timing:
         ):
             if not isfinite(value) or value < 0:
                 raise ValueError(f"Timing {name} must be finite and nonnegative.")
+        if self.move_profile not in ("linear", "paper"):
+            raise ValueError(f"Unknown movement timing profile: {self.move_profile}.")
 
     def move_duration(self, distance: float) -> float:
         """Return movement time in microseconds for a distance in micrometers.
@@ -159,6 +164,10 @@ class Timing:
         """
         if not isfinite(distance) or distance < 0:
             raise ValueError("Movement distance must be finite and nonnegative.")
+        if self.move_profile == "paper":
+            if distance <= 110:
+                return float(200 * (distance / 110) ** (1 / 3))
+            return 200 + (distance - 110) / 1.1
         return self.move_us_per_um * distance
 
 
@@ -175,6 +184,7 @@ class Device:
         cz: Optional CZ channel and interaction capability.
         readout: Optional readout channel and result timing.
         local: Optional addressed rotation and reset channel.
+        global_control: Optional global single-qubit rotation channel.
 
     Raises:
         ValueError: If a zone, site, or AOD ID is empty or duplicated.
@@ -188,6 +198,7 @@ class Device:
     cz: CZCapability | None = None
     readout: ReadoutCapability | None = None
     local: LocalControl | None = None
+    global_control: GlobalControl | None = None
     _sites_by_id: dict[str, SLMSite] = field(init=False, repr=False, compare=False)
     _aods_by_id: dict[str, AOD] = field(init=False, repr=False, compare=False)
 
@@ -285,7 +296,10 @@ def loads_device(source: str) -> Device:
         cz["holder_pairs"] = tuple((pair[0], pair[1]) for pair in cz["holder_pairs"])
     readout = data.get("readout")
     local = data.get("local")
-    for capability in (readout, local):
+    global_control = data.get("global_control")
+    if global_control is not None and global_control.get("region") is not None:
+        global_control["region"] = tuple(global_control["region"])
+    for capability in (readout, local, global_control):
         if capability is not None and "holders" in capability:
             capability["holders"] = tuple(capability["holders"])
     sites = [
@@ -323,6 +337,9 @@ def loads_device(source: str) -> Device:
         cz=CZCapability(**cz) if cz is not None else None,
         readout=ReadoutCapability(**readout) if readout is not None else None,
         local=LocalControl(**local) if local is not None else None,
+        global_control=(
+            GlobalControl(**global_control) if global_control is not None else None
+        ),
     )
 
 

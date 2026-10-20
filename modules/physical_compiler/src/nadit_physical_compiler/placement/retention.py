@@ -2,13 +2,17 @@
 
 from math import hypot
 
+from ..coverage import RegionSet
 from ..device import Device, Position, Region, SLMSite
 from ..state import AODHolder, AtomLayout, AtomState, SLMHolder
 from .catalog import GatePairCatalog
 
 
 def reachable_storage_sites(
-    device: Device, aod_id: str, storage_zone_id: str, coverage: Region
+    device: Device,
+    aod_id: str,
+    storage_zone_id: str,
+    coverage: Region | RegionSet,
 ) -> tuple[SLMSite, ...]:
     """Return distinct reachable storage positions outside the pulse region.
 

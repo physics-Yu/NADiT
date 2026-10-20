@@ -71,6 +71,42 @@ class SLMArray:
 type SiteLocation = tuple[SLMArray, int, int]
 
 
+def _paired_arrays(
+    pairs: tuple[tuple[SLMSite, SLMSite], ...],
+    name: str,
+    spacing: float,
+    staging: StagingGeometry | None,
+) -> tuple[SLMArray, SLMArray]:
+    ordered = tuple(
+        tuple(sorted(pair, key=lambda site: (site.position.x, site.position.y)))
+        for pair in pairs
+    )
+    separation = hypot(
+        ordered[0][0].position.x - ordered[0][1].position.x,
+        ordered[0][0].position.y - ordered[0][1].position.y,
+    )
+    pitch = Position(separation + 3 * spacing, 2 * spacing)
+    if staging is not None and ordered[0][0].id in staging.sites:
+        descriptor = staging.sites[ordered[0][0].id]
+        pitch = Position(descriptor.pitch_x, descriptor.pitch_y)
+    left = _array(f"{name}:left", "left", tuple(pair[0] for pair in ordered), pitch)
+    right = _array(f"{name}:right", "right", tuple(pair[1] for pair in ordered), pitch)
+    inferred = {
+        frozenset((first.id, second.id))
+        for left_row, right_row in zip(left.sites, right.sites, strict=True)
+        for first, second in zip(left_row, right_row, strict=True)
+    }
+    if inferred != {frozenset((first.id, second.id)) for first, second in pairs}:
+        raise ValueError(
+            "Catalogue pairing does not follow common SLM row/column indices; "
+            "provide explicit PlacementGeometry."
+        )
+    return (
+        SLMArray(left.id, left.kind, left.sites, left.pitch, right.sites),
+        SLMArray(right.id, right.kind, right.sites, right.pitch, left.sites),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class PlacementGeometry:
     """Ordered storage and paired entanglement arrays with cached site queries.
@@ -135,7 +171,7 @@ class PlacementGeometry:
             staging: Optional explicit lattice pitches for singleton axes.
 
         Returns:
-            The inferred storage arrays and the catalogue's two paired arrays.
+            Storage arrays and one pair of arrays per catalogue region.
 
         Raises:
             ValueError: If flat sites do not describe rectangular regular arrays;
@@ -165,39 +201,17 @@ class PlacementGeometry:
                 pitch = Position(descriptor.pitch_x, descriptor.pitch_y)
             storage.append(_array(name, "storage", sites, pitch))
             assigned.update(site.id for site in sites)
-        pairs = tuple(
-            tuple(sorted(pair, key=lambda site: (site.position.x, site.position.y)))
-            for pair in catalog.pairs
-        )
-        separation = hypot(
-            pairs[0][0].position.x - pairs[0][1].position.x,
-            pairs[0][0].position.y - pairs[0][1].position.y,
-        )
-        gate_pitch = Position(separation + 3 * spacing, 2 * spacing)
-        if staging is not None and pairs[0][0].id in staging.sites:
-            descriptor = staging.sites[pairs[0][0].id]
-            gate_pitch = Position(descriptor.pitch_x, descriptor.pitch_y)
-        left = _array(
-            "entanglement:left", "left", tuple(pair[0] for pair in pairs), gate_pitch
-        )
-        right = _array(
-            "entanglement:right", "right", tuple(pair[1] for pair in pairs), gate_pitch
-        )
-        inferred_pairs = {
-            frozenset((first.id, second.id))
-            for left_row, right_row in zip(left.sites, right.sites, strict=True)
-            for first, second in zip(left_row, right_row, strict=True)
-        }
-        if inferred_pairs != {
-            frozenset((first.id, second.id)) for first, second in pairs
-        }:
-            raise ValueError(
-                "Catalogue pairing does not follow common SLM row/column indices; "
-                "provide explicit PlacementGeometry."
+        groups = catalog.region_pairs
+        gates = tuple(
+            _paired_arrays(
+                pairs,
+                "entanglement" if len(groups) == 1 else f"entanglement:{index}",
+                spacing,
+                staging,
             )
-        left = SLMArray(left.id, left.kind, left.sites, left.pitch, right.sites)
-        right = SLMArray(right.id, right.kind, right.sites, right.pitch, left.sites)
-        return cls(tuple(storage), ((left, right),))
+            for index, pairs in enumerate(groups)
+        )
+        return cls(tuple(storage), gates)
 
     def locate(self, site_id: str) -> SiteLocation:
         """Return array and lattice indices; unknown site IDs raise KeyError."""

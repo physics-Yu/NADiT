@@ -1,0 +1,6086 @@
+{
+  "commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "sources": {
+    "Architecture.hpp": "aaad72585f543a4620d696d95ef4a27efddb141453d54c85784a819dd12df2cf",
+    "Architecture.cpp": "2f1861cfb807d72e5a96927c36e746845f2453c6069581034b30a7d808d78725",
+    "HeuristicPlacer.hpp": "e5c528ebb5009fbc08621a9bd5e2e021baff007c9e1d46e81065beff4c6c13ec",
+    "HeuristicPlacer.cpp": "0864e0905f39b1604dac544447166f6cccc5eace85f2cd93ebeb665912be8e5c",
+    "CodeGenerator.cpp": "3223883b05b32aa696fc2ca07e6ad45e7c90396cbd9d83a2443618267d62620a",
+    "CodeGenerator.hpp": "25041fa74fd25d29160a8db979639d6592065cebbeb42da891c069d18f34ccf9",
+    "IndependentSetRouter.cpp": "17a6273c5b77ada9fc1248a54df183d39055c925f4e01b5f967edebfec6e7bdf",
+    "IndependentSetRouter.hpp": "18c81dd6b3a082e2fa9265503e7c23a9736acf529904cc0d008f0e85f121efbb",
+    "ASAPScheduler.cpp": "31009474fbdbca13b4f55ab4ec9d5c738e4a4b7558af974e7736119a32a894f4",
+    "ASAPScheduler.hpp": "e22d674f9da212e16671bda23672734e27355e418bee274ec856ca56a3a50fa6",
+    "VertexMatchingReuseAnalyzer.cpp": "76f2d2866ae57c23821bbf3f496824a53f35398b5c14daf176b0de7905886f67",
+    "VertexMatchingReuseAnalyzer.hpp": "dff4d7c5a3aa5d8dcafcd0d8e11aa34aa80a7ee5e3fdbad32c4c98507c665706",
+    "Types.hpp": "a0b581c8695afb650dcc62d3c0d2da67eec0326ff6fa24c1c354300f55bc5201",
+    "Compiler.hpp": "b444bee64fb60aa8de13117e75d4b53d60025810bbdbab8c6327b38e76823db2"
+  },
+  "translation_unit_sha256": "88ba43ecf50d75ed256967b202137ec522c995659046f06914cd99dfa36c668c",
+  "units": "integer micrometres",
+  "cases": {
+    "single_pair_local_rotations": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [
+            0,
+            1
+          ],
+          [
+            3
+          ],
+          [
+            5
+          ]
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0,
+            1
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              1,
+              0
+            ]
+          ],
+          [],
+          [],
+          [
+            [
+              1,
+              0
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.25,
+              0,
+              0
+            ],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              1
+            ],
+            "targets": [],
+            "parameters": [
+              0.5
+            ],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                80
+              ],
+              [
+                2,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              -0.75,
+              -1.5707963267948966,
+              1.5707963267948966
+            ],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                16
+              ],
+              [
+                8,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              1.25
+            ],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "explicit_rydberg_extent": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [
+            0,
+            1
+          ],
+          [
+            3
+          ],
+          [
+            5
+          ]
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0,
+            1
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              1,
+              0
+            ]
+          ],
+          [],
+          [],
+          [
+            [
+              1,
+              0
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              70,
+              60,
+              100
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.25,
+              0,
+              0
+            ],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              1
+            ],
+            "targets": [],
+            "parameters": [
+              0.5
+            ],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                80
+              ],
+              [
+                2,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              -0.75,
+              -1.5707963267948966,
+              1.5707963267948966
+            ],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                16
+              ],
+              [
+                8,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              1.25
+            ],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "parallel_pairs_partner_change": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [
+            0
+          ],
+          [
+            3
+          ],
+          [
+            6
+          ]
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              4
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              0,
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              3,
+              2
+            ]
+          ],
+          [
+            [
+              3,
+              0,
+              2,
+              1
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            24,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.2,
+              0.3,
+              0.4
+            ],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                24,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.6
+            ],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                8,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                24,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                28,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                36,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                24,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                32,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "local_u",
+            "atoms": [
+              3
+            ],
+            "targets": [],
+            "parameters": [
+              -0.3,
+              0,
+              0
+            ],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "source_endpoint_priority_reuse": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [],
+          [],
+          []
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              4
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              0,
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              3
+            ],
+            [
+              2
+            ]
+          ],
+          [
+            [
+              3,
+              0,
+              2,
+              1
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            24,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                24,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              3
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              3
+            ],
+            "targets": [
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2
+            ],
+            "targets": [
+              [
+                20,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2
+            ],
+            "targets": [
+              [
+                14,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                28,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                36,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                24,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                32,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "capacity_one_pair": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [],
+          [
+            3
+          ],
+          [],
+          [],
+          []
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ]
+        ],
+        "reuse": [
+          [],
+          [],
+          []
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              1,
+              0,
+              3
+            ],
+            [
+              2,
+              0,
+              3
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              1,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              1,
+              0
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            24,
+            16
+          ],
+          [
+            32,
+            16
+          ],
+          [
+            40,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                80
+              ],
+              [
+                2,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [
+              [
+                0,
+                16
+              ],
+              [
+                8,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.2
+            ],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [
+              [
+                16,
+                16
+              ],
+              [
+                24,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                36,
+                20
+              ],
+              [
+                44,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                33,
+                74
+              ],
+              [
+                41,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                36,
+                80
+              ],
+              [
+                38,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                33,
+                74
+              ],
+              [
+                41,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                36,
+                20
+              ],
+              [
+                44,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [
+              [
+                32,
+                16
+              ],
+              [
+                40,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              4,
+              5
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                20,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                12,
+                12
+              ],
+              [
+                20,
+                12
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [
+              [
+                8,
+                8
+              ],
+              [
+                16,
+                8
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "global_ry_and_barrier": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [
+            0
+          ],
+          [
+            4
+          ],
+          []
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              4
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              0,
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              3,
+              2
+            ]
+          ],
+          [
+            [
+              3,
+              0,
+              2,
+              1
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            24,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "global_ry",
+            "atoms": [],
+            "targets": [],
+            "parameters": [
+              1.5707963267948966
+            ],
+            "zones": [
+              1
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                24,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_ry",
+            "atoms": [],
+            "targets": [],
+            "parameters": [
+              -1.5707963267948966
+            ],
+            "zones": [
+              1
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                8,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1
+            ],
+            "targets": [
+              [
+                24,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                28,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                36,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                24,
+                16
+              ],
+              [
+                16,
+                16
+              ],
+              [
+                32,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "astar_strict": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [],
+          [],
+          []
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              2
+            ],
+            [
+              2,
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              2
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              0,
+              2,
+              1,
+              3
+            ]
+          ],
+          [
+            [
+              3,
+              1,
+              2
+            ]
+          ],
+          [
+            [
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            [
+              2,
+              0,
+              3,
+              1
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            24,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                4,
+                20
+              ],
+              [
+                12,
+                20
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ],
+              [
+                36,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                16,
+                16
+              ],
+              [
+                24,
+                16
+              ],
+              [
+                32,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              3
+            ],
+            "targets": [
+              [
+                36,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              3
+            ],
+            "targets": [
+              [
+                17,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              3
+            ],
+            "targets": [
+              [
+                14,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2
+            ],
+            "targets": [
+              [
+                20,
+                20
+              ],
+              [
+                28,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2
+            ],
+            "targets": [
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              2
+            ],
+            "targets": [
+              [
+                24,
+                80
+              ],
+              [
+                26,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              2
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                21,
+                74
+              ],
+              [
+                29,
+                74
+              ],
+              [
+                17,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                12,
+                20
+              ],
+              [
+                28,
+                20
+              ],
+              [
+                36,
+                20
+              ],
+              [
+                20,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [
+              [
+                8,
+                16
+              ],
+              [
+                24,
+                16
+              ],
+              [
+                32,
+                16
+              ],
+              [
+                16,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "local_only": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [
+            0,
+            1,
+            2
+          ]
+        ],
+        "two_layers": [],
+        "reuse": [],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ]
+          ]
+        ],
+        "routings": [],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              38,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              64,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            16,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "local_u",
+            "atoms": [
+              0
+            ],
+            "targets": [],
+            "parameters": [
+              0.1,
+              -1.5707963267948966,
+              1.5707963267948966
+            ],
+            "zones": []
+          },
+          {
+            "kind": "local_u",
+            "atoms": [
+              1
+            ],
+            "targets": [],
+            "parameters": [
+              0.2,
+              0,
+              0
+            ],
+            "zones": []
+          },
+          {
+            "kind": "local_rz",
+            "atoms": [
+              2
+            ],
+            "targets": [],
+            "parameters": [
+              0.3
+            ],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "two_gate_zones": {
+      "status": "ok",
+      "result": {
+        "single_layers": [
+          [],
+          [],
+          []
+        ],
+        "two_layers": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              5,
+              7
+            ]
+          ]
+        ],
+        "reuse": [
+          [
+            0,
+            4
+          ]
+        ],
+        "placements": [
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              5
+            ],
+            [
+              0,
+              2,
+              6
+            ],
+            [
+              0,
+              2,
+              7
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              4,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              4,
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              0,
+              2,
+              5
+            ],
+            [
+              0,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              6
+            ]
+          ],
+          [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              4,
+              0,
+              0
+            ],
+            [
+              4,
+              0,
+              1
+            ]
+          ],
+          [
+            [
+              0,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              2
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              4
+            ],
+            [
+              0,
+              2,
+              6
+            ],
+            [
+              0,
+              2,
+              5
+            ],
+            [
+              0,
+              2,
+              7
+            ]
+          ]
+        ],
+        "routings": [
+          [
+            [
+              3,
+              2,
+              7,
+              4,
+              1,
+              6,
+              5,
+              0
+            ]
+          ],
+          [
+            [
+              7,
+              1
+            ],
+            [
+              2,
+              6,
+              3,
+              5
+            ]
+          ],
+          [
+            [
+              1,
+              7
+            ],
+            [
+              6,
+              3,
+              2,
+              5
+            ]
+          ],
+          [
+            [
+              3,
+              1,
+              7,
+              4,
+              2,
+              5,
+              6,
+              0
+            ]
+          ]
+        ],
+        "zones": [
+          {
+            "name": "zone_cz0",
+            "extent": [
+              0,
+              80,
+              14,
+              80
+            ]
+          },
+          {
+            "name": "zone_cz1",
+            "extent": [
+              100,
+              80,
+              114,
+              80
+            ]
+          },
+          {
+            "name": "global",
+            "extent": [
+              0,
+              0,
+              160,
+              24
+            ]
+          }
+        ],
+        "initial": [
+          [
+            0,
+            16
+          ],
+          [
+            20,
+            16
+          ],
+          [
+            40,
+            16
+          ],
+          [
+            60,
+            16
+          ],
+          [
+            80,
+            16
+          ],
+          [
+            100,
+            16
+          ],
+          [
+            120,
+            16
+          ],
+          [
+            140,
+            16
+          ]
+        ],
+        "actions": [
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                10,
+                20
+              ],
+              [
+                30,
+                20
+              ],
+              [
+                50,
+                20
+              ],
+              [
+                70,
+                20
+              ],
+              [
+                90,
+                20
+              ],
+              [
+                110,
+                20
+              ],
+              [
+                130,
+                20
+              ],
+              [
+                150,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                5,
+                74
+              ],
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                97,
+                74
+              ],
+              [
+                105,
+                74
+              ],
+              [
+                109,
+                74
+              ],
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                0,
+                80
+              ],
+              [
+                2,
+                80
+              ],
+              [
+                12,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                100,
+                80
+              ],
+              [
+                102,
+                80
+              ],
+              [
+                112,
+                80
+              ],
+              [
+                114,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0,
+              1
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                5,
+                74
+              ],
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                10,
+                12
+              ],
+              [
+                130,
+                12
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                0,
+                8
+              ],
+              [
+                120,
+                8
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                105,
+                74
+              ],
+              [
+                109,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                10,
+                20
+              ],
+              [
+                30,
+                20
+              ],
+              [
+                110,
+                20
+              ],
+              [
+                130,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                0,
+                16
+              ],
+              [
+                20,
+                16
+              ],
+              [
+                100,
+                16
+              ],
+              [
+                120,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                10,
+                12
+              ],
+              [
+                130,
+                12
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                9,
+                74
+              ],
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [
+              [
+                12,
+                80
+              ],
+              [
+                114,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              1,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                10,
+                20
+              ],
+              [
+                30,
+                20
+              ],
+              [
+                110,
+                20
+              ],
+              [
+                130,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                5,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                109,
+                74
+              ],
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              2,
+              3,
+              5,
+              6
+            ],
+            "targets": [
+              [
+                2,
+                80
+              ],
+              [
+                14,
+                80
+              ],
+              [
+                112,
+                80
+              ],
+              [
+                117,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              2,
+              3,
+              5
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              6
+            ],
+            "targets": [
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              6
+            ],
+            "targets": [
+              [
+                105,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              6
+            ],
+            "targets": [
+              [
+                102,
+                80
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              6
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "global_cz",
+            "atoms": [],
+            "targets": [],
+            "parameters": [],
+            "zones": [
+              0,
+              1
+            ]
+          },
+          {
+            "kind": "load",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                -3,
+                74
+              ],
+              [
+                9,
+                74
+              ],
+              [
+                5,
+                74
+              ],
+              [
+                17,
+                74
+              ],
+              [
+                97,
+                74
+              ],
+              [
+                109,
+                74
+              ],
+              [
+                105,
+                74
+              ],
+              [
+                117,
+                74
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                10,
+                20
+              ],
+              [
+                50,
+                20
+              ],
+              [
+                30,
+                20
+              ],
+              [
+                70,
+                20
+              ],
+              [
+                90,
+                20
+              ],
+              [
+                130,
+                20
+              ],
+              [
+                110,
+                20
+              ],
+              [
+                150,
+                20
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "move",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [
+              [
+                0,
+                16
+              ],
+              [
+                40,
+                16
+              ],
+              [
+                20,
+                16
+              ],
+              [
+                60,
+                16
+              ],
+              [
+                80,
+                16
+              ],
+              [
+                120,
+                16
+              ],
+              [
+                100,
+                16
+              ],
+              [
+                140,
+                16
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          },
+          {
+            "kind": "store",
+            "atoms": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "targets": [],
+            "parameters": [],
+            "zones": []
+          }
+        ]
+      }
+    },
+    "source_initial_slm_row_reset": {
+      "status": "source_failure",
+      "failed_stage": "placement",
+      "completed_stages": {
+        "scheduling": {
+          "single_layers": [
+            [],
+            []
+          ],
+          "two_layers": [
+            [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          ]
+        },
+        "reuse": []
+      }
+    },
+    "source_exhausted_multizone_window": {
+      "status": "timeout",
+      "failed_stage": "placement",
+      "completed_stages": {
+        "scheduling": {
+          "single_layers": [
+            [],
+            [],
+            []
+          ],
+          "two_layers": [
+            [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                4,
+                6
+              ],
+              [
+                5,
+                7
+              ]
+            ]
+          ]
+        },
+        "reuse": [
+          [
+            0,
+            4
+          ]
+        ]
+      }
+    }
+  }
+}

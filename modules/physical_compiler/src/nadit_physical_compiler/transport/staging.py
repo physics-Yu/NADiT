@@ -8,7 +8,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from math import isclose
+from math import isclose, trunc
 from typing import Literal
 
 from ..device import Position
@@ -40,10 +40,12 @@ def generate_stages(
     """Expand one admitted batch into staged loading, movement, and unloading.
 
     Args:
-        moves: Equality-preserving movement requests for one admitted zone pair.
+        moves: Equality-preserving requests admitted by the constructed template.
         layout: Starting SLM holders for the batch atoms.
         destinations: Target SLM holders, indexed by atom ID.
         geometry: Recognized or explicitly supplied SLM subarray geometry.
+            As in the source, the first mover supplies the batch lattice bounds.
+            Actual constructed grids determine resource and occupancy admission.
 
     Returns:
         Atom events with stable active row and column identities. Geometry
@@ -65,6 +67,7 @@ class _Generator:
         destinations: Mapping[int, AtomState],
         geometry: StagingGeometry,
     ) -> None:
+        self.coordinate_quantum = geometry.coordinate_quantum
         self.moves = {move.atom_id: move for move in moves}
         atoms = {atom.id: atom for atom in layout.atoms}
         self.source_kinds: dict[int, SiteKind] = {}
@@ -121,6 +124,14 @@ class _Generator:
             self._store_columns()
         return tuple(self.events)
 
+    def _divide(self, value: float, divisor: int) -> float:
+        """Apply either continuous offsets or source integer-unit division."""
+        if self.coordinate_quantum is None:
+            return value / divisor
+        return (
+            trunc(value / (divisor * self.coordinate_quantum)) * self.coordinate_quantum
+        )
+
     def _groups(self, source: bool, row: bool) -> dict[float, set[int]]:
         groups: dict[float, set[int]] = {}
         for atom, move in self.moves.items():
@@ -166,8 +177,8 @@ class _Generator:
         kind = self.source_kinds[atom] if source else self.target_kinds[atom]
         x = move.source.x if source else move.target.x
         if kind == "storage":
-            return x + shape.pitch_x / 2
-        return x + (-1 if kind == "left" else 1) * shape.pitch_x / 4
+            return x + self._divide(shape.pitch_x, 2)
+        return x + (-1 if kind == "left" else 1) * self._divide(shape.pitch_x, 4)
 
     def _column_x(self, atom: int, source: bool) -> float:
         move = self.moves[atom]
@@ -175,8 +186,8 @@ class _Generator:
         kind = self.source_kinds[atom] if source else self.target_kinds[atom]
         x = move.source.x if source else move.target.x
         if kind == "storage":
-            return x + shape.pitch_x / 2
-        offset = (shape.pitch_x - shape.pair_separation) / 3
+            return x + self._divide(shape.pitch_x, 2)
+        offset = self._divide(shape.pitch_x - shape.pair_separation, 3)
         return x + (-offset if kind == "left" else offset)
 
     def _load_rows(self) -> None:
@@ -188,17 +199,17 @@ class _Generator:
             if row in self.rows:
                 continue
             loading = set(group)
-            self.rows[row] = y = source_y + sign * dy / 2
+            self.rows[row] = y = source_y + sign * self._divide(dy, 2)
             next_y = y - dy
             for previous in _below(self.rows, row):
                 if self.rows[previous] <= next_y:
                     break
                 self.rows[previous] = next_y
-                next_y -= dy if next_y > self.source.min_y else dy / 2
+                next_y -= dy if next_y > self.source.min_y else self._divide(dy, 2)
             next_y = y + dy
             previous = row
             for upper in [*_above(self.rows, row), None]:
-                threshold = next_y - sign * dy / 2
+                threshold = next_y - sign * self._divide(dy, 2)
                 for another_y, another_group in groups.items():
                     another = self.sy[another_y]
                     if (
@@ -208,15 +219,15 @@ class _Generator:
                         and self._mask(group, True, True)
                         == self._mask(another_group, True, True)
                     ):
-                        self.rows[another] = another_y + sign * dy / 2
+                        self.rows[another] = another_y + sign * self._divide(dy, 2)
                         loading.update(another_group)
-                        next_y = another_y + dy + sign * dy / 2
+                        next_y = another_y + dy + sign * self._divide(dy, 2)
                         previous = another
                 if upper is None:
                     break
                 if self.rows[upper] < next_y:
                     self.rows[upper] = next_y
-                    next_y += dy if next_y < self.source.max_y else dy / 2
+                    next_y += dy if next_y < self.source.max_y else self._divide(dy, 2)
                 previous = upper
             self._move(True)
             for atom in group:
@@ -252,7 +263,7 @@ class _Generator:
             self._move(True)
             for atom in loading:
                 y = self.moves[atom].source.y
-                self.rows[self.sy[y]] = y + sign * self.source.pitch_y / 2
+                self.rows[self.sy[y]] = y + sign * self._divide(self.source.pitch_y, 2)
             self._load(loading)
             self._move(True)
 
@@ -265,17 +276,17 @@ class _Generator:
         groups: dict[float, set[int]],
     ) -> None:
         dx = self.source.pitch_x
-        self.columns[column] = x + dx / 2
-        next_x = x - dx / 2
+        self.columns[column] = x + self._divide(dx, 2)
+        next_x = x - self._divide(dx, 2)
         for previous in _below(self.columns, column):
             if self.columns[previous] <= next_x:
                 break
             self.columns[previous] = next_x
-            next_x -= dx if next_x > self.source.min_x else dx / 2
-        next_x = x + dx + dx / 2
+            next_x -= dx if next_x > self.source.min_x else self._divide(dx, 2)
+        next_x = x + dx + self._divide(dx, 2)
         previous = column
         for upper in [*_above(self.columns, column), None]:
-            threshold = next_x - dx / 2
+            threshold = next_x - self._divide(dx, 2)
             for another_x, another_group in groups.items():
                 another = self.sx[another_x]
                 if (
@@ -285,15 +296,15 @@ class _Generator:
                     and self._mask(group, True, False)
                     == self._mask(another_group, True, False)
                 ):
-                    self.columns[another] = another_x + dx / 2
+                    self.columns[another] = another_x + self._divide(dx, 2)
                     loading.update(another_group)
-                    next_x = another_x + dx + dx / 2
+                    next_x = another_x + dx + self._divide(dx, 2)
                     previous = another
             if upper is None:
                 break
             if self.columns[upper] < next_x:
                 self.columns[upper] = next_x
-                next_x += dx if next_x < self.source.max_x else dx / 2
+                next_x += dx if next_x < self.source.max_x else self._divide(dx, 2)
             previous = upper
 
     def _load_gate_column(
@@ -306,7 +317,7 @@ class _Generator:
         kind: SiteKind,
     ) -> None:
         dx, separation = self.source.pitch_x, self.source.pair_separation
-        offset = (dx - separation) / 3
+        offset = self._divide(dx - separation, 3)
         left = kind == "left"
         self.columns[column] = x + (-offset if left else offset)
         next_x = x - (dx - separation - offset if left else separation + offset)
@@ -352,18 +363,20 @@ class _Generator:
         dy = self.target.pitch_y
         sign = -1 if self.up else 1
         targets = {self.ty[y]: y for y in groups}
-        self.rows.update((row, y + sign * dy / 2) for row, y in targets.items())
+        self.rows.update(
+            (row, y + sign * self._divide(dy, 2)) for row, y in targets.items()
+        )
         for atom, move in self.moves.items():
             self.columns[self.tx[move.target.x]] = self._row_x(atom, False)
         first_row = self.ty[next(iter(groups))]
         next_y = self.rows[first_row]
         for previous in _below(self.rows, first_row):
-            next_y -= dy if next_y > self.target.min_y else dy / 2
+            next_y -= dy if next_y > self.target.min_y else self._divide(dy, 2)
             self.rows[previous] = min(self.rows[previous], next_y)
             next_y = self.rows[previous]
         next_y = self.rows[first_row]
         for upper in _above(self.rows, first_row):
-            next_y += dy if next_y < self.target.max_y else dy / 2
+            next_y += dy if next_y < self.target.max_y else self._divide(dy, 2)
             self.rows[upper] = max(self.rows[upper], next_y)
             next_y = self.rows[upper]
         for y, group in groups.items():
@@ -372,34 +385,38 @@ class _Generator:
                 continue
             storing = set(group)
             aligned = [(row, y)]
-            self.rows[row] = offset_y = y + sign * dy / 2
+            self.rows[row] = offset_y = y + sign * self._divide(dy, 2)
             next_y = offset_y - dy
             for previous in _below(self.rows, row):
                 if self.rows[previous] <= next_y:
                     break
                 self.rows[previous] = next_y
-                next_y -= dy if next_y > self.target.min_y else dy / 2
+                next_y -= dy if next_y > self.target.min_y else self._divide(dy, 2)
             next_y = offset_y + dy
             free = 0
             for upper in _above(self.rows, row):
                 other_y, other = targets[upper], groups[targets[upper]]
-                if other_y >= next_y - sign * dy / 2 + free * dy and self._mask(
-                    group, False, True
-                ) == self._mask(other, False, True):
+                if other_y >= next_y - sign * self._divide(
+                    dy, 2
+                ) + free * dy and self._mask(group, False, True) == self._mask(
+                    other, False, True
+                ):
                     aligned.append((upper, other_y))
-                    self.rows[upper] = other_y + sign * dy / 2
+                    self.rows[upper] = other_y + sign * self._divide(dy, 2)
                     storing.update(other)
-                    next_y = other_y - sign * dy / 2
+                    next_y = other_y - sign * self._divide(dy, 2)
                     for previous in _below(self.rows, upper):
                         if self.rows[previous] <= next_y:
                             break
                         self.rows[previous] = next_y
-                        next_y -= dy if next_y > self.target.min_y else dy / 2
-                    next_y = other_y + dy + sign * dy / 2
+                        next_y -= (
+                            dy if next_y > self.target.min_y else self._divide(dy, 2)
+                        )
+                    next_y = other_y + dy + sign * self._divide(dy, 2)
                     free = 0
                 elif self.rows[upper] < next_y:
                     self.rows[upper] = next_y
-                    next_y += dy if next_y < self.target.max_y else dy / 2
+                    next_y += dy if next_y < self.target.max_y else self._divide(dy, 2)
                 else:
                     free += 1
             self._move(False)
@@ -423,7 +440,8 @@ class _Generator:
         sign = -1 if self.up else 1
         targets = {self.tx[x]: x for x in groups}
         self.rows.update(
-            (row, y + sign * self.target.pitch_y / 2) for y, row in self.ty.items()
+            (row, y + sign * self._divide(self.target.pitch_y, 2))
+            for y, row in self.ty.items()
         )
         for x, group in groups.items():
             self.columns[self.tx[x]] = self._column_x(min(group), False)
@@ -452,7 +470,7 @@ class _Generator:
             self._move(False)
             for atom in storing:
                 y = self.moves[atom].target.y
-                self.rows[self.ty[y]] = y + sign * self.target.pitch_y / 2
+                self.rows[self.ty[y]] = y + sign * self._divide(self.target.pitch_y, 2)
             self._store(storing)
             for column_id, _ in aligned:
                 del self.columns[column_id]
@@ -463,12 +481,12 @@ class _Generator:
         column = self.tx[first_x]
         first_kind = self.target_kinds[min(groups[first_x])]
         dx = self.target.pitch_x
-        offset = (dx - self.target.pair_separation) / 3
+        offset = self._divide(dx - self.target.pair_separation, 3)
         kind = first_kind
         next_x = self.columns[column]
         for previous in _below(self.columns, column):
             if kind == "storage":
-                next_x -= dx if next_x > self.target.min_x else dx / 2
+                next_x -= dx if next_x > self.target.min_x else self._divide(dx, 2)
             else:
                 next_x -= (
                     dx - offset
@@ -488,7 +506,7 @@ class _Generator:
         next_x = self.columns[column]
         for upper in _above(self.columns, column):
             if kind == "storage":
-                next_x += dx if next_x > self.target.min_x else dx / 2
+                next_x += dx if next_x > self.target.min_x else self._divide(dx, 2)
             else:
                 # Ascending lanes use the upper boundary. Using min_x here
                 # corrupts left/right parity when starting at the left margin.
@@ -518,34 +536,34 @@ class _Generator:
         targets: dict[int, float],
     ) -> None:
         dx = self.target.pitch_x
-        self.columns[column] = x + dx / 2
-        next_x = x - dx / 2
+        self.columns[column] = x + self._divide(dx, 2)
+        next_x = x - self._divide(dx, 2)
         for previous in _below(self.columns, column):
             if self.columns[previous] <= next_x:
                 break
             self.columns[previous] = next_x
-            next_x -= dx if next_x > self.target.min_x else dx / 2
-        next_x = x + dx + dx / 2
+            next_x -= dx if next_x > self.target.min_x else self._divide(dx, 2)
+        next_x = x + dx + self._divide(dx, 2)
         free = 0
         for upper in _above(self.columns, column):
             other_x, other = targets[upper], groups[targets[upper]]
-            if other_x >= next_x + free * dx - dx / 2 and self._mask(
+            if other_x >= next_x + free * dx - self._divide(dx, 2) and self._mask(
                 group, False, False
             ) == self._mask(other, False, False):
                 aligned.append((upper, other_x))
-                self.columns[upper] = other_x + dx / 2
+                self.columns[upper] = other_x + self._divide(dx, 2)
                 storing.update(other)
-                next_x = other_x - dx / 2
+                next_x = other_x - self._divide(dx, 2)
                 for previous in _below(self.columns, upper):
                     if self.columns[previous] <= next_x:
                         break
                     self.columns[previous] = next_x
-                    next_x -= dx if next_x > self.target.min_x else dx / 2
-                next_x = other_x + dx + dx / 2
+                    next_x -= dx if next_x > self.target.min_x else self._divide(dx, 2)
+                next_x = other_x + dx + self._divide(dx, 2)
                 free = 0
             elif self.columns[upper] < next_x:
                 self.columns[upper] = next_x
-                next_x += dx if next_x < self.target.max_x else dx / 2
+                next_x += dx if next_x < self.target.max_x else self._divide(dx, 2)
                 free = 0
             else:
                 free += 1
@@ -562,7 +580,7 @@ class _Generator:
         kind: SiteKind,
     ) -> None:
         dx, separation = self.target.pitch_x, self.target.pair_separation
-        offset = (dx - separation) / 3
+        offset = self._divide(dx - separation, 3)
         left = kind == "left"
         self.columns[column] = x + (-offset if left else offset)
         next_x = x - (dx - separation - offset if left else separation + offset)

@@ -2,7 +2,16 @@
 
 from typing import Literal
 
-from ..atom_ir import AtomAction, AtomStep, CZPulse, Measure, Reset, Rotation
+from ..atom_ir import (
+    AtomAction,
+    AtomStep,
+    CZPulse,
+    GlobalRY,
+    LocalU,
+    Measure,
+    Reset,
+    Rotation,
+)
 from ..contracts import AtomFragment, GateLayer
 from ..device import Device, Region
 from ..physical_ir import PhysicalDAG, PhysicalOperation
@@ -41,6 +50,25 @@ def _emit_operation(
 ) -> AtomAction:
     atom_ids = tuple(layout.qubit_to_atom[q] for q in operation.qubits)
     sources = (operation.id,)
+    if operation.name == "global_ry":
+        if device.global_control is None:
+            raise ValueError("Global RY emission requires a global-control capability.")
+        bounds = tuple(zone.bounds for zone in device.zones)
+        coverage = Region(
+            min(region.x_min for region in bounds),
+            min(region.y_min for region in bounds),
+            max(region.x_max for region in bounds),
+            max(region.y_max for region in bounds),
+        )
+        if device.global_control.region is not None:
+            coverage = Region(*device.global_control.region)
+        return GlobalRY(
+            device.global_control.channel,
+            coverage,
+            operation.params[0],
+            duration_us=device.global_control.rotation_us,
+            source_ids=sources,
+        )
     if operation.name == "cz":
         if device.cz is None:
             raise ValueError("CZ emission requires a CZ capability.")
@@ -69,14 +97,14 @@ def _emit_operation(
             duration_us=device.readout.duration_us,
             source_ids=sources,
         )
-    if operation.name in _ROTATION_AXES or operation.name == "reset":
+    if operation.name in (*_ROTATION_AXES, "u", "reset"):
         return _emit_local(operation, atom_ids, device)
     raise ValueError(f"Unsupported Atom IR emission operation {operation.name!r}.")
 
 
 def _emit_local(
     operation: PhysicalOperation, atom_ids: tuple[int, ...], device: Device
-) -> Rotation | Reset:
+) -> Rotation | LocalU | Reset:
     if device.local is None:
         raise ValueError("Addressed operation emission requires local control.")
     if operation.name == "reset":
@@ -84,6 +112,14 @@ def _emit_local(
             device.local.channel,
             atom_ids,
             duration_us=device.local.reset_us,
+            source_ids=(operation.id,),
+        )
+    if operation.name == "u":
+        return LocalU(
+            device.local.channel,
+            atom_ids,
+            *operation.params,
+            duration_us=device.local.rotation_us,
             source_ids=(operation.id,),
         )
     return Rotation(

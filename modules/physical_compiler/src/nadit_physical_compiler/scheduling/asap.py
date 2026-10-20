@@ -39,12 +39,12 @@ class ReadyScheduler:
                 (
                     index
                     for index in ordered
-                    if dag.nodes[index].name in ("rx", "ry", "rz")
+                    if dag.nodes[index].name in ("rx", "ry", "rz", "u", "global_ry")
                 ),
                 first,
             )
         name = dag.nodes[first].name
-        if name not in ("rx", "ry", "rz", "reset", "cz"):
+        if name not in ("rx", "ry", "rz", "u", "reset", "cz"):
             return GateLayer((ordered[0],))
         capacity = self.max_cz_gates if name == "cz" else len(ordered)
         selected: list[int] = []

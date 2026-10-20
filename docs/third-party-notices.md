@@ -2,7 +2,7 @@
 
 ## MQT QMAP
 
-The candidate-generation, scoring, and IDS algorithms in
+The candidate-generation, scoring, IDS, and A* algorithms in
 `modules/physical_compiler/src/nadit_physical_compiler/placement/` are adapted
 from MQT QMAP commit `cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d`:
 
@@ -10,6 +10,14 @@ from MQT QMAP commit `cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d`:
 - `include/na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp`
 - `src/na/zoned/Architecture.cpp`
 - `include/na/zoned/Architecture.hpp`
+
+The source static scheduler and original reuse policy in the corresponding
+`scheduling/` and `reuse/` packages adapt:
+
+- `src/na/zoned/scheduler/ASAPScheduler.cpp`
+- `include/na/zoned/scheduler/ASAPScheduler.hpp`
+- `src/na/zoned/reuse_analyzer/VertexMatchingReuseAnalyzer.cpp`
+- `include/na/zoned/reuse_analyzer/VertexMatchingReuseAnalyzer.hpp`
 
 The staged strict and relaxed routing and atom-event construction in
 `modules/physical_compiler/src/nadit_physical_compiler/transport/` also adapt
@@ -21,8 +29,11 @@ the same revision's:
 - `include/na/zoned/code_generator/CodeGenerator.hpp`
 
 The standalone comparison in `modules/physical_compiler/reference/` extracts
-and executes the original layout, router, and rearrangement methods with
-data-only C++ adapters and observation wrappers.
+and executes the original scheduling, reuse, layout, router, and complete
+code-generation methods with data-only C++ adapters and observation wrappers.
+The paper timing profile and benchmark settings follow
+`eval/na/zoned/eval_ids_relaxed_routing.py` and
+`eval/na/zoned/square_architecture.json`.
 
 Source: <https://github.com/munich-quantum-toolkit/qmap>
 
