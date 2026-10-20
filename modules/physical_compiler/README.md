@@ -18,10 +18,12 @@ adds a fixed catalogue, capacity-limited CZ layers, sequential transfers, and
 one shared pulse per CZ layer. Direct replay reconstructs the exit layout.
 Strict parallel transport uses shared geometry rules, a conflict map, and
 current occupancy to construct common-load movement batches.
+Optional matching reuse retains compatible atoms at gate sites across known
+CZ layers. Lookahead stops at unresolved feedback without sampling.
 
 ## Next step
 
-Next, add following-layer reuse, IDS placement, and staged/relaxed routing.
+Next, add IDS placement using transport cost, then staged/relaxed routing.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -55,7 +57,8 @@ physical_compiler/
 │   ├── contracts.py    # Gate-layer, placement, and Atom IR fragment handoffs
 │   ├── compiler.py     # DAG progress, planned time, and case-specific results
 │   ├── capabilities.py # CZ, local control, and readout capabilities
-│   ├── scheduling/    # Ready-layer selection
+│   ├── scheduling/    # Ready-layer selection and pure next-CZ preview
+│   ├── reuse/         # Maximum matching of shared CZ endpoints
 │   ├── placement/     # Fixed-pair and readout placement
 │   ├── transport/     # Constructed AOD transfers and movement
 │   ├── emission/      # Bind gates to existing Atom IR actions
@@ -150,7 +153,12 @@ DAG, Atom IR, and atom state types:
 Each implementation owns its options. Transport returns existing AtomSteps;
 emission binds action parameters and durations. These interfaces do not
 own compilation state. The initial implementations live in `scheduling/`,
-`placement/`, `transport/`, and `emission/`.
+`reuse/`, `placement/`, `transport/`, and `emission/`.
+
+`CompilationStrategy.lookahead_enabled` requests a next-CZ preview;
+`lower(..., following=None)` receives that optional GateLayer. The compiler
+owns the preview's progress inputs. Scheduler selection is deterministic
+and does not mutate scheduler state.
 
 ## One-pair compilation
 
@@ -289,8 +297,67 @@ and the complete Atom IR. Integration tests enumerate actual interactions
 from illuminated atom positions, compare them with intended source gates,
 and check dependency timing and exit-state replay.
 
-Reuse, IDS, and transport optimization follow the sequence in
+IDS and further transport optimization follow the sequence in
 [ADR 0010](../../docs/decisions/0010-multipair-compilation.md).
+
+## Following-layer preview and matching reuse
+
+Configure the existing stage composition with a reuse analyzer:
+
+```python
+from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
+from nadit_physical_compiler.transport import StrictTransport
+
+strategy = SearchSmarterStrategy(
+    ReadyScheduler(max_cz_gates=catalog.capacity),
+    MultiPairPlacer("transport", catalog),
+    StrictTransport("transport"),
+    WholeLayerEmitter(catalog.coverage),
+    reuse_analyzer=MatchingReuseAnalyzer(),
+)
+```
+
+Without `reuse_analyzer`, the multi-pair storage-return baseline remains
+available. With it, the compiler previews the next selected CZ layer using
+a copied ready frontier and sparse dependency-count changes. It can pass
+resolved barriers, phase metadata, false conditions, and addressed rotations.
+It stops at a selected measurement, reset, unsupported operation, or any
+frontier condition whose result is not available at the current planned time.
+Preview does not sample, commit operations, or change the program phase.
+
+`MatchingReuseAnalyzer.analyze(dag, current, following)` returns physical
+qubit IDs. It maximizes matching cardinality between the two layers' gates,
+retaining their shared endpoints. Identical unordered pairs retain both
+atoms. For `(a,b), (c,d)` followed by `(a,c), (b,d)`, two compatible anchors
+remain; the other two atoms return to storage before joining new partners.
+
+The placer reserves anchored pairs first. Its exit layout keeps the selected
+reuse atoms at execution sites; the next placement reads their actual holders.
+If a local operation relocates an anchor, placement uses the new position.
+The existing strict transporter constructs all transfers around stationary
+atoms. The final CZ layer returns its participants to storage; individual
+storage assignments may differ from the entry layout.
+
+```text
+uv run --locked python examples/compile_multipair.py --transport strict --bit 0 --reuse
+uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse
+```
+
+With the checked-in device and pair capacity 2:
+
+| Bit | Reuse | Atom loads | LOAD batches | Transport time (us) |
+| --- | --- | ---: | ---: | ---: |
+| 0 | Off | 17 | 7 | 1340.949 |
+| 0 | On | 13 | 8 | 1472.926 |
+| 1 | Off | 25 | 9 | 1621.157 |
+| 1 | On | 21 | 12 | 2013.171 |
+
+Atom loads sum the atoms in every LOAD, including readout. Retained anchors
+reduce this count but can split strict batches and change later storage
+assignments. Maximum matching optimizes retained atom count; transport-aware
+placement is needed to optimize duration. Both cases preserve source-operation
+decisions, stable results, pulse interactions, and exit-state replay.
+See [ADR 0012](../../docs/decisions/0012-lookahead-and-matching-reuse.md).
 
 ## Shared rules and strict parallel transport
 
@@ -656,6 +723,8 @@ quantum-state simulation.
   multi-pair baseline, shared transport rules, reuse, and search sequence.
 - [ADR 0011](../../docs/decisions/0011-strict-parallel-transport.md):
   strict batch admission, occupancy closure, and direct parallel actions.
+- [ADR 0012](../../docs/decisions/0012-lookahead-and-matching-reuse.md):
+  pure next-CZ preview, feedback boundaries, and matching-based gate anchors.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

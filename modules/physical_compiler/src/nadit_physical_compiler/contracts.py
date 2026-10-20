@@ -51,7 +51,10 @@ class AtomFragment:
 
 
 class Scheduler(Protocol):
-    """Select a gate layer from the compiler's resolved ready operations."""
+    """Select a layer deterministically without mutating scheduler state.
+
+    Compilation and lookahead share this selector on different ready frontiers.
+    """
 
     def select(self, dag: PhysicalDAG, ready: tuple[int, ...]) -> GateLayer:
         """Choose the next layer.
@@ -104,7 +107,8 @@ class Placer(Protocol):
             layer: Layer to place.
             layout: Current atom arrangement and physical-qubit binding.
             device: Device geometry, timing, and capabilities.
-            reuse_qubits: Physical-qubit IDs proposed for reuse.
+            reuse_qubits: Current participants proposed to remain at their
+                execution sites in the exit layout for the following CZ layer.
 
         Returns:
             Selected execution and exit layouts.

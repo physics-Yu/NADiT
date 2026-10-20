@@ -8,20 +8,32 @@ from .contracts import AtomFragment, GateLayer
 from .device import Device
 from .execution import FakeBackend, MeasurementBackend
 from .physical_ir import PhysicalDAG, ResultRef
+from .scheduling.lookahead import next_cz_layer
 from .state import AtomLayout, validate_layout
 
 
 class CompilationStrategy(Protocol):
     """Select ready operations and construct their atom-action fragments."""
 
+    @property
+    def lookahead_enabled(self) -> bool:
+        """Whether lowering uses a preview of the following CZ layer."""
+        ...
+
     def select(self, dag: PhysicalDAG, ready: tuple[int, ...]) -> GateLayer:
-        """Select native operations from resolved, time-ready node IDs."""
+        """Select resolved, time-ready nodes without changing scheduler state."""
         ...
 
     def lower(
-        self, dag: PhysicalDAG, layer: GateLayer, layout: AtomLayout, device: Device
+        self,
+        dag: PhysicalDAG,
+        layer: GateLayer,
+        layout: AtomLayout,
+        device: Device,
+        *,
+        following: GateLayer | None = None,
     ) -> AtomFragment:
-        """Return constructed actions, their exit layout, and completed node IDs."""
+        """Construct a fragment using an optional known following CZ layer."""
         ...
 
 
@@ -144,7 +156,10 @@ class _Compilation:
                 self._wait_until(min(pending_times))
                 continue
             layer = self.strategy.select(self.dag, ready)
-            fragment = self.strategy.lower(self.dag, layer, self.layout, self.device)
+            following = self._following(layer)
+            fragment = self.strategy.lower(
+                self.dag, layer, self.layout, self.device, following=following
+            )
             if not fragment.completed_operation_ids:
                 raise ValueError(
                     "A selected layer must complete at least one operation."
@@ -157,6 +172,27 @@ class _Compilation:
             tuple(self.operations[index] for index in range(len(self.dag.nodes))),
             tuple(self.results.values()),
             tuple(self.layers),
+        )
+
+    def _following(self, layer: GateLayer) -> GateLayer | None:
+        if (
+            not self.strategy.lookahead_enabled
+            or not layer.operation_ids
+            or self.dag.nodes[layer.operation_ids[0]].name != "cz"
+        ):
+            return None
+        return next_cz_layer(
+            self.dag,
+            layer,
+            ready=self.ready,
+            remaining=self.remaining,
+            successors=self.successors,
+            results={
+                reference: record.value
+                for reference, record in self.results.items()
+                if record.available_at_us <= self.time_us
+            },
+            scheduler=self.strategy,
         )
 
     def _time_ready(self) -> tuple[tuple[int, ...], list[float]]:

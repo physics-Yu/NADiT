@@ -1,4 +1,4 @@
-"""Deterministic catalogue placement with storage returns after each CZ layer."""
+"""Catalogue placement with retained gate anchors and spectator evacuation."""
 
 from dataclasses import dataclass
 from math import hypot
@@ -34,22 +34,23 @@ class MultiPairPlacer:
         *,
         reuse_qubits: tuple[int, ...] = (),
     ) -> PlacementPlan:
-        """Choose one shared-CZ arrangement and its storage return layout.
+        """Choose a shared-CZ arrangement and retain selected atoms for reuse.
 
         Args:
             dag: Native physical operations.
             layer: Disjoint, homogeneous operations selected by the scheduler.
             layout: Current atom positions, holders, and qubit bindings.
             device: Fixed sites, transport workspace, and operation capabilities.
-            reuse_qubits: Interface hint; this baseline returns every CZ
-                participant to storage and does not retain gate-site assignments.
+            reuse_qubits: Current participating qubits to retain at their
+                execution gate sites for a known following CZ layer.
 
         Returns:
             Execution and exit layouts preserving atom order and qubit bindings.
             Local operations and singleton readout use the existing pair helper.
 
         Raises:
-            ValueError: If pair capacity or free storage is insufficient.
+            ValueError: If pair capacity or free storage is insufficient, or
+                current gate-site anchors cannot satisfy the selected layer.
         """
         if not layer.operation_ids or dag.nodes[layer.operation_ids[0]].name != "cz":
             return PairPlacer(self.aod_id).place(
@@ -57,17 +58,21 @@ class MultiPairPlacer:
             )
         if len(layer.operation_ids) > self.catalog.capacity:
             raise ValueError("CZ layer exceeds the gate-pair catalogue capacity.")
-        participants = {
-            layout.qubit_to_atom[q]
-            for operation_id in layer.operation_ids
-            for q in dag.nodes[operation_id].qubits
-        }
-        exit_layout = self._storage_exit(layout, device, participants)
-        execution = self._execution_layout(dag, layer, layout, exit_layout, device)
+        assignments = self._gate_assignments(dag, layer, layout, device)
+        retained_ids = {
+            layout.qubit_to_atom[q] for q in reuse_qubits
+        } & assignments.keys()
+        retained = {atom_id: assignments[atom_id] for atom_id in retained_ids}
+        exit_layout = self._storage_exit(layout, device, set(assignments), retained)
+        execution = _replace_atoms(exit_layout, assignments)
         return PlacementPlan(execution, exit_layout)
 
     def _storage_exit(
-        self, layout: AtomLayout, device: Device, participants: set[int]
+        self,
+        layout: AtomLayout,
+        device: Device,
+        participants: set[int],
+        retained: dict[int, AtomState],
     ) -> AtomLayout:
         zone = next(
             (item for item in device.zones if item.id == self.storage_zone_id), None
@@ -86,7 +91,8 @@ class MultiPairPlacer:
         relocations = [
             atom
             for atom in layout.atoms
-            if (
+            if atom.id not in retained
+            and (
                 atom.id in participants or self.catalog.coverage.contains(atom.position)
             )
             and not (
@@ -94,45 +100,74 @@ class MultiPairPlacer:
             )
         ]
         moving_ids = {atom.id for atom in relocations}
-        occupied = {atom.position for atom in layout.atoms if atom.id not in moving_ids}
-        replacements: dict[int, AtomState] = {}
+        occupied = {
+            atom.position
+            for atom in layout.atoms
+            if atom.id not in moving_ids and atom.id not in retained
+        }
+        initially_occupied = {atom.position for atom in layout.atoms}
+        replacements = dict(retained)
+        if retained:
+            relocations.sort(key=lambda atom: atom.id in participants)
         for atom in relocations:
             free = [site for site in sites if site.position not in occupied]
             if not free:
                 raise ValueError("Insufficient free storage outside CZ pulse coverage.")
             selected = min(
                 free,
-                key=lambda site: (_distance(atom.position, site.position), site.id),
+                key=lambda site: (
+                    atom.id not in participants and site.position in initially_occupied,
+                    _distance(atom.position, site.position),
+                    site.id,
+                ),
             )
             replacements[atom.id] = _at_site(atom.id, selected)
             occupied.add(selected.position)
         return _replace_atoms(layout, replacements) if replacements else layout
 
-    def _execution_layout(
+    def _gate_assignments(
         self,
         dag: PhysicalDAG,
         layer: GateLayer,
         entry_layout: AtomLayout,
-        exit_layout: AtomLayout,
         device: Device,
-    ) -> AtomLayout:
+    ) -> dict[int, AtomState]:
         workspace = device.aod(self.aod_id).workspace
-        available = [
-            (index, pair)
+        available = {
+            index: pair
             for index, pair in enumerate(self.catalog.pairs)
             if all(workspace.contains(site.position) for site in pair)
-        ]
+        }
         if len(layer.operation_ids) > len(available):
             raise ValueError(
                 "Reachable gate-pair capacity is smaller than the CZ layer."
             )
-        replacements: dict[int, AtomState] = {}
+        locations = {
+            site.id: (index, side)
+            for index, pair in enumerate(self.catalog.pairs)
+            for side, site in enumerate(pair)
+        }
+        assignments: dict[int, AtomState] = {}
+        unanchored: list[tuple[AtomState, AtomState]] = []
         for operation_id in layer.operation_ids:
             operation = dag.nodes[operation_id]
             first, second = (
                 entry_layout.atom(entry_layout.qubit_to_atom[q])
                 for q in operation.qubits
             )
+            anchor = _anchor_pair(first, second, locations, self.catalog.pairs)
+            if anchor is None:
+                unanchored.append((first, second))
+                continue
+            index, first_site, second_site = anchor
+            if index not in available:
+                raise ValueError(
+                    "Gate anchors require the same or an unreachable pair."
+                )
+            del available[index]
+            assignments[first.id] = _at_site(first.id, first_site)
+            assignments[second.id] = _at_site(second.id, second_site)
+        for first, second in unanchored:
             candidates = (
                 (
                     _distance(first.position, a.position)
@@ -142,16 +177,43 @@ class MultiPairPlacer:
                     a,
                     b,
                 )
-                for index, pair in available
+                for index, pair in available.items()
                 for orientation, (a, b) in enumerate((pair, pair[::-1]))
             )
             _, selected_index, _, first_site, second_site = min(
                 candidates, key=lambda item: item[:3]
             )
-            replacements[first.id] = _at_site(first.id, first_site)
-            replacements[second.id] = _at_site(second.id, second_site)
-            available = [item for item in available if item[0] != selected_index]
-        return _replace_atoms(exit_layout, replacements)
+            assignments[first.id] = _at_site(first.id, first_site)
+            assignments[second.id] = _at_site(second.id, second_site)
+            del available[selected_index]
+        return assignments
+
+
+def _anchor_pair(
+    first: AtomState,
+    second: AtomState,
+    locations: dict[str, tuple[int, int]],
+    pairs: tuple[tuple[SLMSite, SLMSite], ...],
+) -> tuple[int, SLMSite, SLMSite] | None:
+    first_anchor = (
+        locations.get(first.holder.site_id)
+        if isinstance(first.holder, SLMHolder)
+        else None
+    )
+    second_anchor = (
+        locations.get(second.holder.site_id)
+        if isinstance(second.holder, SLMHolder)
+        else None
+    )
+    if first_anchor is not None:
+        index, side = first_anchor
+        if second_anchor is not None and second_anchor[0] != index:
+            raise ValueError("A CZ gate has anchors in different catalogue pairs.")
+        return index, pairs[index][side], pairs[index][1 - side]
+    if second_anchor is not None:
+        index, side = second_anchor
+        return index, pairs[index][1 - side], pairs[index][side]
+    return None
 
 
 def _distance(first: Position, second: Position) -> float:

@@ -19,6 +19,14 @@
 
 ### Added
 
+- Pure next-CZ preview using compiler progress and available results, stopping
+  at unresolved feedback without sampling measurements.
+- Maximum matching of shared CZ endpoints and reuse-aware placement that
+  retains gate-site anchors across partner changes and addressed rotations.
+- Optional `reuse_analyzer` strategy composition and `--reuse` study switch,
+  with feedback, pulse geometry, strict transport, and terminal replay tests.
+- Separate atom-load and transport-time metrics: reuse reduces loaded atoms
+  in the current study but can increase strict batch count and duration.
 - Shared strict movement rules, a pairwise conflict map, batch row/column
   capacity checks, stable endpoint frames, and a distance-based batch cost.
 - Strict parallel transport with fixed-point source/target occupancy closure

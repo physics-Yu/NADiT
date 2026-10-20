@@ -21,6 +21,7 @@ from nadit_physical_compiler import (
 )
 from nadit_physical_compiler.emission import WholeLayerEmitter
 from nadit_physical_compiler.placement import GatePairCatalog, MultiPairPlacer
+from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
 from nadit_physical_compiler.transport import SequentialTransport, StrictTransport
@@ -34,6 +35,11 @@ def main() -> None:
     parser.add_argument("--capacity", type=int, choices=(1, 2), default=2)
     parser.add_argument(
         "--transport", choices=("sequential", "strict"), default="sequential"
+    )
+    parser.add_argument(
+        "--reuse",
+        action="store_true",
+        help="Retain matched atoms for the next CZ layer.",
     )
     args = parser.parse_args()
     module = Path(__file__).resolve().parents[1]
@@ -72,11 +78,12 @@ def main() -> None:
             MultiPairPlacer("transport", catalog),
             transporter,
             WholeLayerEmitter(catalog.coverage),
+            reuse_analyzer=MatchingReuseAnalyzer() if args.reuse else None,
         ),
         entry_state=entry,
         measurement_backend=FakeBackend(args.seed, overrides),
     )
-    assert replay(result.program, entry, device) == result.exit_state == entry
+    assert replay(result.program, entry, device) == result.exit_state
     actions = [action for step in result.program.steps for action in step.actions]
     print(
         json.dumps(
@@ -84,6 +91,7 @@ def main() -> None:
                 "native_nodes": len(dag.nodes),
                 "pair_capacity": catalog.capacity,
                 "transport": args.transport,
+                "reuse": args.reuse,
                 "cz_gates_per_pulse": [
                     len(action.source_ids)
                     for action in actions
@@ -111,6 +119,11 @@ def main() -> None:
                     for action in actions
                     if isinstance(action, Load | Move | Store)
                 ),
+                "atom_load_count": sum(
+                    len(action.bindings)
+                    for action in actions
+                    if isinstance(action, Load)
+                ),
                 "program_duration_us": result.program.duration_us,
                 "measurements": [
                     {
@@ -126,6 +139,11 @@ def main() -> None:
                     if item.status == "skipped"
                 ],
                 "replay_matches_exit_state": True,
+                "exit_slm_sites": {
+                    str(atom.id): atom.holder.site_id
+                    for atom in result.exit_state.atoms
+                    if isinstance(atom.holder, SLMHolder)
+                },
             },
             indent=2,
         )

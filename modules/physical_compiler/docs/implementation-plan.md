@@ -4,7 +4,10 @@ Date: 2026-10-20.
 Status: Steps 1 and 3, retained-readout replay and operation capabilities from
 step 2, and the multi-pair correctness baseline in step 4 are implemented.
 Step 4's shared rules and direct strict batching are also implemented.
-The next increment is following-layer preview and matching-based reuse.
+Following-layer preview and matching-based reuse are also implemented,
+specified in [ADR 0012](../../../docs/decisions/0012-lookahead-and-matching-reuse.md).
+This connects a pure next-CZ preview, maximum matching, and retained gate-site
+anchors to the existing strict transporter.
 
 ## Compilation contract
 
@@ -57,7 +60,8 @@ their implementation step begins.
 | `src/nadit_physical_compiler/contracts.py` | Gate-layer, placement, and Atom IR fragment handoffs |
 | `src/nadit_physical_compiler/compiler.py` | Compilation context, ready set, measurement records, strategy contract and result |
 | `src/nadit_physical_compiler/strategies/search_smarter.py` | First strategy: scheduling, reuse, placement, routing, action generation |
-| `src/nadit_physical_compiler/scheduling/` | Layer selection and reuse analysis |
+| `src/nadit_physical_compiler/scheduling/` | Layer selection and pure next-CZ preview |
+| `src/nadit_physical_compiler/reuse/` | Matching-based selection of retained physical qubits |
 | `src/nadit_physical_compiler/placement/` | Candidate locations, cost evaluation, and IDS |
 | `src/nadit_physical_compiler/transport/` | Shared compatibility/cost rules, batching, and legal transport construction |
 | `src/nadit_physical_compiler/emission/` | Lightweight Atom IR parameter and timing binding |
@@ -171,12 +175,13 @@ Implement this stage in five increments, as defined in
 4. IDS placement search.
 5. Relaxed routing and its staged action construction.
 
-Items 1 and 2 are implemented. Integration tests cover both forced feedback
+Items 1, 2, and 3 are implemented. Integration tests cover both forced feedback
 branches, actual illuminated interaction pairs, capacity splitting, spectator
 clearing, and replay. Strict transport constructs simultaneous LOAD/MOVE/STORE
 batches; capacity, source ghosts, and target occupancy can split a batch.
 Staged pickup and offsets are subsequent constructors. Gate participants return
-to storage after CZ; reuse is added in item 3, which is next.
+to storage after CZ unless selected for following-layer reuse. Matching keeps
+compatible gate-site anchors; preview stops at unknown or unavailable feedback.
 
 Complete the flexible zoned profile using fixed candidate interaction pairs:
 gate layering, reuse analysis, routing-aware placement with IDS, transport
@@ -244,5 +249,6 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is following-layer preview and matching-based reuse.
-Placement search then uses the shared transport compatibility and cost.
+The next work item is IDS placement using the shared transport compatibility
+and cost. Matching reuse already reduces atom transfers; placement search
+must account for its effect on strict batch count and planned duration.
