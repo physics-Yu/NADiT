@@ -16,6 +16,10 @@ circuit once, executes a seeded case twice, changes reporting latency, and
 enumerates every assignment to its nine measurement results. It prints a JSON
 summary.
 
+It explicitly selects the `h`, `x`, `cx`, `ccx`, `p` gate basis to preserve
+the source-level operation-count oracle below. The frontend's default CZ/
+rotation basis is tested separately, including cross-basis result identity.
+
 ## Input
 
 The [fixture](../tests/fixtures/logical.qasm3) is a byte-for-byte copy of the

@@ -14,6 +14,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Part | State |
 | --- | --- |
 | OpenQASM 2.0 / 3.0 frontend and Physical DAG | Implemented |
+| Configurable native translation before PhysicalDAG | Implemented |
+| Scheduling, placement, and transport handoff contracts | Implemented |
 | Measurement-result references and single-bit conditions | Implemented |
 | Seeded fake measurement backend | Implemented |
 | DAG feedback reference tester (`execute`) | Implemented |
@@ -30,6 +32,11 @@ covers all 512 assignments to the supplied circuit's nine measurement results.
 ## Physical compilation
 
 ```text
+QASM + GateSet
+    -> parse and expand source gates/conditions
+    -> native translation
+    -> PhysicalDAG
+
 Physical DAG + Device + strategy configuration + entry state
     -> compile one case using fake measurement results
     -> Atom IR + timeline + exit state
@@ -41,6 +48,11 @@ The strategy selects compatible operations and performs gate grouping,
 placement, transport planning, and action generation.
 Initial mapping and placement are optimization decisions; an entry state
 supplies existing assignments and positions.
+
+The frontend completes native gate translation before building PhysicalDAG.
+GateSet selects the native basis without supplying zone or AOD geometry.
+Source measurement identities survive translation even when DAG node IDs
+change. See [ADR 0008](docs/decisions/0008-native-frontend-and-module-contracts.md).
 
 A predecessor releases its successors after it has been compiled or skipped.
 When compiling a measurement, the compiler obtains one result from the fake
@@ -107,7 +119,8 @@ will consume the generated action program in a later step.
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
 2. Implement Atom IR structures and text output (complete), then action replay.
-3. Connect native gate lowering and case compilation for a one-pair circuit.
+3. Implement native frontend translation and module handoffs (complete), then
+   connect case compilation for a one-pair circuit.
 4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
 6. Package reusable components and connect logical QEC compilation.

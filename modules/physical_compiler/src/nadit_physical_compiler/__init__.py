@@ -13,6 +13,7 @@ from .atom_ir import (
     Store,
     Wait,
 )
+from .contracts import AtomFragment, GateLayer, PlacementPlan
 from .device import (
     AOD,
     Device,
@@ -33,6 +34,7 @@ from .execution import (
     OperationEvent,
     execute,
 )
+from .frontend import DEFAULT_GATE_SET, GateSet
 from .motion import ConstraintResult, check_load, check_move, check_store
 from .physical_ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
 from .qasm import load_qasm, loads_qasm
@@ -53,6 +55,7 @@ __all__ = [
     "AODHolder",
     "AODLine",
     "AtomAction",
+    "AtomFragment",
     "AtomLayout",
     "AtomProgram",
     "AtomState",
@@ -60,9 +63,12 @@ __all__ = [
     "CZPulse",
     "Condition",
     "ConstraintResult",
+    "DEFAULT_GATE_SET",
     "Device",
     "ExecutionTrace",
     "FakeBackend",
+    "GateLayer",
+    "GateSet",
     "Load",
     "Measure",
     "MeasurementBackend",
@@ -71,6 +77,7 @@ __all__ = [
     "OperationEvent",
     "PhysicalDAG",
     "PhysicalOperation",
+    "PlacementPlan",
     "Position",
     "Region",
     "Register",

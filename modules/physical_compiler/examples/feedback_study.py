@@ -6,7 +6,7 @@ from hashlib import sha256
 from itertools import product
 from pathlib import Path
 
-from nadit_physical_compiler import FakeBackend, ResultRef, execute, load_qasm
+from nadit_physical_compiler import FakeBackend, GateSet, execute, load_qasm
 
 
 def main() -> None:
@@ -16,8 +16,11 @@ def main() -> None:
     parser.add_argument("--measurement-latency", type=float, default=2.0)
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1] / "tests/fixtures/logical.qasm3"
-    dag = load_qasm(source)
-    measurements = [node for node in dag.nodes if node.name == "measure"]
+    gate_set = GateSet(("h", "x", "cx", "ccx", "p"))
+    dag = load_qasm(source, gate_set=gate_set)
+    measurements = {
+        result: node for node in dag.nodes if (result := node.result) is not None
+    }
     conditions = [node for node in dag.nodes if node.condition is not None]
     trace = execute(
         dag, FakeBackend(args.seed), measurement_latency=args.measurement_latency
@@ -43,10 +46,7 @@ def main() -> None:
     selected_paths: set[tuple[int, ...]] = set()
     branch_coverage = {node.id: set[str]() for node in conditions}
     for bits in product((0, 1), repeat=len(measurements)):
-        overrides = {
-            ResultRef(node.id): bit
-            for node, bit in zip(measurements, bits, strict=True)
-        }
+        overrides = dict(zip(measurements, bits, strict=True))
         case = execute(
             dag,
             FakeBackend(overrides=overrides),
@@ -85,6 +85,7 @@ def main() -> None:
             "conditional_operations": len(conditions),
         },
         "configuration": {
+            "gate_set": gate_set.names,
             "seed": args.seed,
             "measurement_latency": args.measurement_latency,
             "operation_duration": 1.0,
@@ -93,7 +94,7 @@ def main() -> None:
             "results": [
                 {
                     "measurement_id": event.result.measurement_id,
-                    "clbit": dag.nodes[event.result.measurement_id].clbits[0],
+                    "clbit": measurements[event.result].clbits[0],
                     "value": event.value,
                     "available_at": event.available_at,
                 }

@@ -4,6 +4,11 @@
 
 ### Changed
 
+- QASM import now translates to a configurable native GateSet before building
+  PhysicalDAG; the default basis is RX/RY/RZ/CZ.
+- Measurement references use stable pre-translation source identities,
+  independently of final native node IDs. Native children retain their source
+  IDs and conditions, including conditional decomposition phases.
 - Renamed the physical circuit module to `physical_ir.py` and its tests to
   `test_physical_ir.py`; package-level circuit exports remain available.
 - Positioned full transport checks as test/debug reference tools, with legal
@@ -14,6 +19,10 @@
 
 ### Added
 
+- Separate parsing, native translation, and DAG adaptation modules, using the
+  existing Qiskit dependency and a per-import gate-translation cache.
+- Gate-layer, placement, and Atom IR fragment records with small scheduling,
+  reuse, placement, and transport protocols.
 - Immutable Atom IR actions, parallel steps, program timing, and Stim-style
   text output, with source-operation links and stable measurement references.
 - A concrete atom program example covering transfer, movement, pulse,

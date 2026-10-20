@@ -23,7 +23,7 @@ class FakeBackend:
     """Generate reproducible test bits independently of execution order.
 
     Args:
-        seed: Seed combined with each measurement's operation ID.
+        seed: Seed combined with each measurement's stable source identity.
         overrides: Explicit bits for selected measurement occurrences.
 
     This backend does not simulate quantum states or measurement probabilities.
@@ -186,11 +186,12 @@ class _Execution:
                 self.start(successor, time)
 
     def report(self, operation_id: int, time: float) -> None:
-        result = ResultRef(operation_id)
+        result = self.dag.nodes[operation_id].result
+        assert result is not None
         value = self.backend.measure(result)
         if value not in (0, 1):
             raise ValueError(
-                f"Measurement {operation_id} returned a non-bit: {value!r}."
+                f"Measurement {result.measurement_id} returned a non-bit: {value!r}."
             )
         self.results[result] = value
         self.measurements.append(MeasurementEvent(result, value, time))

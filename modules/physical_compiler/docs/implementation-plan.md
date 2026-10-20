@@ -3,13 +3,17 @@
 Date: 2026-10-20.
 Status: Step 1 and the Atom IR structures/text output in step 2 are implemented.
 The QASM frontend, Physical DAG, fake results, and feedback reference tester
-are also implemented.
+are also implemented. Step 3's native frontend and module handoffs are complete.
 
 ## Compilation contract
 
 ```text
+QASM + GateSet
+    -> parsed circuit
+    -> native translation
+    -> PhysicalDAG
+
 Physical DAG + Device + strategy + entry state + measurement provider
-    -> native operations
     -> gate layers
     -> reuse analysis
     -> placement
@@ -47,18 +51,23 @@ their implementation step begins.
 | `src/nadit_physical_compiler/atom_ir.py` | Atom actions, parallel steps, source links, Stim-style text output |
 | `src/nadit_physical_compiler/validation.py` | Explicit test/debug validation of action legality and source coverage |
 | `src/nadit_physical_compiler/replay.py` | Action state transitions and timing |
-| `src/nadit_physical_compiler/lowering.py` | Native gate decomposition with source operation and condition provenance |
+| `src/nadit_physical_compiler/frontend/` | Source parsing/expansion, native translation, and final DAG construction |
+| `src/nadit_physical_compiler/contracts.py` | Gate-layer, placement, and Atom IR fragment handoffs |
 | `src/nadit_physical_compiler/compiler.py` | Compilation context, ready set, measurement records, strategy contract and result |
 | `src/nadit_physical_compiler/strategies/search_smarter.py` | First strategy: scheduling, reuse, placement, routing, action generation |
+| `src/nadit_physical_compiler/scheduling/` | Layer selection and reuse analysis |
+| `src/nadit_physical_compiler/placement/` | Candidate locations, cost evaluation, and IDS |
+| `src/nadit_physical_compiler/transport/` | Shared compatibility/cost rules, batching, and legal transport construction |
+| `src/nadit_physical_compiler/emission/` | Lightweight Atom IR parameter and timing binding |
 | `configs/zoned_flexible.json`, `configs/zoned_rigid_16.json` | Flexible reference and rigid-device study configurations |
 | `tests/fixtures/devices/zoned_small.json` | Small geometry shared by device and compilation tests |
 | `examples/compile_study.py` | QASM-to-Atom-IR study and compilation metrics |
 | `examples/atom_ir_example.py` | Manually constructed atom program and text output |
 | `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
-| `tests/test_atom_ir.py`, `tests/test_lowering.py`, `tests/test_compiler.py` | Action, native-gate, feedback and pipeline checks |
+| `tests/test_atom_ir.py`, `tests/test_native_frontend.py`, `tests/test_contracts.py`, `tests/test_compiler.py` | Action, frontend, handoff, feedback, and pipeline checks |
 
-Keep stage helpers together initially. Split a strategy by stage when its
-implementation requires separate files.
+Stage algorithms live in their respective packages; the strategy composes
+them. Create each package when its implementation begins.
 
 ## 1. Device, state, and motion capabilities
 
@@ -112,12 +121,17 @@ Replay acceptance:
 - Measure an atom while it remains in AOD, without inserting STORE.
 - Reject unintended illuminated pairings and incompatible actions in a step.
 
-## 3. Native gates and one-pair compilation
+## 3. Native frontend, module handoffs, and one-pair compilation
 
-Implement `lowering.py`, `compiler.py`, and the first path through
-`strategies/search_smarter.py`. Lower supported circuit gates to CZ and
-addressed rotations while retaining source IDs, conditions, and global phase.
-Use the existing parser and fake result provider.
+Implemented: frontend native translation before PhysicalDAG construction,
+with a configurable GateSet defaulting to CZ and rotations. Source measurement
+IDs are separate from final node IDs, and conditioned phase contributions keep
+their guards. `contracts.py` defines gate-layer, placement, and AtomStep
+fragment records, with scheduler, reuse, placement, and transport protocols.
+
+Remaining: implement `compiler.py` and compose the scheduling, placement, transport,
+and emission modules through `strategies/search_smarter.py`. Each module owns
+its options. Reuse existing AtomSteps for generated action fragments.
 
 Complete a small one-pair circuit through placement, transport, CZ, readout,
 and a conditional single-qubit operation. This establishes the full input and
@@ -198,4 +212,5 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is action replay and the pulse/readout policies in step 2.
+The next work item is one-pair compilation through the module handoffs.
+Action replay can be developed alongside the compiler modules.

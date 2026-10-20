@@ -3,6 +3,8 @@
 Status: Implemented; accepted on 2026-10-20. `execute` is a feedback reference
 tester. [ADR 0005](0005-case-driven-physical-compilation.md) defines the subsequent
 compiler-owned progress model.
+[ADR 0008](0008-native-frontend-and-module-contracts.md) separates stable source
+measurement identities from final native DAG node IDs.
 
 ## Context
 

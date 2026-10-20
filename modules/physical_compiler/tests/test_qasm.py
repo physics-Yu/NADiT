@@ -1,5 +1,6 @@
-"""Behavioral tests for the static OpenQASM frontend."""
+"""Parser and dependency tests with an explicit target gate basis."""
 
+from functools import partial
 from math import pi
 from pathlib import Path
 
@@ -8,9 +9,18 @@ import pytest
 from nadit_physical_compiler import (
     PhysicalOperation,
     Register,
-    load_qasm,
-    loads_qasm,
 )
+from nadit_physical_compiler import (
+    load_qasm as _load_qasm,
+)
+from nadit_physical_compiler import (
+    loads_qasm as _loads_qasm,
+)
+from nadit_physical_compiler.frontend import GateSet
+
+TARGET_GATES = GateSet(("h", "x", "y", "z", "cx", "cz", "rx", "ry", "rz", "u", "p"))
+load_qasm = partial(_load_qasm, gate_set=TARGET_GATES)
+loads_qasm = partial(_loads_qasm, gate_set=TARGET_GATES)
 
 
 def _source(version: int, body: str, qubits: int = 3, clbits: int = 2) -> str:
@@ -117,7 +127,7 @@ def test_numeric_parameter_expressions_are_evaluated(version: int) -> None:
 
 
 @pytest.mark.parametrize("version", [2, 3])
-def test_nested_parameterized_custom_gates_expand_without_native_lowering(
+def test_nested_parameterized_custom_gates_expand_into_requested_native_gates(
     version: int,
 ) -> None:
     body = (

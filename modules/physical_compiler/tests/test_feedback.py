@@ -1,5 +1,6 @@
 """Tests for measurement-result dependencies and conditional operations."""
 
+from functools import partial
 from math import pi
 from pathlib import Path
 
@@ -10,9 +11,19 @@ from nadit_physical_compiler import (
     FakeBackend,
     ResultRef,
     execute,
-    load_qasm,
-    loads_qasm,
 )
+from nadit_physical_compiler import (
+    load_qasm as _load_qasm,
+)
+from nadit_physical_compiler import (
+    loads_qasm as _loads_qasm,
+)
+from nadit_physical_compiler.frontend import GateSet
+
+# Keep the original feedback study's native basis and operation-count oracle.
+TARGET_GATES = GateSet(("h", "x", "z", "rz", "p", "cx", "ccx"))
+load_qasm = partial(_load_qasm, gate_set=TARGET_GATES)
+loads_qasm = partial(_loads_qasm, gate_set=TARGET_GATES)
 
 
 def _source(body: str, *, qubits: int = 3, clbits: int = 1) -> str:

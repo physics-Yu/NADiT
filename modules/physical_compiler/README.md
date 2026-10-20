@@ -8,13 +8,16 @@ The flexible device foundation provides geometry, atom holders, active AOD
 lines, and loading, movement, and unloading constraint checks.
 `physical_ir.py` defines circuit operations and dependencies. `atom_ir.py`
 provides atom actions, parallel steps, program timing, and text output.
-The frontend uses Qiskit for parsing, custom-gate expansion, and wire
-dependencies. The tester produces an abstract physical-circuit trace.
+The frontend uses Qiskit for parsing, custom-gate expansion, native translation,
+and wire dependencies. Native translation finishes before PhysicalDAG
+construction. Small records and protocols define module handoffs.
+The tester produces an abstract physical-circuit trace.
 Physical-DAG-to-Atom-IR compilation and atom-action replay are not implemented.
 
 ## Next step
 
-Next, implement atom-action replay and Device pulse/readout policies.
+Next, connect one-pair compilation through the module handoffs, with
+atom-action replay and Device pulse/readout policies.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -40,7 +43,12 @@ physical_compiler/
 ├── uv.lock
 ├── src/nadit_physical_compiler/
 │   ├── __init__.py
-│   ├── qasm.py         # QASM parsing and DAG adaptation
+│   ├── qasm.py         # Compatibility exports for frontend loaders
+│   ├── frontend/
+│   │   ├── qasm.py     # Parsing, custom-gate expansion, condition binding
+│   │   ├── native.py   # GateSet translation with source provenance
+│   │   └── dag.py      # Native circuit to PhysicalDAG
+│   ├── contracts.py    # Gate-layer, placement, and Atom IR fragment handoffs
 │   ├── physical_ir.py  # Circuit operations, dependencies, result references
 │   ├── atom_ir.py      # Atom actions, parallel steps, timing, text output
 │   ├── execution.py    # Physical DAG feedback reference tester
@@ -66,10 +74,10 @@ Use Python 3.12 and run these commands from `modules/physical_compiler/`:
 
 ```text
 uv sync --locked
-uv run pytest -q
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy .
+uv run --locked pytest -q
+uv run --locked ruff format --check .
+uv run --locked ruff check .
+uv run --locked mypy .
 ```
 
 Runtime dependencies are Qiskit 2.6.0 and `qiskit-qasm3-import` 0.6.0.
@@ -90,11 +98,9 @@ cx q[0], q[1];
 measure q -> c;
 """)
 
-print([(node.id, node.name, node.qubits, node.clbits) for node in dag.nodes])
-# [(0, 'h', (0,), ()), (1, 'cx', (0, 1), ()),
-#  (2, 'measure', (0,), (0,)), (3, 'measure', (1,), (1,))]
-print(dag.edges)
-# ((0, 1), (1, 2), (1, 3))
+assert {node.name for node in dag.nodes} <= {"rx", "ry", "rz", "cz", "measure"}
+assert [node.result.measurement_id for node in dag.nodes if node.result] == [2, 3]
+print([(node.id, node.source_id, node.name) for node in dag.nodes])
 ```
 
 To parse an existing circuit file, pass its path:
@@ -105,11 +111,33 @@ from nadit_physical_compiler import load_qasm
 dag_from_file = load_qasm("circuit.qasm")
 ```
 
-- `loads_qasm(source: str) -> PhysicalDAG` parses an in-memory circuit.
-- `load_qasm(path) -> PhysicalDAG` parses a circuit file.
+- `loads_qasm(source: str, *, gate_set=DEFAULT_GATE_SET) -> PhysicalDAG`
+  parses and translates an in-memory circuit.
+- `load_qasm(path, *, gate_set=DEFAULT_GATE_SET) -> PhysicalDAG`
+  parses and translates a circuit file.
 
 Both entry points return NADiT records; downstream callers do not need Qiskit
-objects.
+objects. `GateSet` selects the target gate names and defaults to
+`("rx", "ry", "rz", "cz")`. Measurement, reset, barrier, and phase metadata
+keep their semantics. For example, `GateSet(("u", "cz"))` selects another
+native basis. The selected basis must express the input gates.
+
+## Module handoffs
+
+The `contracts` module defines immutable records using the existing Physical
+DAG, Atom IR, and atom state types:
+
+| Record | Fields and meaning |
+| --- | --- |
+| `GateLayer` | `operation_ids`: selected native DAG nodes |
+| `PlacementPlan` | `execution_layout`: layout for the layer; `exit_layout`: desired layout after the layer |
+| `AtomFragment` | `steps`: generated AtomSteps; `exit_layout`: resulting state; `completed_operation_ids`: completed native DAG nodes |
+
+`Scheduler.select`, `ReuseAnalyzer.analyze`, `Placer.place`, and
+`Transporter.construct` are typing protocols for interchangeable helpers.
+Each implementation owns its options. Transport returns existing AtomSteps;
+emission binds action parameters and durations. These interfaces do not
+implement scheduling, placement, routing, or a compiler loop.
 
 ## Flexible device foundation
 
@@ -265,13 +293,17 @@ in the circuit source itself.
 | `quantum_registers`, `classical_registers` | Register records with `name` and flattened `bits` |
 | `global_phase` | Circuit global phase in radians |
 
-Each node has `id`, `name`, `qubits`, `clbits`, `params`, and an optional
-`condition`. Node IDs are consecutive from zero after custom-gate expansion and
-branch flattening. Qubit and classical-bit indices refer to their respective
+Each node has `id`, `source_id`, `name`, `qubits`, `clbits`, `params`, and an
+optional `condition`. Node IDs are consecutive from zero in the final native
+circuit. Source IDs are assigned after custom-gate expansion and branch
+flattening, before native translation; all native children retain that ID.
+Qubit and classical-bit indices refer to their respective
 flattened wire spaces. Parameters are numeric; gate angles use the parser's
 radian convention.
 
-`ResultRef(measurement_id)` identifies one measurement occurrence.
+`ResultRef(measurement_id)` identifies one source measurement occurrence.
+For a measurement node, `node.result` returns `ResultRef(node.source_id)`.
+Changing the target GateSet can change node IDs without changing result IDs.
 `Condition(result, value)` requires that result to equal `0` or `1`; the default
 value is `1`. The importer binds each condition to the latest preceding
 measurement of its source bit. A later write to that bit does not change an
@@ -288,13 +320,15 @@ whether independent operations may share a physical batch.
 
 ## Feedback reference tester
 
-The following example forces the measured bit to `1`. The tester reports the
-`x` branch as executed and the `z` branch as skipped:
+The following example selects `h/x/z` as its target gates and forces the
+measured bit to `1`. The tester reports the `x` branch as executed and the
+`z` branch as skipped:
 
 ```python
-from nadit_physical_compiler import FakeBackend, ResultRef, execute, loads_qasm
+from nadit_physical_compiler import FakeBackend, GateSet, ResultRef, execute, loads_qasm
 
-dag = loads_qasm("""
+dag = loads_qasm(
+    """
 OPENQASM 3.0;
 include "stdgates.inc";
 qubit[3] q;
@@ -306,7 +340,9 @@ if (c[0]) {
 } else {
     z q[1];
 }
-""")
+""",
+    gate_set=GateSet(("h", "x", "z")),
+)
 
 trace = execute(
     dag,
@@ -348,9 +384,10 @@ result-delivery event.
 by result availability. `trace.duration` includes the final operation completion
 or result delivery, whichever is later.
 
-`FakeBackend` combines its seed with each measurement ID, so results do not
-depend on execution order. `overrides` maps particular `ResultRef` values to
-explicit bits. A custom backend can provide `measure(result: ResultRef) -> int`.
+`FakeBackend` combines its seed with each source measurement ID, so results do
+not depend on execution order or native gate expansion. `overrides` maps
+particular `ResultRef` values to explicit bits. A custom backend can provide
+`measure(result: ResultRef) -> int`.
 These abstract times and fake bits exercise feedback semantics without a
 quantum-state simulation.
 
@@ -368,6 +405,9 @@ quantum-state simulation.
   zones, interaction positions, and holder-dependent operations.
 - [ADR 0007](../../docs/decisions/0007-explicit-physical-and-atom-ir.md):
   separate circuit and atom representations, with construction outside validators.
+- [ADR 0008](../../docs/decisions/0008-native-frontend-and-module-contracts.md):
+  native translation before DAG construction, stable source identities, and
+  module handoffs.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

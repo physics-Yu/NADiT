@@ -9,7 +9,8 @@ class ResultRef:
     """Identify one measurement output, independently of later bit writes.
 
     Args:
-        measurement_id: ID of the producing measurement operation in the DAG.
+        measurement_id: Stable source identity of the producing measurement.
+            Native gate expansion may change its DAG node ID.
     """
 
     measurement_id: int
@@ -33,12 +34,14 @@ class PhysicalOperation:
     """An operation on circuit wires, before atom or device binding.
 
     Args:
-        id: Zero-based position in the normalized circuit.
-        name: Standard operation name, such as ``h``, ``cx``, or ``measure``.
+        id: Zero-based position in this DAG.
+        name: Target operation name, such as ``rx``, ``cz``, or ``measure``.
         qubits: Ordered indices into the circuit's quantum wires.
         clbits: Ordered indices into the circuit's classical wires.
         params: Bound numeric operation parameters; angles are in radians.
         condition: Optional measurement-result comparison controlling execution.
+        source_id: Operation identity before native gate decomposition. Defaults
+            to ``id`` for directly constructed operations.
 
     Wire indices and identifiers are checked by the containing PhysicalDAG.
     """
@@ -49,6 +52,19 @@ class PhysicalOperation:
     clbits: tuple[int, ...]
     params: tuple[float, ...]
     condition: Condition | None = None
+    source_id: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.source_id is None:
+            object.__setattr__(self, "source_id", self.id)
+
+    @property
+    def result(self) -> ResultRef | None:
+        """Return the stable output identity for a measurement, otherwise None."""
+        if self.name != "measure":
+            return None
+        assert self.source_id is not None
+        return ResultRef(self.source_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +87,7 @@ class PhysicalDAG:
     Args:
         num_qubits: Total number of quantum wires, including unused wires.
         num_clbits: Total number of classical wires, including unused wires.
-        nodes: Operations in normalized source order, with consecutive IDs.
+        nodes: Operations in native circuit order, with consecutive IDs.
         edges: Sorted, unique wire and measurement-result dependency pairs.
         quantum_registers: Named quantum registers and their flat indices.
         classical_registers: Named classical registers and their flat indices.
@@ -98,6 +114,7 @@ class PhysicalDAG:
             raise ValueError("Circuit wire counts must be nonnegative.")
         if not isfinite(self.global_phase):
             raise ValueError("Circuit global phase must be finite.")
+        measurements: set[ResultRef] = set()
         for index, node in enumerate(self.nodes):
             if node.id != index:
                 raise ValueError(f"Expected operation ID {index}, got {node.id}.")
@@ -108,13 +125,20 @@ class PhysicalDAG:
             if not all(isfinite(value) for value in node.params):
                 raise ValueError(f"Operation {index} parameters must be finite.")
             if node.condition is not None:
-                producer = node.condition.result.measurement_id
-                if not 0 <= producer < index or self.nodes[producer].name != "measure":
+                if node.condition.result not in measurements:
                     raise ValueError(
                         f"Operation {index} must reference an earlier measurement."
                     )
                 if node.condition.value not in (0, 1):
                     raise ValueError("A condition must compare against 0 or 1.")
+            result = node.result
+            if result is not None:
+                if result in measurements:
+                    raise ValueError(
+                        "Duplicate measurement source identity "
+                        f"{result.measurement_id}."
+                    )
+                measurements.add(result)
         _check_registers(self.quantum_registers, self.num_qubits, "Quantum")
         _check_registers(self.classical_registers, self.num_clbits, "Classical")
         if self.edges != tuple(sorted(set(self.edges))):
