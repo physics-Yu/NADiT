@@ -1,7 +1,7 @@
 # NADiT Architecture
 
-Date: 2026-10-19
-Status: Discussion baseline; implementation has not started.
+Date: 2026-10-20
+Status: Static QASM frontend implemented; later compiler and runtime layers remain design work.
 
 This document records the agreed direction and the questions that remain open.
 **Confirmed** records decisions accepted in the discussion.
@@ -29,6 +29,16 @@ to consume the atom-action record.
 **Confirmed.** Build the physical compiler first so that the logical QEC
 compiler can use compiled components. QEC protocols define the physical
 circuits that implement those components.
+
+**Confirmed on 2026-10-20.** Complete the physical compiler core before
+implementing component packaging and binding. The
+[module design record](modules/physical_compiler/docs/atom-ir-and-components.md) preserves the requirements
+and proposed interfaces; core completion criteria remain open.
+
+**Confirmed on 2026-10-20.** The complete physical compiler is pluggable.
+Each strategy receives Device capabilities and completes physical-circuit-to-atom-action
+compilation. Capabilities constrain planning and every generated action.
+See [ADR 0002](docs/decisions/0002-pluggable-physical-compiler.md).
 
 The component preparation path is:
 
@@ -96,9 +106,16 @@ implementation is not yet chosen.
 
 ## 4. Physical DAG and gate layers
 
-**Confirmed.** The next layer discussion concerns the Physical DAG. It contains
+**Confirmed.** The Physical DAG contains
 the physical operations and dependencies supplied by the component or QEC
 protocol. Physical compilation must preserve the required ordering.
+
+**Implemented on 2026-10-20.** The static OpenQASM 2.0 / 3.0 frontend uses
+Qiskit parsing and DAG conversion to produce independent NADiT records.
+The records retain operations, quantum and classical wire dependencies,
+registers, and global phase. Device-dependent scheduling remains a later step.
+See [ADR 0003](docs/decisions/0003-qasm-physical-dag-frontend.md) and the
+[module API](modules/physical_compiler/README.md).
 
 **Proposed terminology:**
 
@@ -225,17 +242,18 @@ the discussion. They inform the design without selecting an implementation.
 
 ## 10. Next discussion and collaboration scope
 
-**Proposed next step.** Select one SE component, specify its Physical DAG,
-and use it to discuss candidate selection and physical gate layers.
+**Confirmed direction on 2026-10-20.** First dissect Search Smarter, Not Harder,
+then establish the general physical compiler framework and implement several strategies.
+**Open.** Specific strategies, interfaces, and implementation acceptance criteria.
 Implementation starts only after its requirements and plan are agreed.
 
 Keep discussions small enough to review and absorb. Analyze and revise the
 idea before expanding it into detailed content. Include statements that
 advance the reasoning; avoid defensive filler.
 
-For this documentation baseline only, the user approved content, consistency,
-and diff checks as the commit gate because the workspace has no test suite.
-This exception does not change the standing rules in `agent.md`.
+For the initial documentation baseline, the user approved content, consistency,
+and diff checks as the commit gate. The physical compiler module now has a test
+suite; implementation changes follow the standing rules in `agent.md`.
 
 ## 11. Repository organization
 
@@ -243,6 +261,7 @@ This exception does not change the standing rules in `agent.md`.
 [modules/physical_compiler/](modules/physical_compiler/README.md) as the physical
 compiler workspace, with `src/`, `tests/`, `docs/`, and `configs/` for implementation,
 tests, module design notes, and example device configurations. The module README
-is its entry point. Organization within those folders remains open.
+is its entry point. Its Python package and frontend layout are defined in
+[ADR 0003](docs/decisions/0003-qasm-physical-dag-frontend.md).
 Global rules and architecture stay at the root; shared decisions stay in
 `docs/decisions/`. See [ADR 0001](docs/decisions/0001-module-workspaces.md).
