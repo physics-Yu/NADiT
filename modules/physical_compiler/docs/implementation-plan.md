@@ -8,6 +8,8 @@ Following-layer preview and matching-based reuse are also implemented,
 specified in [ADR 0012](../../../docs/decisions/0012-lookahead-and-matching-reuse.md).
 This connects a pure next-CZ preview, maximum matching, and retained gate-site
 anchors to the existing strict transporter.
+Source-aligned candidate generation, compatibility-group scoring, optional
+retention, and bounded IDS are implemented in step 4.
 
 ## Compilation contract
 
@@ -175,7 +177,7 @@ Implement this stage in five increments, as defined in
 4. IDS placement search.
 5. Relaxed routing and its staged action construction.
 
-Items 1, 2, and 3 are implemented. Integration tests cover both forced feedback
+Items 1 through 4 are implemented. Integration tests cover both forced feedback
 branches, actual illuminated interaction pairs, capacity splitting, spectator
 clearing, and replay. Strict transport constructs simultaneous LOAD/MOVE/STORE
 batches; capacity, source ghosts, and target occupancy can split a batch.
@@ -251,6 +253,10 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is IDS placement using the shared transport compatibility
-and cost. Matching reuse already reduces atom transfers; placement search
-must account for its effect on strict batch count and planned duration.
+Source-aligned IDS placement is specified in
+[ADR 0013](../../../docs/decisions/0013-routing-aware-ids-placement.md).
+It adds full candidate generation, compatible-group proxy scoring, partner
+lookahead, and optional reuse. Final strict transport supplies the measured
+batch counts and predicted time; no complete two-layer transport evaluator
+is used during search.
+The next work item is staged/relaxed routing.

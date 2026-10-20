@@ -64,7 +64,9 @@ class SearchSmarterStrategy:
             if self.reuse_analyzer is not None and following is not None
             else ()
         )
-        plan = self.placer.place(dag, layer, layout, device, reuse_qubits=reuse_qubits)
+        plan = self.placer.place(
+            dag, layer, layout, device, reuse_qubits=reuse_qubits, following=following
+        )
         arrival = self.transporter.construct(layout, plan.execution_layout, device)
         operation = self.emitter(dag, layer, arrival.exit_layout, device)
         departure = self.transporter.construct(

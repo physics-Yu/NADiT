@@ -20,10 +20,12 @@ Strict parallel transport uses shared geometry rules, a conflict map, and
 current occupancy to construct common-load movement batches.
 Optional matching reuse retains compatible atoms at gate sites across known
 CZ layers. Lookahead stops at unresolved feedback without sampling.
+Routing-aware placement adds source-aligned candidate generation, compatible
+movement-group scoring, optional reuse, and bounded Iterative Diving Search.
 
 ## Next step
 
-Next, add IDS placement using transport cost, then staged/relaxed routing.
+Next, add staged/relaxed routing and compare the rigid-device variant.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -59,7 +61,7 @@ physical_compiler/
 │   ├── capabilities.py # CZ, local control, and readout capabilities
 │   ├── scheduling/    # Ready-layer selection and pure next-CZ preview
 │   ├── reuse/         # Maximum matching of shared CZ endpoints
-│   ├── placement/     # Fixed-pair and readout placement
+│   ├── placement/     # Fixed placement, candidates, scoring, and IDS
 │   ├── transport/     # Constructed AOD transfers and movement
 │   ├── emission/      # Bind gates to existing Atom IR actions
 │   ├── strategies/    # Compose stage implementations
@@ -159,6 +161,8 @@ own compilation state. The initial implementations live in `scheduling/`,
 `lower(..., following=None)` receives that optional GateLayer. The compiler
 owns the preview's progress inputs. Scheduler selection is deterministic
 and does not mutate scheduler state.
+The strategy forwards `following` to `Placer.place` for partner-distance
+estimates. The fixed placers accept the hint without changing their decisions.
 
 ## One-pair compilation
 
@@ -216,8 +220,9 @@ singleton batches. Local rotations on distinct atoms can share a step.
 Readout moves one atom into the measurement region while held by the AOD,
 measures it there, and returns it to its previous SLM site. This frees the AOD
 and supports later operations on either atom. Readout retains atoms. Cyclic
-swaps requiring a temporary site, parked AOD control groups, destructive
-readout, IDS search, and multi-pair routing are subsequent work.
+swaps requiring a temporary site, parked AOD control groups, and destructive
+readout remain subsequent work. The following strategies add multi-pair
+transport and IDS placement.
 
 Run both feedback branches and print their actions:
 
@@ -297,7 +302,7 @@ and the complete Atom IR. Integration tests enumerate actual interactions
 from illuminated atom positions, compare them with intended source gates,
 and check dependency timing and exit-state replay.
 
-IDS and further transport optimization follow the sequence in
+Further transport optimization follows the sequence in
 [ADR 0010](../../docs/decisions/0010-multipair-compilation.md).
 
 ## Following-layer preview and matching reuse
@@ -355,14 +360,16 @@ uv run --locked python examples/compile_multipair.py --transport strict --bit 0 
 uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse
 ```
 
-With the checked-in device and pair capacity 2:
+With the checked-in device and pair capacity 2, including the IDS strategy below:
 
-| Bit | Reuse | Atom loads | Atom stores | LOAD / STORE batches | Transport time (us) |
+| Bit | Placement and reuse | Atom loads | Atom stores | LOAD / STORE batches | Transport time (us) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 0 | Off | 17 | 17 | 7 / 7 | 1340.949 |
-| 0 | On | 13 | 13 | 8 / 8 | 1472.926 |
-| 1 | Off | 25 | 25 | 9 / 9 | 1621.157 |
-| 1 | On | 21 | 21 | 12 / 12 | 2013.171 |
+| 0 | Greedy, no reuse | 17 | 17 | 7 / 7 | 1340.949 |
+| 0 | Greedy, fixed matching reuse | 13 | 13 | 8 / 8 | 1472.926 |
+| 0 | IDS, optional matching reuse | 13 | 13 | 6 / 6 | 1141.125 |
+| 1 | Greedy, no reuse | 25 | 25 | 9 / 9 | 1621.157 |
+| 1 | Greedy, fixed matching reuse | 21 | 21 | 12 / 12 | 2013.171 |
+| 1 | IDS, optional matching reuse | 21 | 21 | 9 / 9 | 1531.643 |
 
 Atom loads and stores sum the atoms in each transfer, including readout.
 Batch counts count LOAD and STORE actions. Retained anchors
@@ -371,6 +378,75 @@ assignments. Maximum matching optimizes retained atom count; transport-aware
 placement is needed to optimize duration. Both cases preserve source-operation
 decisions, stable results, pulse interactions, and exit-state replay.
 See [ADR 0012](../../docs/decisions/0012-lookahead-and-matching-reuse.md).
+
+## Routing-aware IDS placement
+
+`HeuristicPlacer` follows MQT QMAP's candidate, compatibility-group, lookahead,
+and IDS structure at commit `cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d`.
+It first searches gate assignments and then storage/stay assignments.
+Matching supplies reuse candidates; the exit search decides which actually
+remain at gate sites.
+
+```python
+from nadit_physical_compiler.placement import HeuristicPlacer, PlacementConfig
+
+placer = HeuristicPlacer(
+    "transport",
+    catalog,
+    config=PlacementConfig(
+        trials=4,
+        queue_capacity=100,
+        deepening_factor=0.01,
+        deepening_value=0.0,
+        lookahead_factor=0.4,
+        reuse_level=5.0,
+    ),
+)
+```
+
+Use it in the existing `SearchSmarterStrategy` with `StrictTransport` and
+`MatchingReuseAnalyzer`. The default example still uses `MultiPairPlacer`.
+`--reuse` enables matching and the compiler's next-layer preview.
+
+Candidate generation uses the reference's full-candidate mode
+(`useWindow=false`) over the configured catalogue and reachable free storage
+sites. Each pair contributes its lower-total-distance orientation. Gate options
+are sorted by their two movement distances; storage options are sorted by
+movement distance, with a zero-movement stay option for matched atoms.
+Actual retained gate pairs are reserved before assigning other gates.
+For the arbitrary Device catalogue, nearest locations are computed from the
+eligible candidate pool. This replaces the reference architecture's
+precomputed nearest-grid-site lookup. Axis discretization shares the
+transport coordinate tolerance.
+
+The score is the sum of the square roots of each compatibility group's maximum
+distance, plus partner-lookahead costs. Groups are extended in first-fit order
+using the shared strict Device rules. The remaining-job heuristic follows the
+reference's available-option distance, mean lookahead, and axis-displacement
+deviation terms. IDS dives into the best child, keeps bounded alternatives,
+and compares a configured number of complete placements.
+
+These scores are proxies, not microseconds. Search does not emit actions or
+call the transporter for candidate evaluation. Strict transport constructs the
+selected movements with occupancy closure; its actual LOAD/MOVE/STORE durations
+provide the reported transport time. The compiler still owns measurements,
+case selection, and result-availability timing.
+
+Compare three modes with the same circuit, Device, and forced result:
+
+```text
+uv run --locked python examples/compile_multipair.py --transport strict --bit 1
+uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse
+uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse --placement ids
+```
+
+Repeat with `--bit 0` for the other branch. `--trials`, `--queue-capacity`, and
+`--reuse-level` configure the IDS example; all search settings are included
+in its JSON output. The API exposes the remaining heuristic weights.
+
+See [ADR 0013](../../docs/decisions/0013-routing-aware-ids-placement.md) for
+the score and interface contract and the
+[third-party notice](../../docs/third-party-notices.md) for source attribution.
 
 ## Shared rules and strict parallel transport
 
@@ -738,6 +814,8 @@ quantum-state simulation.
   strict batch admission, occupancy closure, and direct parallel actions.
 - [ADR 0012](../../docs/decisions/0012-lookahead-and-matching-reuse.md):
   pure next-CZ preview, feedback boundaries, and matching-based gate anchors.
+- [ADR 0013](../../docs/decisions/0013-routing-aware-ids-placement.md):
+  source-aligned candidate generation, compatible-group scoring, and IDS.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

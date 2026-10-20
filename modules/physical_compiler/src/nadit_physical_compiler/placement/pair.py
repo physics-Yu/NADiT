@@ -35,6 +35,7 @@ class PairPlacer:
         device: Device,
         *,
         reuse_qubits: tuple[int, ...] = (),
+        following: GateLayer | None = None,
     ) -> PlacementPlan:
         """Choose execution and exit positions for a homogeneous gate layer.
 
@@ -45,6 +46,7 @@ class PairPlacer:
             device: Geometry and operation capabilities.
             reuse_qubits: Accepted interface hint; this strategy retains gate
                 positions whenever they remain useful without moving atoms.
+            following: Accepted next-layer hint; this baseline uses current positions.
 
         Returns:
             Execution and exit layouts. Readout returns atoms to their entry

@@ -56,11 +56,17 @@ def test_compiled_result_enables_reuse_while_actions_wait_for_feedback(
             device: Device,
             *,
             reuse_qubits: tuple[int, ...] = (),
+            following: GateLayer | None = None,
         ) -> PlacementPlan:
             if dag.nodes[layer.operation_ids[0]].name == "cz":
                 observations.append((layer, reuse_qubits, tuple(backend.calls)))
             return strategy.placer.place(
-                dag, layer, layout, device, reuse_qubits=reuse_qubits
+                dag,
+                layer,
+                layout,
+                device,
+                reuse_qubits=reuse_qubits,
+                following=following,
             )
 
     result = compile_physical(
@@ -219,11 +225,17 @@ def test_local_control_relocation_recomputes_actual_gate_anchors(
             device: Device,
             *,
             reuse_qubits: tuple[int, ...] = (),
+            following: GateLayer | None = None,
         ) -> PlacementPlan:
             if dag.nodes[layer.operation_ids[0]].name == "cz":
                 observed.append((layout, reuse_qubits))
             return strategy.placer.place(
-                dag, layer, layout, device, reuse_qubits=reuse_qubits
+                dag,
+                layer,
+                layout,
+                device,
+                reuse_qubits=reuse_qubits,
+                following=following,
             )
 
     result = compile_physical(

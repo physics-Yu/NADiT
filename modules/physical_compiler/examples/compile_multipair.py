@@ -3,6 +3,7 @@
 import argparse
 import json
 from collections import Counter
+from dataclasses import asdict
 from pathlib import Path
 
 from nadit_physical_compiler import (
@@ -20,7 +21,12 @@ from nadit_physical_compiler import (
     replay,
 )
 from nadit_physical_compiler.emission import WholeLayerEmitter
-from nadit_physical_compiler.placement import GatePairCatalog, MultiPairPlacer
+from nadit_physical_compiler.placement import (
+    GatePairCatalog,
+    HeuristicPlacer,
+    MultiPairPlacer,
+    PlacementConfig,
+)
 from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
@@ -33,6 +39,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--bit", type=int, choices=(0, 1))
     parser.add_argument("--capacity", type=int, choices=(1, 2), default=2)
+    parser.add_argument("--placement", choices=("greedy", "ids"), default="greedy")
+    parser.add_argument("--trials", type=int, default=4)
+    parser.add_argument("--queue-capacity", type=int, default=100)
+    parser.add_argument("--reuse-level", type=float, default=5.0)
     parser.add_argument(
         "--transport", choices=("sequential", "strict"), default="sequential"
     )
@@ -70,12 +80,25 @@ def main() -> None:
         if args.transport == "strict"
         else SequentialTransport("transport")
     )
+    placer = (
+        HeuristicPlacer(
+            "transport",
+            catalog,
+            config=PlacementConfig(
+                trials=args.trials,
+                queue_capacity=args.queue_capacity,
+                reuse_level=args.reuse_level,
+            ),
+        )
+        if args.placement == "ids"
+        else MultiPairPlacer("transport", catalog)
+    )
     result = compile_physical(
         dag,
         device,
         strategy=SearchSmarterStrategy(
             ReadyScheduler(max_cz_gates=catalog.capacity),
-            MultiPairPlacer("transport", catalog),
+            placer,
             transporter,
             WholeLayerEmitter(catalog.coverage),
             reuse_analyzer=MatchingReuseAnalyzer() if args.reuse else None,
@@ -90,6 +113,12 @@ def main() -> None:
             {
                 "native_nodes": len(dag.nodes),
                 "pair_capacity": catalog.capacity,
+                "placement": args.placement,
+                "placement_config": (
+                    asdict(placer.config)
+                    if isinstance(placer, HeuristicPlacer)
+                    else None
+                ),
                 "transport": args.transport,
                 "reuse": args.reuse,
                 "cz_gates_per_pulse": [

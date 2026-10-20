@@ -202,6 +202,7 @@ def test_measurement_blocks_preview_and_is_sampled_only_when_emitted(
             device: Device,
             *,
             reuse_qubits: tuple[int, ...] = (),
+            following: GateLayer | None = None,
         ) -> PlacementPlan:
             calls.append(
                 (
@@ -211,7 +212,12 @@ def test_measurement_blocks_preview_and_is_sampled_only_when_emitted(
                 )
             )
             return strategy.placer.place(
-                dag, layer, layout, device, reuse_qubits=reuse_qubits
+                dag,
+                layer,
+                layout,
+                device,
+                reuse_qubits=reuse_qubits,
+                following=following,
             )
 
     result = compile_physical(

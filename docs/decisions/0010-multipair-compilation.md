@@ -1,7 +1,7 @@
 # 0010: Multi-Pair Compilation
 
-Status: Accepted on 2026-10-20. The correctness baseline and direct strict
-transport are implemented; reuse, IDS, and staged routing follow.
+Status: Accepted on 2026-10-20. The correctness baseline, direct strict
+transport, reuse, and IDS are implemented; staged routing follows.
 
 ## Context
 
@@ -46,10 +46,10 @@ order, offset space, and destination-release dependencies. These properties
 are updated incrementally; they are not all pairwise graph edges. Full
 transport checks remain test/debug tools.
 
-Placement and routing will share the same compatibility and timing rules.
-Placement extends partial assignments by updating compatible groups and their
-estimated cost. Cost uses configured transfer times and, for each movement
-phase, the maximum atom distance times the movement-time coefficient.
+Placement and routing share Device-backed compatibility rules. Placement uses
+the public implementation's compatible-group and partner-distance proxy score;
+generated transport uses configured transfer times and distance-to-time timing.
+[ADR 0013](0013-routing-aware-ids-placement.md) specifies this separation.
 
 IDS means Iterative Diving Search: follow the best child toward a complete
 layout, keep alternatives in a bounded queue, and compare a configured number
@@ -61,7 +61,7 @@ of completed candidates. It does not generate atom actions during search.
    distinct pair placement, sequential transport, and one pulse per layer.
 2. Shared transport rules and strict parallel batching.
 3. Following-layer preview and matching-based atom reuse.
-4. IDS placement using the tested transport cost.
+4. IDS placement using compatible-group proxy cost and partner lookahead.
 5. Relaxed routing and its complete staged transfer/offset construction.
 
 Each increment preserves measurement identities, branch selection, action

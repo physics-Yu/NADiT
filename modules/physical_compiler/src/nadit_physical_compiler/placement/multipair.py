@@ -33,6 +33,7 @@ class MultiPairPlacer:
         device: Device,
         *,
         reuse_qubits: tuple[int, ...] = (),
+        following: GateLayer | None = None,
     ) -> PlacementPlan:
         """Choose a shared-CZ arrangement and retain selected atoms for reuse.
 
@@ -43,6 +44,7 @@ class MultiPairPlacer:
             device: Fixed sites, transport workspace, and operation capabilities.
             reuse_qubits: Current participating qubits to retain at their
                 execution gate sites for a known following CZ layer.
+            following: Accepted next-layer hint; this baseline retains all candidates.
 
         Returns:
             Execution and exit layouts preserving atom order and qubit bindings.
@@ -54,7 +56,12 @@ class MultiPairPlacer:
         """
         if not layer.operation_ids or dag.nodes[layer.operation_ids[0]].name != "cz":
             return PairPlacer(self.aod_id).place(
-                dag, layer, layout, device, reuse_qubits=reuse_qubits
+                dag,
+                layer,
+                layout,
+                device,
+                reuse_qubits=reuse_qubits,
+                following=following,
             )
         if len(layer.operation_ids) > self.catalog.capacity:
             raise ValueError("CZ layer exceeds the gate-pair catalogue capacity.")

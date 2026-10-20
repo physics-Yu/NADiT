@@ -99,6 +99,7 @@ class Placer(Protocol):
         device: Device,
         *,
         reuse_qubits: tuple[int, ...] = (),
+        following: GateLayer | None = None,
     ) -> PlacementPlan:
         """Choose layouts for a selected gate layer.
 
@@ -109,6 +110,7 @@ class Placer(Protocol):
             device: Device geometry, timing, and capabilities.
             reuse_qubits: Current participants proposed to remain at their
                 execution sites in the exit layout for the following CZ layer.
+            following: Known next CZ layer for partner-distance estimates.
 
         Returns:
             Selected execution and exit layouts.

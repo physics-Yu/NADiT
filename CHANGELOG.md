@@ -23,6 +23,12 @@
 
 ### Added
 
+- Source-aligned routing-aware placement with full gate/storage candidates,
+  compatible movement-group scoring, partner lookahead, and bounded IDS.
+- Optional retention in the storage-placement search: matched atoms can stay
+  at a gate site or return to storage according to the reference proxy score.
+- An IDS placement mode and search configuration in the multi-pair study,
+  sharing strict transport, measurement feedback, and action replay.
 - Pure next-CZ preview using compiler progress and compiled results, stopping
   at unresolved feedback without sampling measurements.
 - Maximum matching of shared CZ endpoints and reuse-aware placement that

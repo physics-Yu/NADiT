@@ -26,7 +26,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Multi-pair fixed placement, sequential transport, and shared pulses | Implemented |
 | Shared transport rules and direct strict parallel batches | Implemented |
 | Next-CZ preview and matching-based atom reuse | Implemented |
-| IDS and staged/relaxed routing | Next |
+| Routing-aware IDS placement and optional reuse | Implemented |
+| Staged/relaxed routing | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
 The module [README](modules/physical_compiler/README.md) defines the implemented API.
@@ -149,14 +150,21 @@ pairs and strict transport moves the other participants. Transport batches
 and duration depend on placement and routing costs.
 See [ADR 0012](docs/decisions/0012-lookahead-and-matching-reuse.md).
 
+HeuristicPlacer adds source-aligned full candidate generation, first-fit
+compatible movement-group scoring, partner lookahead, and bounded IDS.
+Matched atoms can stay in the gate zone or return to storage. Placement scores
+remain separate from the generated transport timeline; strict transport
+constructs final legal batches using Device timing and occupancy.
+See [ADR 0013](docs/decisions/0013-routing-aware-ids-placement.md).
+
 ## Development order
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
 2. Implement Atom IR structures, text output, and retained-readout replay (complete).
 3. Implement native frontend translation, module handoffs, and one-pair case
    compilation (complete).
-4. Implement the multi-pair baseline, direct strict transport, and matching
-   reuse (complete), then IDS placement and staged/relaxed routing.
+4. Implement the multi-pair baseline, direct strict transport, matching reuse,
+   and IDS placement (complete), then staged/relaxed routing.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
 6. Package reusable components and connect logical QEC compilation.
 
