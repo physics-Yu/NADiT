@@ -100,3 +100,72 @@ weighted heuristic does not establish optimality.
 
 The checked-in `benchmark_results.json` records the completed bounded study.
 Raw native inputs and large traces stay in the study output directory.
+The local ignored archive `artifacts/search-smarter-2026-10-21.zip` also preserves
+all 26 native inputs, QASM files, 61 successful traces, the manifest, and the
+reuse ablation. Its SHA-256 is recorded in the compact JSON; archive integrity
+and all 52 input-file hashes were verified.
+
+## Recorded study: 2026-10-21
+
+Implementation commit: `1d8478a`. The original C++ adapter was built with
+Zig 0.13.0, C++20, `-O3`, and translation-unit SHA-256
+`88ba43ecf50d75ed256967b202137ec522c995659046f06914cd99dfa36c668c`.
+The explicit paper Rydberg range `[0, 308]` to `[400, 400]` is supplied to
+both implementations, separately from the trap-site rectangle.
+
+All 26 inputs were prepared and all 156 runs were attempted, with two workers
+and a **30-second whole-worker budget**. No run remains pending. This budget
+includes architecture setup, observation and trace serialization; it is shorter
+than the paper's 900-second compilation limit.
+
+| Implementation | Variant | Successful | Timed out |
+| --- | --- | ---: | ---: |
+| Original C++ | A* strict | 8 | 18 |
+| Original C++ | IDS strict | 18 | 8 |
+| Original C++ | IDS relaxed | 18 | 8 |
+| Local | A* strict | 1 | 25 |
+| Local | IDS strict | 8 | 18 |
+| Local | IDS relaxed | 8 | 18 |
+
+There were 61 successes and 95 worker timeouts, with no exception failures.
+Seventeen source/local pairs completed on both sides. Ten pairs matched through
+the entire action trace: IDS strict and relaxed for graphstate sizes 60, 80,
+100, 140, and 160. Seven pairs first differed in placement:
+
+| Input | Variants | First differing placement |
+| --- | --- | --- |
+| graphstate 60 | A* strict | First CZ execution layout |
+| graphstate 120 | IDS strict, IDS relaxed | Storage layout after the second CZ layer |
+| graphstate 180 | IDS strict, IDS relaxed | Storage layout after the second CZ layer |
+| graphstate 200 | IDS strict, IDS relaxed | Fourth CZ execution layout |
+
+Scheduling and reuse matched before each of these differences. Their causal
+queue-pop or score difference has not been located. Known precision and
+equal-priority ordering differences are not a demonstrated explanation for
+these seven observations.
+
+The complete JSON records each attempted run, native-input and QASM hashes,
+source hashes, metrics, first differing paths, source/local metric differences,
+and successful within-implementation ablations. For graphstate 60:
+
+| Implementation | Variant | Atom loads (= stores) | LOAD actions (= STORE actions) | Rearrangement time (us) |
+| --- | --- | ---: | ---: | ---: |
+| Original C++ | A* strict | 226 | 58 | 16581.924 |
+| Local | A* strict | 226 | 59 | 15960.838 |
+| Original C++ / Local | IDS strict | 204 | 46 | 12884.994 |
+| Original C++ / Local | IDS relaxed | 204 | 46 | 12794.416 |
+
+The A* layouts differ, so the two A* durations describe different generated
+plans. The IDS strict/relaxed action traces match their corresponding original
+runs.
+
+A separate small reuse-policy ablation uses
+`source_endpoint_priority_reuse` with the same paper timing. Original C++ and
+local source reuse match: 14 atom loads and stores, 5 LOAD and STORE actions,
+1706.039 us. The complete-shared-edge policy selects `{1, 2}` instead of `{0}`:
+12 atom loads and stores, the same 5 LOAD and STORE actions, and 1710.387 us.
+Fewer loaded atoms did not reduce rearrangement time in this example.
+
+The paper's 900-second evaluation and published speedup ratios have not been
+reproduced by this bounded study. The unresolved placement differences and
+larger local cases remain work for subsequent source alignment and profiling.

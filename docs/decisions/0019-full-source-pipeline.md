@@ -1,6 +1,7 @@
 # 0019: Complete source pipeline and evaluation
 
-Status: Core implementation verified on 2026-10-21; bounded benchmark in progress.
+Status: Implementation and bounded study completed on 2026-10-21.
+Full source equivalence and the published time-budget evaluation remain open.
 
 ## Scope and order
 
@@ -132,13 +133,36 @@ paper's timeout or release-build speedup claims. Original C++ bodies run in an
 O3 standalone executable; local timings include Python Device/DAG construction.
 
 Equal-priority heap order and numeric score accumulation retain their documented
-local differences. A first A* placement difference on `graphstate_60` is recorded;
-the cause has not been isolated to either factor. Matching the A* control flow
-does not establish identical search decisions on every input.
+local differences. Seven completed source/local pairs first differ in placement:
+A* on `graphstate_60`, and IDS strict/relaxed on `graphstate_120`, `180`, and `200`.
+The first differing queue pop or score has not been isolated. The known numeric
+and tie-order differences are not established causes of these observations.
+
+## Bounded study results
+
+All 26 original circuit sizes were prepared, and all 156 implementation/variant
+runs were attempted with two workers and a 30-second whole-worker budget.
+There are no pending runs or exception failures.
+
+| Implementation | Successful | Timed out |
+| --- | ---: | ---: |
+| Original C++ stages | 44 | 34 |
+| Local source profile | 17 | 61 |
+
+Seventeen pairs completed on both implementations. Ten matched through the
+final actions; seven first differed in placement. Scheduling and reuse matched
+before those differences. The [benchmark report](../../modules/physical_compiler/reference/benchmark_README.md)
+records the complete matrix, source/input hashes, metrics, and precise first
+differences. These observations do not establish the paper's 900-second results.
+
+A separate complete-edge reuse ablation reduces atom loads/stores from 14/14
+to 12/12 but changes transport time from 1706.039 to 1710.387 microseconds.
+Both plans use five LOAD and five STORE actions. Transfer counts and duration
+remain separate measured outputs.
 
 ## Unified verification
 
-The completed modules pass 1,077 tests against the preceding 966-test baseline.
+The completed modules pass 1,078 tests against the preceding 966-test baseline.
 Ruff format, lint, and mypy pass. Existing test assertions are unchanged; two
 test-helper coverage annotations were extended to accept region unions.
 
@@ -147,3 +171,5 @@ removing that restriction and checking actual constructed plans resolved it.
 Additional regressions retain explicit pulse extents, keep SLM grouping
 independent of overlapping illumination, and prevent stale benchmark traces
 from being compared after a failed or timed-out rerun.
+An additional executed C++ case confirms that one illumination region can cover
+two entanglement-array groups; array count does not determine pulse-region count.
