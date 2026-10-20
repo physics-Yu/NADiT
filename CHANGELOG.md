@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Use direct strict transport between gate regions with different pair
+  separations; the shared staged offset formula requires one separation.
 - Carry actual retained-atom snapshots between compilation layers instead of
   treating every occupied gate site as a reuse anchor.
 - Clear nonretained pulse-region occupants before greedy or IDS gate placement,
@@ -31,6 +33,12 @@
 
 ### Added
 
+- Optional relaxed routing with source-aligned compatibility, weighted conflicts,
+  donor-group redistribution, and a configurable strict-fallback cost threshold.
+- Device-admitted row/column reordering using the existing staged generator and
+  explicit-grid Atom IR, with finite-capacity and occupancy constraints.
+- Executed pinned C++ router and reversed-axis movement comparisons, plus
+  measurement-feedback and per-action replay coverage.
 - Staged strict transport with distance-ordered groups, row/column pickup,
   lattice offsets, combined transfers, and explicit AOD-grid Atom IR.
 - Regular SLM staging geometry with optional explicit pitches and direct strict

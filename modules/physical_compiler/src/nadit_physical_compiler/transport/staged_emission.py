@@ -6,7 +6,7 @@ from ..atom_ir import AtomAction, AtomStep, Load, Move, Store
 from ..contracts import AtomFragment
 from ..device import Device, Position
 from ..state import AODGrid, AODHolder, AODLine, AtomLayout, AtomState, SLMHolder
-from .rules import MoveRequest, StrictRules
+from .rules import MoveRequest, StrictRules, _partition
 from .staging import StageEvent
 
 
@@ -22,7 +22,7 @@ def emit_stages(
 
     Args:
         events: Constructed transfers and collective position changes.
-        moves: Strict-compatible requests, defining stable row/column identities.
+        moves: Equality-preserving requests, defining stable row/column identities.
         layout: SLM-held entry layout.
         destinations: Final atoms with receiving SLM holders.
         device: Transfer and movement timing.
@@ -31,10 +31,13 @@ def emit_stages(
     Returns:
         Existing Atom IR actions and the directly constructed exit layout.
     """
-    _, _, bindings = rules.frames(moves)
+    # Numeric IDs label source lines. The staged constructor may insert those
+    # lines in another spatial order; IDs stay fixed throughout their lifetime.
+    _, rows = _partition(tuple(move.source.y for move in moves))
+    _, columns = _partition(tuple(move.source.x for move in moves))
     holders = {
-        atom_id: AODHolder(rules.aod.id, row, column)
-        for atom_id, row, column in bindings
+        move.atom_id: AODHolder(rules.aod.id, row, column)
+        for move, row, column in zip(moves, rows, columns, strict=True)
     }
     carried: dict[int, AtomState] = {}
     updated: dict[int, AtomState] = {}

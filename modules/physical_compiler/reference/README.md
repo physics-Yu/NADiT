@@ -1,5 +1,8 @@
 # Pinned QMAP rearrangement reference
 
+The additional [relaxed-router comparison](relaxed_README.md) executes original
+compatibility, group-merging, and reversed-axis staging code.
+
 This directory compares the staged transport constructor with **executed
 upstream C++**, not a second Python implementation of its algorithm.
 

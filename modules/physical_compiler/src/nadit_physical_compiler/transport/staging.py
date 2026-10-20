@@ -37,16 +37,16 @@ def generate_stages(
     destinations: Mapping[int, AtomState],
     geometry: StagingGeometry,
 ) -> tuple[StageEvent, ...]:
-    """Expand one strict batch into staged loading, movement, and unloading.
+    """Expand one admitted batch into staged loading, movement, and unloading.
 
     Args:
-        moves: Pairwise strict-compatible movement requests for one zone pair.
+        moves: Equality-preserving movement requests for one admitted zone pair.
         layout: Starting SLM holders for the batch atoms.
         destinations: Target SLM holders, indexed by atom ID.
         geometry: Recognized or explicitly supplied SLM subarray geometry.
 
     Returns:
-        Atom events with source-preserving row and column identities. Geometry
+        Atom events with stable active row and column identities. Geometry
         admission and conversion to complete AOD grids belong to the adapter.
 
     Raises:
@@ -90,8 +90,19 @@ class _Generator:
         )
         self.horizontal = dict(sorted((move.source.x, move.target.x) for move in moves))
         self.vertical = dict(sorted((move.source.y, move.target.y) for move in moves))
+        self.row_ordered = list(self.vertical.values()) == sorted(
+            self.vertical.values()
+        )
+        self.column_ordered = list(self.horizontal.values()) == sorted(
+            self.horizontal.values()
+        )
         self.sx = {x: index for index, x in enumerate(self.horizontal)}
-        self.sy = {y: index for index, y in enumerate(self.vertical)}
+        self.sy = {
+            source: index
+            for index, source in enumerate(
+                sorted(self.vertical, key=self.vertical.__getitem__)
+            )
+        }
         self.tx = {
             target: self.sx[source] for source, target in self.horizontal.items()
         }
@@ -104,10 +115,10 @@ class _Generator:
         self.events: list[StageEvent] = []
 
     def generate(self) -> tuple[StageEvent, ...]:
-        if len(self.horizontal) < len(self.vertical):
+        if self.row_ordered and len(self.horizontal) < len(self.vertical):
             self._load_columns()
             self._store_columns()
-        elif len(self.vertical) < len(self.horizontal):
+        elif self.column_ordered and len(self.vertical) < len(self.horizontal):
             self._load_rows()
             self._store_rows()
         else:

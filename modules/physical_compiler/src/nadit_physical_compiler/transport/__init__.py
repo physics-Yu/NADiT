@@ -1,6 +1,8 @@
 """Construct selected transport actions from atom placement requests."""
 
 from .pair import PairTransport
+from .relaxed import RelaxedTransport
+from .relaxed_rules import MovementCompatibility, RelaxedRules
 from .rules import MoveRequest, StrictRules, build_conflict_map
 from .sequential import SequentialTransport
 from .staged import StagedStrictTransport
@@ -9,7 +11,10 @@ from .strict import StrictTransport
 
 __all__ = [
     "MoveRequest",
+    "MovementCompatibility",
     "PairTransport",
+    "RelaxedRules",
+    "RelaxedTransport",
     "SequentialTransport",
     "SiteStagingGeometry",
     "StagedStrictTransport",

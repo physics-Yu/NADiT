@@ -32,6 +32,7 @@ from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
 from nadit_physical_compiler.transport import (
+    RelaxedTransport,
     SequentialTransport,
     StagedStrictTransport,
     StrictTransport,
@@ -48,8 +49,11 @@ def main() -> None:
     parser.add_argument("--trials", type=int, default=4)
     parser.add_argument("--queue-capacity", type=int, default=100)
     parser.add_argument("--reuse-level", type=float, default=5.0)
+    parser.add_argument("--prefer-split", type=float, default=1.0)
     parser.add_argument(
-        "--transport", choices=("sequential", "strict", "staged"), default="sequential"
+        "--transport",
+        choices=("sequential", "strict", "staged", "relaxed"),
+        default="sequential",
     )
     parser.add_argument(
         "--reuse",
@@ -84,6 +88,7 @@ def main() -> None:
         "sequential": SequentialTransport("transport"),
         "strict": StrictTransport("transport"),
         "staged": StagedStrictTransport("transport"),
+        "relaxed": RelaxedTransport("transport", prefer_split=args.prefer_split),
     }
     transporter = transports[args.transport]
     placer = (
@@ -126,6 +131,9 @@ def main() -> None:
                     else None
                 ),
                 "transport": args.transport,
+                "prefer_split": args.prefer_split
+                if args.transport == "relaxed"
+                else None,
                 "reuse": args.reuse,
                 "cz_gates_per_pulse": [
                     len(action.source_ids)

@@ -1,10 +1,11 @@
 # 0010: Multi-Pair Compilation
 
 Status: Accepted on 2026-10-20. The correctness baseline, direct and staged
-strict transport, reuse, and IDS are implemented; relaxed routing follows.
+strict transport, reuse, IDS, and relaxed routing are implemented.
 
 [ADR 0015](0015-staged-strict-transport.md) specifies staged strict pickup,
-release, and offsets.
+release, and offsets. [ADR 0016](0016-relaxed-routing.md) adds relaxed
+compatibility and cost-based batch merging over the shared staged generator.
 
 ## Context
 

@@ -100,6 +100,8 @@ def _common_lattice(descriptions: list[SiteStagingGeometry]) -> bool:
             return False
     if "storage" in by_kind:
         return len(by_kind) == 1
+    if not 0 < first.pair_separation < first.pitch_x:
+        return False
     if "left" in by_kind and "right" in by_kind:
         left, right = by_kind["left"], by_kind["right"]
         return _same(right.min_x - left.min_x, first.pair_separation) and _same(

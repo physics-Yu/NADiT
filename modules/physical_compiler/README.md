@@ -28,7 +28,9 @@ movement-group scoring, optional reuse, and bounded Iterative Diving Search.
 Staged strict routing provides row/column pickup,
 offsets, and release; see
 [ADR 0015](../../docs/decisions/0015-staged-strict-transport.md).
-Relaxed routing and the rigid-device comparison follow separately.
+Relaxed routing adds compatible batch merging and staged reordering; see
+[ADR 0016](../../docs/decisions/0016-relaxed-routing.md).
+The rigid-device comparison follows separately.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -575,6 +577,46 @@ uv run --locked python examples/compile_multipair.py --transport sequential --bi
 uv run --locked python examples/compile_multipair.py --transport strict --bit 1
 uv run --locked python examples/compile_multipair.py --transport strict --bit 0
 ```
+
+## Relaxed routing
+
+`RelaxedTransport(aod_id, geometry=None, prefer_split=1.0)` composes the
+reference compatibility and group-merging algorithm with existing staged
+transfers. It retains equality on each axis, so rows and columns cannot split
+or merge. Endpoint order changes are realized by inserting rows during pickup
+and releasing columns in stages; active lines never cross in one MOVE.
+
+The implementation separates `relaxed_rules.py` for compatibility and cubed
+offset costs, `relaxed_groups.py` for strict groups and donor redistribution,
+`relaxed_policy.py` for Device admission, and `relaxed.py` for transport
+composition. The existing staging generator and Atom IR emitter are shared.
+
+The reference starts with distance-descending strict groups and considers
+donors in reverse order. It redistributes a donor only when every atom has a
+compatible recipient and the sum of incremental proxy costs is low enough.
+`prefer_split=1.0` is the reference default; larger values favor strict groups.
+Device capacity, workspace, and destination occupancy can also retain a strict
+group. No duplicate Atom IR plans or complete action checks are used to make
+this decision.
+
+Row reordering reserves an extra source-Y corridor. Column reordering reserves
+a target-X corridor. Those corridors must fit the AOD and contain no foreign
+SLM sites. Gate-column reversals admit at most two columns; larger reversals
+retain strict groups. Ordered gate-column release keeps the existing complete
+mask rule. Regular storage-column reversal uses half-pitch lanes. Paired arrays
+require positive pair separation smaller than the horizontal pitch.
+Transfers between two gate regions with different pair separations use direct
+strict transport because the reference generator assumes one separation.
+
+```text
+uv run --locked python examples/compile_multipair.py --transport relaxed --bit 1 --reuse --placement ids
+uv run --locked python examples/compile_multipair.py --transport relaxed --bit 1 --reuse --placement ids --prefer-split 20
+```
+
+The merge proxy uses cube roots of distances as in the source implementation.
+It is separate from the Device distance-to-time function used to report actual
+program durations. See [ADR 0016](../../docs/decisions/0016-relaxed-routing.md)
+and the [executed C++ comparison](reference/relaxed_README.md).
 
 The example reports transport duration, load batch sizes, and maximum parallel
 atom count. See [ADR 0011](../../docs/decisions/0011-strict-parallel-transport.md)

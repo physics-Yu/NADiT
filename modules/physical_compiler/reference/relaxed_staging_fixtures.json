@@ -1,0 +1,32 @@
+{
+  "units": "nm",
+  "nm_per_um": 1000,
+  "slms": [
+    {"kind":"storage","origin":[0,0],"pitch":[5000,5000],"rows":4,"columns":4},
+    {"kind":"left","origin":[0,120000],"pitch":[8000,10000],"rows":4,"columns":3},
+    {"kind":"right","origin":[2000,120000],"pitch":[8000,10000],"rows":4,"columns":3}
+  ],
+  "cases": [
+    {
+      "name": "x_reversal",
+      "axis_policy": ["row","column"],
+      "source_sites": [[0,0,0],[0,0,1]],
+      "target_sites": [[2,0,0],[1,0,0]],
+      "stationary_sites": []
+    },
+    {
+      "name": "y_reversal",
+      "axis_policy": ["row","column"],
+      "source_sites": [[0,0,0],[0,1,0]],
+      "target_sites": [[1,1,0],[1,0,0]],
+      "stationary_sites": []
+    },
+    {
+      "name": "xy_reversal",
+      "axis_policy": ["row","column"],
+      "source_sites": [[0,0,0],[0,1,1]],
+      "target_sites": [[2,1,0],[1,0,0]],
+      "stationary_sites": []
+    }
+  ]
+}

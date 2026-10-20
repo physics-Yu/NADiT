@@ -1,0 +1,353 @@
+{
+  "source_commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "source_sha256": {
+    "CodeGenerator.cpp": "3223883b05b32aa696fc2ca07e6ad45e7c90396cbd9d83a2443618267d62620a",
+    "CodeGenerator.hpp": "25041fa74fd25d29160a8db979639d6592065cebbeb42da891c069d18f34ccf9",
+    "IndependentSetRouter.cpp": "17a6273c5b77ada9fc1248a54df183d39055c925f4e01b5f967edebfec6e7bdf",
+    "IndependentSetRouter.hpp": "18c81dd6b3a082e2fa9265503e7c23a9736acf529904cc0d008f0e85f121efbb"
+  },
+  "translation_unit_sha256": "9c6ef0c3d6f18d1d4e11ce24cdc7ced37fb8cb6215dbab66630ebd2c809654bc",
+  "cases": {
+    "x_reversal": [
+      {
+        "kind": "load",
+        "positions": [
+          [
+            0,
+            0.0,
+            0.0
+          ],
+          [
+            1,
+            5.0,
+            0.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            2.5
+          ],
+          [
+            1,
+            7.5,
+            2.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            -4.0,
+            115.0
+          ],
+          [
+            1,
+            -2.0,
+            115.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            -4.0,
+            120.0
+          ],
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "store",
+        "positions": [
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            -4.0,
+            115.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            4.0,
+            115.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "store",
+        "positions": [
+          [
+            0,
+            2.0,
+            120.0
+          ]
+        ]
+      }
+    ],
+    "y_reversal": [
+      {
+        "kind": "load",
+        "positions": [
+          [
+            0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            2.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            12.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            0.0,
+            12.5
+          ]
+        ]
+      },
+      {
+        "kind": "load",
+        "positions": [
+          [
+            1,
+            0.0,
+            5.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            12.5
+          ],
+          [
+            1,
+            2.5,
+            7.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            -2.0,
+            125.0
+          ],
+          [
+            1,
+            -2.0,
+            115.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            0.0,
+            130.0
+          ],
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "store",
+        "positions": [
+          [
+            0,
+            0.0,
+            130.0
+          ],
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      }
+    ],
+    "xy_reversal": [
+      {
+        "kind": "load",
+        "positions": [
+          [
+            0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            2.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.5,
+            12.5
+          ]
+        ]
+      },
+      {
+        "kind": "load",
+        "positions": [
+          [
+            1,
+            5.0,
+            5.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            1,
+            7.5,
+            7.5
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            -4.0,
+            125.0
+          ],
+          [
+            1,
+            -2.0,
+            115.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "store",
+        "positions": [
+          [
+            1,
+            0.0,
+            120.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            4.0,
+            125.0
+          ]
+        ]
+      },
+      {
+        "kind": "move",
+        "positions": [
+          [
+            0,
+            2.0,
+            130.0
+          ]
+        ]
+      },
+      {
+        "kind": "store",
+        "positions": [
+          [
+            0,
+            2.0,
+            130.0
+          ]
+        ]
+      }
+    ]
+  }
+}

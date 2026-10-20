@@ -6,7 +6,7 @@ from math import hypot
 from ..atom_ir import AtomStep
 from ..contracts import AtomFragment
 from ..device import Device, Position
-from ..state import AODHolder, AtomLayout, AtomState, SLMHolder
+from ..state import COORDINATE_TOLERANCE, AODHolder, AtomLayout, AtomState, SLMHolder
 from .occupancy import Occupancy
 from .pair import _without_empty_grids
 from .rules import MoveRequest, StrictRules, build_conflict_map
@@ -147,6 +147,12 @@ def _region_pairs(
             and target is not None
             and source.zone_id in regions
             and target.zone_id in regions
+            and (
+                source.kind == "storage"
+                or target.kind == "storage"
+                or abs(source.pair_separation - target.pair_separation)
+                <= COORDINATE_TOLERANCE
+            )
         ):
             pairs[atom.id] = (source.zone_id, target.zone_id)
     return pairs
