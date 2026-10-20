@@ -250,7 +250,7 @@ Use the same compiler and strategy handoffs with these helpers:
 | Helper | Responsibility |
 | --- | --- |
 | `GatePairCatalog.from_device(device, zone_id, pairs)` | Bind explicit SLM site pairs and check their shared-pulse geometry once |
-| `ReadyScheduler(max_cz_gates=catalog.capacity)` | Select disjoint ready CZ gates up to the fixed pair capacity |
+| `ReadyScheduler(max_cz_gates=catalog.capacity)` | Drain ready local rotations, then select disjoint CZ gates up to the fixed pair capacity |
 | `MultiPairPlacer(aod_id, catalog, storage_zone_id="storage")` | Assign distinct pairs, clear spectators, and plan storage returns |
 | `SequentialTransport(aod_id)` | Move one atom at a time, following destination vacancy order |
 | `WholeLayerEmitter(catalog.coverage)` | Emit one CZPulse carrying every selected CZ node ID |
@@ -373,7 +373,8 @@ uv run --locked python examples/compile_multipair.py --transport strict --bit 0 
 uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse
 ```
 
-With the checked-in device and pair capacity 2, including the IDS strategy below:
+Historical baseline before the source audit in ADR 0017, with the example
+device and pair capacity 2:
 
 | Bit | Placement and reuse | Atom loads | Atom stores | LOAD / STORE batches | Transport time (us) |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -529,7 +530,8 @@ The implementation separates:
 | --- | --- |
 | `transport/staged.py` | Distance-ordered groups and transport integration |
 | `transport/staging_geometry.py` | Regular SLM pitches and paired gate geometry |
-| `transport/staged_policy.py` | Admitted offset lanes and workspace margins |
+| `transport/staged_policy.py` | Reference regular-array geometry |
+| `transport/staged_plan.py` | Cached stages, actual AOD resources, and occupied intersections |
 | `transport/staging.py` | Reference row/column transfers and intermediate positions |
 | `transport/staged_emission.py` | Complete active grids, affected atoms, and action timing |
 
@@ -540,12 +542,12 @@ Every emitted MOVE preserves active line identity and order. Only atoms whose
 positions change appear in its targets; all active lines remain in its grid.
 Each transfer and offset contributes its own duration.
 
-Gate-column release uses a construction whitelist: at most two columns, or
-a complete Cartesian block that aligns and releases together. Admission can
-complete the block using compatible pending requests; otherwise it forms
-smaller batches. This avoids a sparse-column overlap observed in the executed
-reference code. The [recorded counterexample](reference/unsafe_sparse_gate.json)
-includes the input and original trace.
+Gate-column release uses the source loops for any column count, including
+sparse masks. The upward spreading scan corrects the source's lower-boundary
+test to use the upper boundary, keeping unselected columns on off-site lanes.
+The [recorded counterexample](reference/unsafe_sparse_gate.json) retains the
+original collision trace. [ADR 0017](../../docs/decisions/0017-source-routing-audit.md)
+records the correction and removal of earlier admission shortcuts.
 
 Regular storage grids and horizontal paired gate arrays are inferred from
 Device sites. A singleton axis has no observable pitch: the default is twice
@@ -554,7 +556,7 @@ plus three minimum spacings. Supply `StagingGeometry` with explicit
 `SiteStagingGeometry` records when the physical lattice pitch is known.
 This preserves the existing Device schema.
 
-Regions with admitted regular geometry and offset margins use staging.
+Regions with the reference regular geometry use staging.
 Each region must describe one regular array or a paired gate array with
 consistent pitches and bounds; heterogeneous subarrays use direct transport.
 Other regions retain the direct strict constructor. AOD-held readout uses
@@ -599,14 +601,13 @@ Device capacity, workspace, and destination occupancy can also retain a strict
 group. No duplicate Atom IR plans or complete action checks are used to make
 this decision.
 
-Row reordering reserves an extra source-Y corridor. Column reordering reserves
-a target-X corridor. Those corridors must fit the AOD and contain no foreign
-SLM sites. Gate-column reversals admit at most two columns; larger reversals
-retain strict groups. Ordered gate-column release keeps the existing complete
-mask rule. Regular storage-column reversal uses half-pitch lanes. Paired arrays
-require positive pair separation smaller than the horizontal pitch.
-Transfers between two gate regions with different pair separations use direct
-strict transport because the reference generator assumes one separation.
+The source template constructs the intermediate coordinates. `StagingPlans`
+caches those stages and binds their actual active grids to configured capacity,
+spacing, workspace, and occupied intersections. Emission consumes the same
+stages. There is no column-count cap, complete-mask requirement, or
+count-times-pitch workspace estimate. Empty SLM sites do not block routing.
+Paired arrays require positive pair separation smaller than the horizontal
+pitch; source and target offsets use their own region's pair separation.
 
 ```text
 uv run --locked python examples/compile_multipair.py --transport relaxed --bit 1 --reuse --placement ids
@@ -622,7 +623,8 @@ The example reports transport duration, load batch sizes, and maximum parallel
 atom count. See [ADR 0011](../../docs/decisions/0011-strict-parallel-transport.md)
 for the construction rules.
 
-With the checked-in device, pair capacity 2, and forced measurement values:
+Historical baseline before ADR 0017, with the example device, pair capacity 2,
+and forced measurement values:
 
 | Bit | Sequential transport actions | Strict transport actions | Sequential transport time (us) | Strict transport time (us) |
 | --- | ---: | ---: | ---: | ---: |

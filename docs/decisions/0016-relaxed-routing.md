@@ -48,16 +48,12 @@ committing a merge. Unsupported shapes retain the strict construction.
 No full action checker, replay, or duplicate two-plan emission is used to
 decide routing.
 
-Source row reordering reserves an envelope of the selected source rows plus
-their count times the source vertical pitch. Storage column reordering uses
-the analogous target-X envelope. Foreign-zone SLM sites cannot enter those
-envelopes. Gate-column reversal admits at most two columns; with
-`d=(pitch_x-pair_separation)/3`, the other column parks at `x-2d` or
-`x-pair_separation-d`. Larger gate-column reversals retain strict groups.
-Ordered gate-column release retains the existing complete-mask condition.
-The reference generator uses one pair-separation value for a rearrangement.
-Transfers between two gate regions with different pair separations therefore
-use direct strict transport; this admission rule is shared with staged strict.
+The source audit in [ADR 0017](0017-source-routing-audit.md) supersedes the
+initial two-column cap, complete-mask rule, whole-region workspace estimates,
+and cross-region equal-separation fallback. The source's multi-column loops
+now use the corrected upward parking boundary and each region's pair separation.
+Cached stages supply actual capacity, spacing, workspace, and occupied-grid
+requirements; accepted stages are reused for Atom IR emission.
 
 Generalize the existing staging generator's line assignment and axis choice
 to the source algorithm. Bind complete active grids to the resulting events.
@@ -66,9 +62,10 @@ source identities remain shared.
 
 ## Verification
 
-The completed modules pass 740 tests, compared with the preceding verified
+The initial implementation passed 740 tests, compared with the preceding verified
 676-test baseline. Ruff formatting, lint, and mypy also pass. Existing test
-assertions and strict reference outputs are unchanged.
+assertions and strict reference outputs were unchanged in that increment.
+Current audit results are recorded in ADR 0017.
 
 The pinned upstream C++ router matches all 12 small cases for mover order,
 compatibility, proxy cost, strict grouping, and relaxed grouping. Its
@@ -81,10 +78,11 @@ conflicts, high-offset strict fallback, finite capacity/workspace, retained
 atoms, both measurement outcomes, feedback latency, and different pair
 separations between gate regions. Full checkers remain in tests.
 
-The existing `multipair_feedback.qasm3` example gives the following comparison,
+At commit `4ed40d4`, `multipair_feedback.qasm3` gave the following comparison,
 with the same Device, reuse enabled, and the same forced measurement outcome.
 The relaxed threshold is 1.0. Atom counts include all LOAD/STORE bindings;
-transport time sums generated LOAD/MOVE/STORE durations.
+transport time sums generated LOAD/MOVE/STORE durations. These are historical
+results before the source audit in ADR 0017.
 
 | Placement | Outcome | Staged strict loads/stores | Relaxed loads/stores | Staged strict transport (us) | Relaxed transport (us) |
 | --- | --- | --- | --- | --- | --- |
@@ -93,7 +91,7 @@ transport time sums generated LOAD/MOVE/STORE durations.
 | IDS | 0 | 13/13 | 13/13 | 1153.238 | 1049.779 |
 | IDS | 1 | 21/21 | 21/21 | 1550.600 | 1447.142 |
 
-All eight programs replay to their reported exit layouts. In these cases the
+All eight programs replayed to their reported exit layouts. In these cases the
 improvement comes from batching the same atom transfers: for IDS outcome 1,
 LOAD actions decrease from nine to eight while atom-load count stays at 21.
 

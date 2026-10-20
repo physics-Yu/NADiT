@@ -1,4 +1,4 @@
-"""Different gate-zone pair separations use direct transport without offsets."""
+"""Gate-zone offsets use the pair separation of the corresponding endpoint."""
 
 import pytest
 
@@ -18,6 +18,7 @@ from nadit_physical_compiler.device import (
 from nadit_physical_compiler.motion import check_load, check_move, check_store
 from nadit_physical_compiler.replay import apply_step, replay
 from nadit_physical_compiler.state import (
+    AODHolder,
     AtomLayout,
     AtomState,
     SLMHolder,
@@ -79,7 +80,7 @@ def _different_gate_zones() -> tuple[Device, StagingGeometry, AtomLayout, AtomLa
 
 
 @pytest.mark.parametrize("relaxed", [False, True])
-def test_gate_zone_gap_change_uses_legal_direct_fallback(relaxed: bool) -> None:
+def test_gate_zone_gap_change_uses_legal_endpoint_offsets(relaxed: bool) -> None:
     device, geometry, entry, target = _different_gate_zones()
     validate_layout(device, entry)
     validate_layout(device, target)
@@ -93,11 +94,12 @@ def test_gate_zone_gap_change_uses_legal_direct_fallback(relaxed: bool) -> None:
         else StagedStrictTransport("aod", geometry)
     )
     fragment = transporter.construct(entry, target, device)
-    assert fragment == StrictTransport("aod").construct(entry, target, device)
+    assert fragment != StrictTransport("aod").construct(entry, target, device)
 
     # Using source separation 1.5 in target pitch 12 gives an offset of 3.5.
     # A reversed column then parks at 12 - 2 * 3.5 = 5, on stationary atom 2.
     current = entry
+    peak = 0
     for step in fragment.steps:
         assert len(step.actions) == 1
         action = step.actions[0]
@@ -117,6 +119,11 @@ def test_gate_zone_gap_change_uses_legal_direct_fallback(relaxed: bool) -> None:
         current = apply_step(current, step, device)
         validate_layout(device, current)
         assert current.atom(2) == entry.atom(2)
+        peak = max(
+            peak,
+            sum(isinstance(atom.holder, AODHolder) for atom in current.atoms),
+        )
 
+    assert peak == (2 if relaxed else 1)
     assert current == fragment.exit_layout == target
     assert replay(AtomProgram(fragment.steps), entry, device) == target

@@ -20,20 +20,30 @@ class ReadyScheduler:
         self.max_cz_gates = max_cz_gates
 
     def select(self, dag: PhysicalDAG, ready: tuple[int, ...]) -> GateLayer:
-        """Select the earliest ready operation and compatible peers.
+        """Drain ready local rotations before selecting a CZ layer.
 
         Args:
             dag: Native physical operations and dependencies.
             ready: Node IDs with resolved dependencies and true conditions.
 
         Returns:
-            Disjoint operations sharing the earliest operation's name.
+            Disjoint operations sharing the selected operation's name.
             CZ layers respect the configured capacity; readout remains singular.
         """
         if not ready:
             return GateLayer(())
         ordered = sorted(ready)
-        name = dag.nodes[ordered[0]].name
+        first = ordered[0]
+        if dag.nodes[first].name == "cz":
+            first = next(
+                (
+                    index
+                    for index in ordered
+                    if dag.nodes[index].name in ("rx", "ry", "rz")
+                ),
+                first,
+            )
+        name = dag.nodes[first].name
         if name not in ("rx", "ry", "rz", "reset", "cz"):
             return GateLayer((ordered[0],))
         capacity = self.max_cz_gates if name == "cz" else len(ordered)

@@ -1,5 +1,6 @@
 """Incremental position lookup using the atom-state coordinate tolerance."""
 
+from bisect import bisect_left
 from collections.abc import Mapping
 from math import floor
 
@@ -35,6 +36,20 @@ class Occupancy:
             and abs(self._positions[atom_id].y - position.y) <= COORDINATE_TOLERANCE
         }
 
+    def at_grid(self, xs: tuple[float, ...], ys: tuple[float, ...]) -> set[int]:
+        """Return atoms at intersections of two sorted coordinate tuples.
+
+        Small grids use the position index. Large grids scan occupied positions
+        directly, avoiding enumeration of their empty intersections.
+        """
+        if len(xs) * len(ys) <= len(self._positions):
+            return {atom for x in xs for y in ys for atom in self.at(Position(x, y))}
+        return {
+            atom
+            for atom, position in self._positions.items()
+            if _on_axis(position.x, xs) and _on_axis(position.y, ys)
+        }
+
     def remove(self, atom_id: int) -> None:
         """Remove an atom before reinsertion; missing IDs raise KeyError."""
         position = self._positions.pop(atom_id)
@@ -57,3 +72,11 @@ def _bucket(position: Position) -> tuple[int, int]:
         floor(position.x / COORDINATE_TOLERANCE),
         floor(position.y / COORDINATE_TOLERANCE),
     )
+
+
+def _on_axis(value: float, coordinates: tuple[float, ...]) -> bool:
+    index = bisect_left(coordinates, value)
+    return (
+        index < len(coordinates)
+        and abs(coordinates[index] - value) <= COORDINATE_TOLERANCE
+    ) or (index > 0 and abs(coordinates[index - 1] - value) <= COORDINATE_TOLERANCE)

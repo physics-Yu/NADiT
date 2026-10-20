@@ -4,8 +4,10 @@
 
 ### Fixed
 
-- Use direct strict transport between gate regions with different pair
-  separations; the shared staged offset formula requires one separation.
+- Correct the source gate-column spreading boundary and use endpoint-specific
+  pair separations instead of limiting column count or forcing direct fallback.
+- Match source distance/candidate tie ordering and drain ready local rotations
+  before CZ selection to expose independent gates in the same layer.
 - Carry actual retained-atom snapshots between compilation layers instead of
   treating every occupied gate site as a reuse anchor.
 - Clear nonretained pulse-region occupants before greedy or IDS gate placement,
@@ -14,6 +16,9 @@
 
 ### Changed
 
+- Remove staged transport's two-column cap and Cartesian-mask completion.
+  Cached source-template stages supply actual AOD capacity, spacing, workspace,
+  and occupied intersections instead of broad geometry envelopes.
 - Lookahead can use already compiled measurement results during planned
   feedback latency; actual conditional actions still wait for result availability.
 - Reuse comparison reports both atom-load and atom-store counts alongside

@@ -6,7 +6,7 @@ from math import hypot
 from ..atom_ir import AtomStep
 from ..contracts import AtomFragment
 from ..device import Device
-from ..state import AODHolder, AtomLayout, AtomState, SLMHolder
+from ..state import AODHolder, AtomLayout, AtomState
 from .occupancy import Occupancy
 from .pair import _without_empty_grids
 from .relaxed_groups import MovementGroups, route_relaxed
@@ -15,8 +15,8 @@ from .relaxed_rules import RelaxedRules
 from .rules import MoveRequest, StrictRules, build_conflict_map
 from .staged import StagedStrictTransport, _region_pairs, _StagedGroups
 from .staged_emission import emit_stages
+from .staged_plan import StagingPlans
 from .staged_policy import staging_regions
-from .staging import generate_stages
 from .staging_geometry import StagingGeometry
 from .strict import _requests
 
@@ -82,13 +82,16 @@ class RelaxedTransport:
         if not moves:
             return AtomFragment((), current)
         geometry = self.geometry or StagingGeometry.from_device(device, self.aod_id)
+        plans = StagingPlans(current, destinations, geometry, strict.aod)
         initial = _strict_batches(
-            current, destinations, device, strict, geometry, moves
+            current, destinations, device, strict, geometry, moves, plans
         )
         if initial is None:
             return fallback.construct(current, target, device)
         relaxed = RelaxedRules(strict.aod, strict.timing)
-        admission = RelaxedAdmission(current, destinations, device, relaxed, geometry)
+        admission = RelaxedAdmission(
+            current, destinations, device, relaxed, geometry, plans
+        )
         groups = route_relaxed(
             moves,
             relaxed,
@@ -98,7 +101,7 @@ class RelaxedTransport:
         )
         steps: list[AtomStep] = []
         for group in groups:
-            events = generate_stages(group, current, destinations, geometry)
+            events = plans.events(group)
             fragment = emit_stages(events, group, current, destinations, device, strict)
             steps.extend(fragment.steps)
             current = fragment.exit_layout
@@ -112,6 +115,7 @@ def _strict_batches(
     rules: StrictRules,
     geometry: StagingGeometry,
     moves: tuple[MoveRequest, ...],
+    plans: StagingPlans,
 ) -> MovementGroups | None:
     regions = staging_regions(device, rules.aod, geometry)
     pairs = _region_pairs(layout, destinations, geometry, regions)
@@ -133,13 +137,8 @@ def _strict_batches(
         build_conflict_map(ordered, rules),
         pairs,
         Occupancy({atom.id: atom.position for atom in layout.atoms}),
-        {
-            move.atom_id
-            for move in ordered
-            if isinstance((holder := destinations[move.atom_id].holder), SLMHolder)
-            and geometry.sites[holder.site_id].kind != "storage"
-        },
-        {move.target: move.atom_id for move in ordered},
+        plans.fits,
+        plans.blockers,
     )
     pending = set(selector.requests)
     groups = []

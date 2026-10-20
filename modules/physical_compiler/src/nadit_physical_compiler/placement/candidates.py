@@ -37,14 +37,16 @@ def gate_jobs(
         config: Lookahead factor used in candidate costs.
 
     Returns:
-        Jobs ordered by descending nearest-pair maximum distance. Options are
-        ordered lexicographically by their two movement distances.
+        Jobs ordered by descending nearest-pair maximum distance and then by
+        descending atom pair, matching the reference scheduler's canonical
+        pairs. Options are ordered lexicographically by their two movement
+        distances.
 
     Raises:
         ValueError: If a gate has no available pair.
     """
     partners = partner_positions or {}
-    jobs: list[tuple[float, PlacementJob]] = []
+    jobs: list[tuple[float, tuple[int, int], PlacementJob]] = []
     for first, second in gates:
         options = tuple(
             _gate_option(first, second, pair, reuse_atoms, partners, config)
@@ -54,8 +56,11 @@ def gate_jobs(
             raise ValueError("A gate has no available catalogue pair.")
         nearest = min(options, key=lambda option: sum(option.distances))
         ordered = tuple(sorted(options, key=lambda option: option.distances))
-        jobs.append((nearest.distance, PlacementJob(ordered)))
-    return tuple(job for _, job in sorted(jobs, key=lambda item: -item[0]))
+        atom_pair = (min(first.id, second.id), max(first.id, second.id))
+        jobs.append((nearest.distance, atom_pair, PlacementJob(ordered)))
+    return tuple(
+        job for _, _, job in sorted(jobs, key=lambda item: item[:2], reverse=True)
+    )
 
 
 def storage_jobs(
@@ -77,7 +82,7 @@ def storage_jobs(
 
     Returns:
         Jobs beginning with the atom farthest from its nearest storage site,
-        followed by increasing distance from that first atom.
+        followed by increasing distance from that first atom and then atom ID.
 
     Raises:
         ValueError: If an atom has neither a storage nor a stay option.
@@ -95,7 +100,7 @@ def storage_jobs(
     first = atoms[first_index]
     remaining = sorted(
         (atom for index, atom in enumerate(atoms) if index != first_index),
-        key=lambda atom: _distance(atom.position, first.position),
+        key=lambda atom: (_distance(atom.position, first.position), atom.id),
     )
     return tuple(
         _storage_job(atom, sites, reuse_atoms, partners, config)

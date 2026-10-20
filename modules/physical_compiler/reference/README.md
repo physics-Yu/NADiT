@@ -59,8 +59,10 @@ build paths.
 This is a counterexample to unrestricted use of the reference constructor
 for sparse column release with retained partners. It does not establish a
 whole-compiler reproduction, since scheduling and placement are not executed.
-It explains NADiT's constructive batch-shape restriction before generation;
-source assumptions alone do not rule out this input. This counterexample is
+NADiT corrects the upward spreading boundary that corrupts the gate-lane phase;
+the same sparse batch now generates legal actions without a column-count cap.
+See [ADR 0017](../../../docs/decisions/0017-source-routing-audit.md).
+Source assumptions alone do not rule out this input. This counterexample is
 excluded from the nine legal trace-comparison oracles in `expected.json`.
 
 ## Running

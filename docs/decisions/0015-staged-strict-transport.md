@@ -67,12 +67,11 @@ assumptions of regular arrays and strict axis order hold in that case.
 [The recorded input and trace](../../modules/physical_compiler/reference/unsafe_sparse_gate.json)
 preserve the evidence.
 
-Before calling the generator, gate-column release admits at most two columns
-or a complete Cartesian block with the same row mask in every column. When
-all missing cells have compatible pending moves, admission adds those moves.
-Otherwise it leaves the extension for a separate batch. Row release and
-storage-column release use their regular offset lanes. No generated action
-is checked and retried in this selection.
+The initial implementation restricted these batches to two columns or complete
+Cartesian blocks. [ADR 0017](0017-source-routing-audit.md) removes that shortcut
+and corrects the upward parking boundary responsible for the collision.
+Sparse multi-column batches now use the same source loops. Device binding
+uses the actual cached stage coordinates and occupied active intersections.
 
 ## Results
 

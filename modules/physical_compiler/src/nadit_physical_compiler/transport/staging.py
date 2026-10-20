@@ -83,11 +83,6 @@ class _Generator:
             self.target_kinds[move.atom_id] = target_shapes[move.atom_id].kind
         self.source = source_shapes[moves[0].atom_id]
         self.target = target_shapes[moves[0].atom_id]
-        self.pair_separation = (
-            self.source.pair_separation
-            if self.source.kind != "storage"
-            else self.target.pair_separation
-        )
         self.horizontal = dict(sorted((move.source.x, move.target.x) for move in moves))
         self.vertical = dict(sorted((move.source.y, move.target.y) for move in moves))
         self.row_ordered = list(self.vertical.values()) == sorted(
@@ -181,7 +176,7 @@ class _Generator:
         x = move.source.x if source else move.target.x
         if kind == "storage":
             return x + shape.pitch_x / 2
-        offset = (shape.pitch_x - self.pair_separation) / 3
+        offset = (shape.pitch_x - shape.pair_separation) / 3
         return x + (-offset if kind == "left" else offset)
 
     def _load_rows(self) -> None:
@@ -310,7 +305,7 @@ class _Generator:
         groups: dict[float, set[int]],
         kind: SiteKind,
     ) -> None:
-        dx, separation = self.source.pitch_x, self.pair_separation
+        dx, separation = self.source.pitch_x, self.source.pair_separation
         offset = (dx - separation) / 3
         left = kind == "left"
         self.columns[column] = x + (-offset if left else offset)
@@ -468,7 +463,7 @@ class _Generator:
         column = self.tx[first_x]
         first_kind = self.target_kinds[min(groups[first_x])]
         dx = self.target.pitch_x
-        offset = (dx - self.pair_separation) / 3
+        offset = (dx - self.target.pair_separation) / 3
         kind = first_kind
         next_x = self.columns[column]
         for previous in _below(self.columns, column):
@@ -495,9 +490,11 @@ class _Generator:
             if kind == "storage":
                 next_x += dx if next_x > self.target.min_x else dx / 2
             else:
+                # Ascending lanes use the upper boundary. Using min_x here
+                # corrupts left/right parity when starting at the left margin.
                 next_x += (
                     dx - offset
-                    if next_x > self.target.min_x and kind == "left"
+                    if next_x < self.target.max_x and kind == "left"
                     else offset
                 )
                 kind = _flip(kind)
@@ -564,7 +561,7 @@ class _Generator:
         targets: dict[int, float],
         kind: SiteKind,
     ) -> None:
-        dx, separation = self.target.pitch_x, self.pair_separation
+        dx, separation = self.target.pitch_x, self.target.pair_separation
         offset = (dx - separation) / 3
         left = kind == "left"
         self.columns[column] = x + (-offset if left else offset)

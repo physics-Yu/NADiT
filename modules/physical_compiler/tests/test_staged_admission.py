@@ -1,8 +1,6 @@
-"""Sparse gate-column batches are admitted constructively before generation."""
+"""Sparse gate-column batches use the corrected source parking lanes."""
 
 from dataclasses import replace
-
-import pytest
 
 from nadit_physical_compiler.atom_ir import Load, Move, Store
 from nadit_physical_compiler.capabilities import CZCapability
@@ -18,20 +16,16 @@ from nadit_physical_compiler.device import (
 from nadit_physical_compiler.motion import check_load, check_move, check_store
 from nadit_physical_compiler.replay import apply_step
 from nadit_physical_compiler.state import (
+    AODHolder,
     AtomLayout,
     AtomState,
     SLMHolder,
     validate_layout,
 )
-from nadit_physical_compiler.transport import StagedStrictTransport, staged
-from nadit_physical_compiler.transport.rules import MoveRequest
-from nadit_physical_compiler.transport.staging import StageEvent, generate_stages
-from nadit_physical_compiler.transport.staging_geometry import StagingGeometry
+from nadit_physical_compiler.transport import StagedStrictTransport
 
 
-def test_sparse_gate_columns_never_send_the_unsafe_group_to_codegen(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_sparse_gate_columns_keep_the_full_batch_on_legal_parking_lanes() -> None:
     device = Device(
         "sparse-gate-columns",
         (
@@ -80,29 +74,9 @@ def test_sparse_gate_columns_never_send_the_unsafe_group_to_codegen(
         )
         + (anchor,),
     )
-    generated_batches: list[tuple[MoveRequest, ...]] = []
-
-    def record(
-        moves: tuple[MoveRequest, ...],
-        layout: AtomLayout,
-        destinations: dict[int, AtomState],
-        geometry: StagingGeometry,
-    ) -> tuple[StageEvent, ...]:
-        generated_batches.append(moves)
-        source_rows = {move.source.y for move in moves}
-        source_columns = {move.source.x for move in moves}
-        target_columns: dict[float, set[float]] = {}
-        for move in moves:
-            target_columns.setdefault(move.target.x, set()).add(move.target.y)
-        if len(source_columns) <= len(source_rows) and len(target_columns) > 2:
-            masks = tuple(target_columns.values())
-            assert all(mask == masks[0] for mask in masks)
-        return generate_stages(moves, layout, destinations, geometry)
-
-    monkeypatch.setattr(staged, "generate_stages", record)
     result = StagedStrictTransport("a").construct(entry, target, device)
-    assert all(len(batch) < 6 for batch in generated_batches)
     current = entry
+    peak = 0
     for step in result.steps:
         for action in step.actions:
             if isinstance(action, Load):
@@ -123,4 +97,9 @@ def test_sparse_gate_columns_never_send_the_unsafe_group_to_codegen(
         current = apply_step(current, step, device)
         validate_layout(device, current)
         assert current.atom(99) == anchor
+        peak = max(
+            peak,
+            sum(isinstance(atom.holder, AODHolder) for atom in current.atoms),
+        )
+    assert peak == 6
     assert current == target == result.exit_layout
