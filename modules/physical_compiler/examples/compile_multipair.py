@@ -20,6 +20,7 @@ from nadit_physical_compiler import (
     load_qasm,
     replay,
 )
+from nadit_physical_compiler.contracts import Transporter
 from nadit_physical_compiler.emission import WholeLayerEmitter
 from nadit_physical_compiler.placement import (
     GatePairCatalog,
@@ -30,7 +31,11 @@ from nadit_physical_compiler.placement import (
 from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
-from nadit_physical_compiler.transport import SequentialTransport, StrictTransport
+from nadit_physical_compiler.transport import (
+    SequentialTransport,
+    StagedStrictTransport,
+    StrictTransport,
+)
 
 
 def main() -> None:
@@ -44,7 +49,7 @@ def main() -> None:
     parser.add_argument("--queue-capacity", type=int, default=100)
     parser.add_argument("--reuse-level", type=float, default=5.0)
     parser.add_argument(
-        "--transport", choices=("sequential", "strict"), default="sequential"
+        "--transport", choices=("sequential", "strict", "staged"), default="sequential"
     )
     parser.add_argument(
         "--reuse",
@@ -75,11 +80,12 @@ def main() -> None:
         for node in dag.nodes
         if (reference := node.result) is not None and args.bit is not None
     }
-    transporter = (
-        StrictTransport("transport")
-        if args.transport == "strict"
-        else SequentialTransport("transport")
-    )
+    transports: dict[str, Transporter] = {
+        "sequential": SequentialTransport("transport"),
+        "strict": StrictTransport("transport"),
+        "staged": StagedStrictTransport("transport"),
+    }
+    transporter = transports[args.transport]
     placer = (
         HeuristicPlacer(
             "transport",

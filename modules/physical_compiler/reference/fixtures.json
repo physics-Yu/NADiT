@@ -1,0 +1,74 @@
+{
+  "units": "nm",
+  "nm_per_um": 1000,
+  "slms": [
+    {"kind": "storage", "origin": [0, 0], "pitch": [5000, 5000], "rows": 4, "columns": 4},
+    {"kind": "left", "origin": [0, 120000], "pitch": [8000, 10000], "rows": 4, "columns": 3},
+    {"kind": "right", "origin": [2000, 120000], "pitch": [8000, 10000], "rows": 4, "columns": 3}
+  ],
+  "cases": [
+    {
+      "name": "row_row_rectangle_up",
+      "axis_policy": ["row", "row"],
+      "source_sites": [[0,0,0],[0,0,1],[0,0,2],[0,1,0],[0,1,1],[0,1,2]],
+      "target_sites": [[1,0,0],[2,0,0],[1,0,1],[1,1,0],[2,1,0],[1,1,1]],
+      "stationary_sites": []
+    },
+    {
+      "name": "row_row_sparse_up",
+      "axis_policy": ["row", "row"],
+      "source_sites": [[0,0,0],[0,0,1],[0,1,1],[0,1,2]],
+      "target_sites": [[1,0,0],[2,0,0],[2,1,0],[1,1,1]],
+      "stationary_sites": [[0,0,2],[0,1,0]]
+    },
+    {
+      "name": "col_col_rectangle_up",
+      "axis_policy": ["column", "column"],
+      "source_sites": [[0,0,0],[0,0,1],[0,1,0],[0,1,1],[0,2,0],[0,2,1]],
+      "target_sites": [[1,0,0],[2,0,0],[1,1,0],[2,1,0],[1,2,0],[2,2,0]],
+      "stationary_sites": []
+    },
+    {
+      "name": "col_col_sparse_up",
+      "axis_policy": ["column", "column"],
+      "source_sites": [[0,0,0],[0,1,0],[0,1,1],[0,2,1]],
+      "target_sites": [[1,0,0],[1,1,0],[2,1,0],[2,2,0]],
+      "stationary_sites": [[0,0,1],[0,2,0]]
+    },
+    {
+      "name": "row_col_rectangle_up",
+      "axis_policy": ["row", "column"],
+      "source_sites": [[0,0,0],[0,0,1],[0,1,0],[0,1,1]],
+      "target_sites": [[1,0,0],[2,0,0],[1,1,0],[2,1,0]],
+      "stationary_sites": []
+    },
+    {
+      "name": "row_col_sparse_up",
+      "axis_policy": ["row", "column"],
+      "source_sites": [[0,0,0],[0,1,1]],
+      "target_sites": [[1,0,0],[2,1,0]],
+      "stationary_sites": [[0,0,1],[0,1,0]]
+    },
+    {
+      "name": "row_row_sparse_down",
+      "axis_policy": ["row", "row"],
+      "source_sites": [[1,0,0],[2,0,0],[2,1,0],[1,1,1]],
+      "target_sites": [[0,0,0],[0,0,1],[0,1,1],[0,1,2]],
+      "stationary_sites": [[1,0,1],[1,1,0]]
+    },
+    {
+      "name": "col_col_sparse_down",
+      "axis_policy": ["column", "column"],
+      "source_sites": [[1,0,0],[1,1,0],[2,1,0],[2,2,0]],
+      "target_sites": [[0,0,0],[0,1,0],[0,1,1],[0,2,1]],
+      "stationary_sites": [[2,0,0],[1,2,0]]
+    },
+    {
+      "name": "row_col_sparse_down",
+      "axis_policy": ["row", "column"],
+      "source_sites": [[1,0,0],[2,1,0]],
+      "target_sites": [[0,0,0],[0,1,1]],
+      "stationary_sites": [[2,0,0],[1,1,0]]
+    }
+  ]
+}

@@ -1,7 +1,10 @@
 # 0010: Multi-Pair Compilation
 
-Status: Accepted on 2026-10-20. The correctness baseline, direct strict
-transport, reuse, and IDS are implemented; staged routing follows.
+Status: Accepted on 2026-10-20. The correctness baseline, direct and staged
+strict transport, reuse, and IDS are implemented; relaxed routing follows.
+
+[ADR 0015](0015-staged-strict-transport.md) specifies staged strict pickup,
+release, and offsets.
 
 ## Context
 

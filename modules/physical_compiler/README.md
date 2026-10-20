@@ -25,7 +25,10 @@ movement-group scoring, optional reuse, and bounded Iterative Diving Search.
 
 ## Next step
 
-Next, add staged/relaxed routing and compare the rigid-device variant.
+Staged strict routing provides row/column pickup,
+offsets, and release; see
+[ADR 0015](../../docs/decisions/0015-staged-strict-transport.md).
+Relaxed routing and the rigid-device comparison follow separately.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -509,6 +512,61 @@ model as sequential transport.
 
 Full movement and state checks are used in tests. The transport constructor
 uses its compatibility, capacity, and occupancy rules directly.
+
+## Staged strict transport
+
+`StagedStrictTransport(aod_id, geometry=None)` uses the same transport interface.
+Requests are ordered by decreasing movement distance before forming strict
+compatible groups. Group admission accounts for line capacity and occupied
+destination sites. Staging handles cross-intersections without collecting
+unrequested spectator atoms.
+
+The implementation separates:
+
+| Module | Responsibility |
+| --- | --- |
+| `transport/staged.py` | Distance-ordered groups and transport integration |
+| `transport/staging_geometry.py` | Regular SLM pitches and paired gate geometry |
+| `transport/staged_policy.py` | Admitted offset lanes and workspace margins |
+| `transport/staging.py` | Reference row/column transfers and intermediate positions |
+| `transport/staged_emission.py` | Complete active grids, affected atoms, and action timing |
+
+Fewer columns than rows selects column pickup and release; fewer rows selects
+row pickup and release; equal counts selects row pickup and column release.
+Compatible rows or columns with identical occupied masks can transfer together.
+Every emitted MOVE preserves active line identity and order. Only atoms whose
+positions change appear in its targets; all active lines remain in its grid.
+Each transfer and offset contributes its own duration.
+
+Gate-column release uses a construction whitelist: at most two columns, or
+a complete Cartesian block that aligns and releases together. Admission can
+complete the block using compatible pending requests; otherwise it forms
+smaller batches. This avoids a sparse-column overlap observed in the executed
+reference code. The [recorded counterexample](reference/unsafe_sparse_gate.json)
+includes the input and original trace.
+
+Regular storage grids and horizontal paired gate arrays are inferred from
+Device sites. A singleton axis has no observable pitch: the default is twice
+the AOD minimum spacing, while a single gate-pair column uses pair separation
+plus three minimum spacings. Supply `StagingGeometry` with explicit
+`SiteStagingGeometry` records when the physical lattice pitch is known.
+This preserves the existing Device schema.
+
+Regions with admitted regular geometry and offset margins use staging.
+Each region must describe one regular array or a paired gate array with
+consistent pitches and bounds; heterogeneous subarrays use direct transport.
+Other regions retain the direct strict constructor. AOD-held readout uses
+the existing singleton transport. These choices do not change DAG progress,
+measurement identity, feedback latency, or pulse emission.
+
+```text
+uv run --locked python examples/compile_multipair.py --transport staged --bit 1 --reuse --placement ids
+```
+
+The [pinned C++ reference harness](reference/README.md) compares the atom-event
+stream of each supplied batch. Independent tests additionally check explicit
+AOD grids, every action, and final replay. See
+[ADR 0015](../../docs/decisions/0015-staged-strict-transport.md).
 
 Compare transports on the same circuit, device, and measurement case:
 

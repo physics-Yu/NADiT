@@ -31,6 +31,12 @@
 
 ### Added
 
+- Staged strict transport with distance-ordered groups, row/column pickup,
+  lattice offsets, combined transfers, and explicit AOD-grid Atom IR.
+- Regular SLM staging geometry with optional explicit pitches and direct strict
+  fallback for regions without the required space or supported geometry.
+- A pinned upstream C++ rearrangement harness and small-case event comparison,
+  plus staged feedback, per-action legality, and exit-replay coverage.
 - Source-aligned routing-aware placement with full gate/storage candidates,
   compatible movement-group scoring, partner lookahead, and bounded IDS.
 - Optional retention in the storage-placement search: matched atoms can stay
