@@ -12,14 +12,15 @@ The frontend uses Qiskit for parsing, custom-gate expansion, native translation,
 and wire dependencies. Native translation finishes before PhysicalDAG
 construction. Small records and protocols define module handoffs.
 The tester produces an abstract physical-circuit trace.
-The one-pair compiler connects ready-layer selection, fixed-pair placement,
-legal transport construction, and Atom IR emission, including measurement
-feedback. Direct action replay reconstructs the exit layout.
+The compiler connects ready-layer selection, fixed-pair placement, transport,
+and Atom IR emission, including measurement feedback. The multi-pair baseline
+adds a fixed catalogue, capacity-limited CZ layers, sequential transfers, and
+one shared pulse per CZ layer. Direct replay reconstructs the exit layout.
 
 ## Next step
 
-Next, extend the flexible strategy with reuse analysis, routing-aware placement,
-and transport batching for multiple gate pairs.
+Next, add shared transport compatibility/cost rules and strict parallel batching,
+then following-layer reuse, IDS placement, and relaxed routing.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -220,6 +221,76 @@ The example's pulse/readout times are explicit study parameters. Tests check
 each emitted transport with the reference constraints, reconstruct the exit
 state, and check conditional selection, timing, and branch phase equivalence.
 
+## Multi-pair correctness baseline
+
+Use the same compiler and strategy handoffs with these helpers:
+
+| Helper | Responsibility |
+| --- | --- |
+| `GatePairCatalog.from_device(device, zone_id, pairs)` | Bind explicit SLM site pairs and check their shared-pulse geometry once |
+| `ReadyScheduler(max_cz_gates=catalog.capacity)` | Select disjoint ready CZ gates up to the fixed pair capacity |
+| `MultiPairPlacer(aod_id, catalog, storage_zone_id="storage")` | Assign distinct pairs, clear spectators, and plan storage returns |
+| `SequentialTransport(aod_id)` | Move one atom at a time, following destination vacancy order |
+| `WholeLayerEmitter(catalog.coverage)` | Emit one CZPulse carrying every selected CZ node ID |
+
+The catalogue's coverage is the full selected CZ zone. Pair endpoints must
+be distinct, each pair must lie within the CZ radius, and atoms belonging
+to different catalogue pairs must be farther apart than that radius.
+Use the same bound device when constructing and using the catalogue.
+
+```python
+from nadit_physical_compiler import load_device
+from nadit_physical_compiler.emission import WholeLayerEmitter
+from nadit_physical_compiler.placement import GatePairCatalog, MultiPairPlacer
+from nadit_physical_compiler.scheduling import ReadyScheduler
+from nadit_physical_compiler.strategies import SearchSmarterStrategy
+from nadit_physical_compiler.transport import SequentialTransport
+
+device = load_device("configs/multipair_flexible.json")
+catalog = GatePairCatalog.from_device(
+    device,
+    "entanglement",
+    (("gate_0_left", "gate_0_right"), ("gate_1_left", "gate_1_right")),
+)
+strategy = SearchSmarterStrategy(
+    ReadyScheduler(max_cz_gates=catalog.capacity),
+    MultiPairPlacer("transport", catalog),
+    SequentialTransport("transport"),
+    WholeLayerEmitter(catalog.coverage),
+)
+assert catalog.capacity == 2
+```
+
+Placement assigns unused candidate pairs greedily by movement distance, with
+deterministic ties. CZ participants return to storage after each layer. Other
+atoms inside pulse coverage also receive storage destinations, including
+unbound spectators. Existing storage sites are retained where possible.
+This supports changing interaction partners without retaining old gate pairs.
+
+Every transport step handles one atom using one AOD row and one column.
+The constructor maintains occupancy and releases blocked destinations as
+their occupants leave. Closed swaps requiring a buffer and parked AOD groups
+remain outside this constructor. Readout retains one atom in AOD and returns
+it to its prior SLM site. The compiler's measurement sampling and condition
+handling are unchanged.
+
+Run the complete four-qubit example with two CZ pairs per pulse, two layers
+using different partners, and a measured conditional layer:
+
+```text
+uv run --locked python examples/compile_multipair.py --bit 0
+uv run --locked python examples/compile_multipair.py --bit 1
+uv run --locked python examples/compile_multipair.py --bit 1 --capacity 1
+```
+
+The example prints pulse sizes, transfer counts, timing, result identities,
+and the complete Atom IR. Integration tests enumerate actual interactions
+from illuminated atom positions, compare them with intended source gates,
+and check dependency timing and exit-state replay.
+
+Reuse, IDS, and parallel transport are subsequent increments in
+[ADR 0010](../../docs/decisions/0010-multipair-compilation.md).
+
 ## Flexible device foundation
 
 The device records zones, fixed SLM sites, flexible AOD capabilities, and
@@ -231,8 +302,8 @@ are retained because their intersections can affect other atoms.
 Optional `Device.cz`, `Device.local`, and `Device.readout` records provide
 control channels, durations, allowed holders, interaction radius, readout
 spacing, retention, and result latency. Their JSON keys use the same names.
-The one-pair placer enforces zone and holder permissions while selecting
-positions. The current CZ placer uses the SLM-SLM capability.
+Placement enforces zone and holder permissions while selecting positions.
+The current CZ placers use the SLM-SLM capability.
 
 ```python
 from nadit_physical_compiler import (
@@ -502,6 +573,8 @@ quantum-state simulation.
   module handoffs.
 - [ADR 0009](../../docs/decisions/0009-one-pair-compilation.md):
   one-pair stage composition, AOD readout, and compile-time feedback.
+- [ADR 0010](../../docs/decisions/0010-multipair-compilation.md):
+  multi-pair baseline, shared transport rules, reuse, and search sequence.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

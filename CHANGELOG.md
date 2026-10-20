@@ -19,6 +19,13 @@
 
 ### Added
 
+- Multi-pair correctness baseline with explicit isolated SLM-pair catalogues,
+  capacity-limited CZ layers, distinct pair assignments, spectator clearing,
+  and storage returns between layers.
+- Sequential singleton transport using an occupancy index and destination
+  vacancy ordering, plus one shared CZ pulse for every placed gate layer.
+- A multi-pair QASM example covering changed interaction partners and
+  measurement-conditioned CZ layers, with geometry, timing, and replay tests.
 - One-pair native-DAG-to-Atom-IR compilation, connecting ready-layer selection,
   fixed SLM pair placement, grouped/singleton AOD transport, and pulse emission.
 - Compile-time measurement sampling with stable identities, conditional action

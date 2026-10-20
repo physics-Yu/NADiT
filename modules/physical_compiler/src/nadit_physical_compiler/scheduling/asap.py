@@ -1,11 +1,23 @@
-"""Deterministic ready-layer selection for the one-pair compiler."""
+"""Deterministic ready-layer selection with configurable CZ capacity."""
 
 from ..contracts import GateLayer
 from ..physical_ir import PhysicalDAG
 
 
 class ReadyScheduler:
-    """Select homogeneous layers without owning dependency progress."""
+    """Select homogeneous layers without owning dependency progress.
+
+    Args:
+        max_cz_gates: Maximum number of disjoint CZ gates in one layer.
+
+    Raises:
+        ValueError: If CZ capacity is not positive.
+    """
+
+    def __init__(self, max_cz_gates: int = 1) -> None:
+        if max_cz_gates <= 0:
+            raise ValueError("CZ layer capacity must be positive.")
+        self.max_cz_gates = max_cz_gates
 
     def select(self, dag: PhysicalDAG, ready: tuple[int, ...]) -> GateLayer:
         """Select the earliest ready operation and compatible peers.
@@ -15,15 +27,16 @@ class ReadyScheduler:
             ready: Node IDs with resolved dependencies and true conditions.
 
         Returns:
-            Disjoint addressed operations sharing the earliest operation's
-            name, or one CZ/readout operation.
+            Disjoint operations sharing the earliest operation's name.
+            CZ layers respect the configured capacity; readout remains singular.
         """
         if not ready:
             return GateLayer(())
         ordered = sorted(ready)
         name = dag.nodes[ordered[0]].name
-        if name not in ("rx", "ry", "rz", "reset"):
+        if name not in ("rx", "ry", "rz", "reset", "cz"):
             return GateLayer((ordered[0],))
+        capacity = self.max_cz_gates if name == "cz" else len(ordered)
         selected: list[int] = []
         occupied: set[int] = set()
         for operation_id in ordered:
@@ -31,4 +44,6 @@ class ReadyScheduler:
             if operation.name == name and occupied.isdisjoint(operation.qubits):
                 selected.append(operation_id)
                 occupied.update(operation.qubits)
+                if len(selected) == capacity:
+                    break
         return GateLayer(tuple(selected))

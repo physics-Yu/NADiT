@@ -1,9 +1,9 @@
 # Physical Compiler Implementation Plan
 
 Date: 2026-10-20.
-Status: Step 1, retained-readout replay and operation capabilities from step 2,
-and the one-pair compilation path in step 3 are implemented. The next increment
-is the multi-pair flexible strategy.
+Status: Steps 1 and 3, retained-readout replay and operation capabilities from
+step 2, and the multi-pair correctness baseline in step 4 are implemented.
+The next increment is shared transport rules and strict parallel batching.
 
 ## Compilation contract
 
@@ -66,6 +66,10 @@ their implementation step begins.
 | `examples/atom_ir_example.py` | Manually constructed atom program and text output |
 | `examples/compile_pair.py`, `examples/pair_feedback.qasm3` | Executable one-pair compilation and feedback example |
 | `configs/one_pair_flexible.json` | Explicit geometry and operation capabilities for the one-pair study |
+| `src/nadit_physical_compiler/placement/catalog.py`, `placement/multipair.py` | Fixed pair catalogue, multi-CZ allocation, and storage returns |
+| `src/nadit_physical_compiler/transport/sequential.py` | Singleton transfers with destination vacancy ordering |
+| `src/nadit_physical_compiler/emission/layer.py` | One region pulse for a complete placed CZ layer |
+| `examples/compile_multipair.py`, `examples/multipair_feedback.qasm3`, `configs/multipair_flexible.json` | Multi-pair compilation, partner changes, and conditional CZ study |
 | `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
 | `tests/test_atom_ir.py`, `tests/test_native_frontend.py`, `tests/test_contracts.py`, `tests/test_compiler.py` | Action, frontend, handoff, feedback, and pipeline checks |
 
@@ -154,6 +158,21 @@ Acceptance:
 
 ## 4. Parallel Search Smarter strategy
 
+Implement this stage in five increments, as defined in
+[ADR 0010](../../../docs/decisions/0010-multipair-compilation.md):
+
+1. Fixed pair catalogue, capacity-limited multi-CZ scheduling, coordinated
+   placement, sequential transport, and whole-layer pulses.
+2. Shared movement compatibility/cost rules and strict parallel transport.
+3. Following-layer preview and matching-based reuse.
+4. IDS placement search.
+5. Relaxed routing and its staged action construction.
+
+Item 1 is implemented. Its integration tests cover both forced feedback
+branches, actual illuminated interaction pairs, capacity splitting, spectator
+clearing, and replay. Gate participants return to storage after CZ; reuse is
+added in item 3. Item 2 is next.
+
 Complete the flexible zoned profile using fixed candidate interaction pairs:
 gate layering, reuse analysis, routing-aware placement with IDS, transport
 batching, and action generation. Start from the pinned reference implementation
@@ -220,5 +239,5 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is reuse, placement search, and transport batching for
-multiple simultaneous gate pairs.
+The next work item is shared movement compatibility/cost rules and strict
+parallel transport. Reuse and layout search follow that tested transport model.

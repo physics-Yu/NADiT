@@ -22,8 +22,8 @@ class SearchSmarterStrategy:
         transporter: Construct legal transfers between layouts.
         emitter: Bind native operations to Atom IR actions and durations.
 
-    The initial helpers implement the two-atom path; IDS and multi-pair routing
-    are subsequent implementations of these stage interfaces.
+    Helpers support the one-pair path and multi-pair correctness baseline.
+    Parallel transport, reuse, and IDS are subsequent stage implementations.
     """
 
     scheduler: Scheduler

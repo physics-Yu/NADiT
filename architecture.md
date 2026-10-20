@@ -23,7 +23,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Atom IR structures, step timing, and text output | Implemented |
 | Atom-action state replay with retained readout | Implemented |
 | One-pair DAG-to-Atom-IR compilation with feedback | Implemented |
-| Multi-pair placement, reuse, and routing | Next |
+| Multi-pair fixed placement, sequential transport, and shared pulses | Implemented |
+| Strict batching, reuse, IDS, and relaxed routing | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
 The module [README](modules/physical_compiler/README.md) defines the implemented API.
@@ -122,18 +123,28 @@ Readout returns the atom to its preceding SLM site. This leaves a common
 SLM boundary for subsequent layers. See
 [ADR 0009](docs/decisions/0009-one-pair-compilation.md).
 
+The multi-pair baseline uses an explicit catalogue of isolated SLM pairs.
+The scheduler selects disjoint CZ gates up to its capacity. Placement clears
+pulse-region spectators, assigns distinct pairs, and returns CZ participants
+to storage afterward. Sequential transport moves one atom at a time; one CZ
+pulse executes the whole placed layer. The compiler and measurement protocol
+remain shared with the one-pair strategy.
+
 ## Development order
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
 2. Implement Atom IR structures, text output, and retained-readout replay (complete).
 3. Implement native frontend translation, module handoffs, and one-pair case
    compilation (complete).
-4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
+4. Implement the multi-pair correctness baseline (complete), then strict
+   parallel transport, reuse, IDS placement, and relaxed routing.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
 6. Package reusable components and connect logical QEC compilation.
 
 The [implementation plan](modules/physical_compiler/docs/implementation-plan.md)
 specifies file ownership and acceptance criteria for these steps.
+[ADR 0010](docs/decisions/0010-multipair-compilation.md) defines conflict-map
+semantics and the multi-pair module sequence.
 
 Device-aware compilation must emit the chosen source operations as legal atom
 actions, preserve their dependencies and case decisions, and return the

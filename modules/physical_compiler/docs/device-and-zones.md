@@ -2,8 +2,8 @@
 
 Date: 2026-10-20.
 Status: Flexible geometry, state, transport checks, operation capabilities,
-and the one-pair compiler are implemented. Multi-pair placement/routing,
-AOD-held CZ strategies, and rigid support follow the
+and the one-pair and multi-pair baseline compilers are implemented. Parallel
+transport, reuse, layout search, AOD-held CZ strategies, and rigid support follow the
 [implementation plan](implementation-plan.md).
 
 ## Device and compiler responsibilities
@@ -30,6 +30,11 @@ AOD and its controlling row and column.
 
 An interaction pair consists of two positions where a CZ can be performed.
 It is distinct from a single SLM trapping site.
+
+The multi-pair baseline binds an explicit list of SLM site pairs to one CZ
+zone with `GatePairCatalog.from_device`. The catalogue validates pair geometry
+once and supplies both layer capacity and shared pulse coverage. Placement
+clears other occupants from that coverage before emitting the pulse.
 
 The first placement strategy uses a finite set of fixed candidate pairs and
 assigns atoms to them dynamically for each gate layer. Configuration can
