@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- Correct upstream initial-array row reset/end access, exhausted-window
+  termination, nearest-column distance assignment, and straddled-y nearest-SLM
+  arithmetic; record executable source differences separately from equal cases.
 - Correct the source gate-column spreading boundary and use endpoint-specific
   pair separations instead of limiting column count or forcing direct fallback.
 - Match source distance/candidate tie ordering and drain ready local rotations
@@ -38,6 +41,10 @@
 
 ### Added
 
+- Source-layout SLM geometry, cached nearest-SLM/site queries, automatic initial
+  storage placement, and configurable candidate windows with source expansion.
+- Original gate-option score-distance metadata and full-free-array score ranks,
+  with executed pinned C++ candidate and search-node comparisons.
 - Optional relaxed routing with source-aligned compatibility, weighted conflicts,
   donor-group redistribution, and a configurable strict-fallback cost threshold.
 - Device-admitted row/column reordering using the existing staged generator and

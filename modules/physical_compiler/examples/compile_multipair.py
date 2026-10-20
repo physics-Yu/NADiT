@@ -7,8 +7,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 from nadit_physical_compiler import (
-    AtomLayout,
-    AtomState,
     CZPulse,
     FakeBackend,
     Load,
@@ -27,6 +25,8 @@ from nadit_physical_compiler.placement import (
     HeuristicPlacer,
     MultiPairPlacer,
     PlacementConfig,
+    PlacementGeometry,
+    make_initial_layout,
 )
 from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
@@ -49,6 +49,10 @@ def main() -> None:
     parser.add_argument("--trials", type=int, default=4)
     parser.add_argument("--queue-capacity", type=int, default=100)
     parser.add_argument("--reuse-level", type=float, default=5.0)
+    parser.add_argument("--window", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--window-min-width", type=int, default=16)
+    parser.add_argument("--window-ratio", type=float, default=1.0)
+    parser.add_argument("--window-share", type=float, default=0.8)
     parser.add_argument("--prefer-split", type=float, default=1.0)
     parser.add_argument(
         "--transport",
@@ -68,16 +72,11 @@ def main() -> None:
     catalog = GatePairCatalog.from_device(
         device, "entanglement", pairs[: args.capacity]
     )
-    entry = AtomLayout(
-        tuple(
-            AtomState(
-                7 + q * 3,
-                device.site(f"storage_r0_c{q}").position,
-                SLMHolder(f"storage_r0_c{q}"),
-            )
-            for q in range(dag.num_qubits)
-        ),
-        qubit_to_atom=tuple(7 + q * 3 for q in range(dag.num_qubits)),
+    geometry = PlacementGeometry.from_device(device, "transport", catalog)
+    entry = make_initial_layout(
+        dag.num_qubits,
+        geometry,
+        atom_ids=tuple(7 + q * 3 for q in range(dag.num_qubits)),
     )
     overrides = {
         reference: args.bit
@@ -99,7 +98,12 @@ def main() -> None:
                 trials=args.trials,
                 queue_capacity=args.queue_capacity,
                 reuse_level=args.reuse_level,
+                use_window=args.window,
+                window_min_width=args.window_min_width,
+                window_ratio=args.window_ratio,
+                window_share=args.window_share,
             ),
+            geometry=geometry,
         )
         if args.placement == "ids"
         else MultiPairPlacer("transport", catalog)
@@ -125,6 +129,11 @@ def main() -> None:
                 "native_nodes": len(dag.nodes),
                 "pair_capacity": catalog.capacity,
                 "placement": args.placement,
+                "initial_slm_sites": {
+                    str(atom.id): atom.holder.site_id
+                    for atom in entry.atoms
+                    if isinstance(atom.holder, SLMHolder)
+                },
                 "placement_config": (
                     asdict(placer.config)
                     if isinstance(placer, HeuristicPlacer)

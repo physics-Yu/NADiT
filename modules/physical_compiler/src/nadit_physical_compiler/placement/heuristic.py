@@ -17,9 +17,12 @@ from ..state import AtomLayout, AtomState
 from ..transport.rules import StrictRules
 from .candidates import gate_jobs, storage_jobs
 from .catalog import GatePairCatalog
+from .coordinates import build_coordinates
+from .geometry import PlacementGeometry
+from .initial import make_initial_layout
 from .multipair import _anchor_pair, _at_site, _replace_atoms
 from .pair import PairPlacer
-from .retention import prepare_gate_layout, reachable_storage_sites
+from .retention import prepare_gate_layout
 from .scoring import PlacementConfig, search_placement
 
 
@@ -32,12 +35,25 @@ class HeuristicPlacer:
         catalog: Validated, isolated gate pairs and their pulse coverage.
         storage_zone_id: Region supplying fixed storage traps.
         config: Bounded IDS and source-aligned proxy-score parameters.
+        geometry: Explicit SLM arrays; regular Device arrays are inferred if omitted.
     """
 
     aod_id: str
     catalog: GatePairCatalog
-    storage_zone_id: str = "storage"
+    storage_zone_id: str | tuple[str, ...] = "storage"
     config: PlacementConfig = PlacementConfig()
+    geometry: PlacementGeometry | None = None
+
+    def initial_layout(
+        self, n_qubits: int, device: Device, *, atom_ids: tuple[int, ...] | None = None
+    ) -> AtomLayout:
+        """Construct the source initial storage placement for a physical circuit."""
+        return make_initial_layout(n_qubits, self._geometry(device), atom_ids=atom_ids)
+
+    def _geometry(self, device: Device) -> PlacementGeometry:
+        return self.geometry or PlacementGeometry.from_device(
+            device, self.aod_id, self.catalog, self.storage_zone_id
+        )
 
     def place(
         self,
@@ -86,8 +102,15 @@ class HeuristicPlacer:
             for q in dag.nodes[operation_id].qubits
         )
         participant_ids = set(participants)
-        storage = reachable_storage_sites(
-            device, self.aod_id, self.storage_zone_id, self.catalog.coverage
+        geometry = self._geometry(device)
+        workspace = device.aod(self.aod_id).workspace
+        storage = tuple(
+            site
+            for array in geometry.storage_arrays
+            for row in array.sites
+            for site in row
+            if workspace.contains(site.position)
+            and not self.catalog.coverage.contains(site.position)
         )
         prepared, anchors = prepare_gate_layout(
             layout, storage, self.catalog, participant_ids, retained_atoms
@@ -100,22 +123,40 @@ class HeuristicPlacer:
             and layout.qubit_to_atom[q] in entry_partners
         )
         rules = StrictRules(device.aod(self.aod_id), device.timing)
+        qubit_ids = {atom: qubit for qubit, atom in enumerate(layout.qubit_to_atom)}
         execution = self._execution(
-            dag, layer, prepared, rules, reusable, entry_partners, anchors
+            dag,
+            layer,
+            prepared,
+            rules,
+            reusable,
+            entry_partners,
+            anchors,
+            geometry,
+            qubit_ids,
         )
         reserved = {
             atom.position for atom in execution.atoms if atom.id not in participant_ids
         }
         free_storage = tuple(site for site in storage if site.position not in reserved)
         execution_atoms = {atom.id: atom for atom in execution.atoms}
+        placed_atoms = tuple(execution_atoms[atom_id] for atom_id in participants)
         jobs = storage_jobs(
-            tuple(execution_atoms[atom_id] for atom_id in participants),
+            placed_atoms,
             free_storage,
             reuse_atoms=reusable,
             partner_positions=_partner_positions(dag, following, execution),
             config=self.config,
+            geometry=geometry,
+            qubit_ids=qubit_ids,
         )
-        selected = search_placement(jobs, rules, self.config, stage="storage")
+        selected = search_placement(
+            jobs,
+            rules,
+            self.config,
+            stage="storage",
+            coordinates=build_coordinates(placed_atoms, free_storage, geometry, jobs),
+        )
         exit_layout = _replace_atoms(
             execution,
             {
@@ -137,6 +178,8 @@ class HeuristicPlacer:
         reusable: frozenset[int],
         partners: dict[int, Position],
         retained_ids: frozenset[int],
+        geometry: PlacementGeometry,
+        qubit_ids: dict[int, int],
     ) -> AtomLayout:
         available = {
             index: pair
@@ -177,8 +220,21 @@ class HeuristicPlacer:
             reuse_atoms=reusable,
             partner_positions=partners,
             config=self.config,
+            geometry=geometry,
+            qubit_ids=qubit_ids,
         )
-        selected = search_placement(jobs, rules, self.config, stage="gate")
+        selected = search_placement(
+            jobs,
+            rules,
+            self.config,
+            stage="gate",
+            coordinates=build_coordinates(
+                tuple(atom for pair in unanchored for atom in pair),
+                tuple(site for pair in available.values() for site in pair),
+                geometry,
+                jobs,
+            ),
+        )
         assigned.update(
             (atom_id, _at_site(atom_id, site))
             for option in selected

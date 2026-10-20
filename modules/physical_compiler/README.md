@@ -22,6 +22,8 @@ Optional matching reuse retains compatible atoms at gate sites across known
 CZ layers. Lookahead stops at unresolved feedback without sampling.
 Routing-aware placement adds source-aligned candidate generation, compatible
 movement-group scoring, optional reuse, and bounded Iterative Diving Search.
+Its layout path includes automatic storage initialization, nearest-SLM/site
+queries, and the source candidate windows and expansion.
 
 ## Next step
 
@@ -414,6 +416,10 @@ placer = HeuristicPlacer(
         deepening_value=0.0,
         lookahead_factor=0.4,
         reuse_level=5.0,
+        use_window=True,
+        window_min_width=16,
+        window_ratio=1.0,
+        window_share=0.8,
     ),
 )
 ```
@@ -422,16 +428,28 @@ Use it in the existing `SearchSmarterStrategy` with `StrictTransport` and
 `MatchingReuseAnalyzer`. The default example still uses `MultiPairPlacer`.
 `--reuse` enables matching and the compiler's next-layer preview.
 
-Candidate generation uses the reference's full-candidate mode
-(`useWindow=false`) over the configured catalogue and reachable free storage
-sites. Each pair contributes its lower-total-distance orientation. Gate options
-are sorted by their two movement distances; storage options are sorted by
-movement distance, with a zero-movement stay option for matched atoms.
-Actual retained gate pairs are reserved before assigning other gates.
-For the arbitrary Device catalogue, nearest locations are computed from the
-eligible candidate pool. This replaces the reference architecture's
-precomputed nearest-grid-site lookup. Axis discretization shares the
-transport coordinate tolerance.
+`PlacementGeometry` records ordered storage and paired gate arrays. Regular
+Device sites and the selected catalogue can be inferred with `from_device`;
+explicit `SLMArray` records supply array grouping when flat coordinates do not.
+Nearest queries select an SLM and then project onto its grid, independently of
+occupancy. Results are cached on demand.
+
+The source window is enabled by default. It expands within the nearest SLM
+until the requested candidate share is reached or the full array is covered.
+`use_window=False` enumerates the full nearest array. Each pair contributes its
+source-selected orientation. Gate options retain the original score-distance
+ordering separately from actual movement endpoints; storage options include a
+stay alternative for matched atoms. Ranks used by the heuristic cover all free
+target sites, including sites outside the selected window.
+
+`make_initial_layout(num_qubits, geometry, atom_ids=...)` fills storage from the
+side toward the gate zone. `placer.initial_layout(num_qubits, device)` provides
+the same initialization through `HeuristicPlacer`. The compiler still accepts
+an explicit `entry_state`. The example uses automatic initialization for every
+comparison mode.
+
+Low-level `gate_jobs` and `storage_jobs` calls without geometry retain their
+generic catalogue behavior. `HeuristicPlacer` uses the source geometry path.
 
 The score is the sum of the square roots of each compatibility group's maximum
 distance, plus partner-lookahead costs. Groups are extended in first-fit order
@@ -455,12 +473,16 @@ uv run --locked python examples/compile_multipair.py --transport strict --bit 1 
 ```
 
 Repeat with `--bit 0` for the other branch. `--trials`, `--queue-capacity`, and
-`--reuse-level` configure the IDS example; all search settings are included
-in its JSON output. The API exposes the remaining heuristic weights.
+`--reuse-level` configure the IDS example. `--no-window`, `--window-min-width`,
+`--window-ratio`, and `--window-share` configure candidate enumeration. All
+search settings and initial SLM sites are included in its JSON output.
 
 See [ADR 0013](../../docs/decisions/0013-routing-aware-ids-placement.md) for
 the score and interface contract and the
 [third-party notice](../../docs/third-party-notices.md) for source attribution.
+The source layout path and explicit source-defect corrections are recorded in
+[ADR 0018](../../docs/decisions/0018-source-placement-path.md); executable C++
+comparisons are described in [the placement reference](reference/placement_README.md).
 
 ## Shared rules and strict parallel transport
 

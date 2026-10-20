@@ -2,6 +2,8 @@
 
 The additional [relaxed-router comparison](relaxed_README.md) executes original
 compatibility, group-merging, and reversed-axis staging code.
+The [placement comparison](placement_README.md) executes original initial
+placement, nearest queries, candidate windows, and IDS scoring.
 
 This directory compares the staged transport constructor with **executed
 upstream C++**, not a second Python implementation of its algorithm.

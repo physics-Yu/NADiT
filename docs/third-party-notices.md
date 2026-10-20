@@ -8,6 +8,8 @@ from MQT QMAP commit `cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d`:
 
 - `src/na/zoned/layout_synthesizer/placer/HeuristicPlacer.cpp`
 - `include/na/zoned/layout_synthesizer/placer/HeuristicPlacer.hpp`
+- `src/na/zoned/Architecture.cpp`
+- `include/na/zoned/Architecture.hpp`
 
 The staged strict and relaxed routing and atom-event construction in
 `modules/physical_compiler/src/nadit_physical_compiler/transport/` also adapt
@@ -19,8 +21,8 @@ the same revision's:
 - `include/na/zoned/code_generator/CodeGenerator.hpp`
 
 The standalone comparison in `modules/physical_compiler/reference/` extracts
-and executes the original router and rearrangement methods with data-only C++
-adapters.
+and executes the original layout, router, and rearrangement methods with
+data-only C++ adapters and observation wrappers.
 
 Source: <https://github.com/munich-quantum-toolkit/qmap>
 

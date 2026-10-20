@@ -7,10 +7,10 @@
 
 from collections.abc import Iterator
 from dataclasses import dataclass
-from math import hypot, sqrt
+from math import hypot, isfinite, sqrt
 from typing import Literal
 
-from ..device import SLMSite
+from ..device import Position, SLMSite
 from ..state import COORDINATE_TOLERANCE
 from ..transport.rules import MoveRequest, StrictRules
 from .ids import iterative_diving_search
@@ -27,6 +27,13 @@ class PlacementConfig:
         reuse_level: Preference subtracted from a stay option's partner cost.
         trials: Number of complete search goals to compare.
         queue_capacity: Base queue bound; IDS initially adds the trial count.
+        use_window: Select source windows instead of the whole nearest array.
+        window_min_width: Initial source window width in lattice columns.
+        window_ratio: Window height divided by width.
+        window_share: Candidate target count relative to the number of jobs.
+
+    Raises:
+        ValueError: If window dimensions or the candidate share are invalid.
 
     These parameters tune proxy scores, independently of Device timing.
     """
@@ -37,6 +44,18 @@ class PlacementConfig:
     reuse_level: float = 5
     trials: int = 4
     queue_capacity: int = 100
+    use_window: bool = True
+    window_min_width: int = 16
+    window_ratio: float = 1.0
+    window_share: float = 0.8
+
+    def __post_init__(self) -> None:
+        if self.window_min_width < 0:
+            raise ValueError("Window minimum width must be nonnegative.")
+        if not isfinite(self.window_ratio) or self.window_ratio <= 0:
+            raise ValueError("Window aspect ratio must be finite and positive.")
+        if not isfinite(self.window_share) or self.window_share < 0:
+            raise ValueError("Window share must be finite and nonnegative.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,10 +65,13 @@ class PlacementOption:
     assignments: tuple[tuple[int, SLMSite], ...]
     moves: tuple[MoveRequest, ...]
     lookahead_cost: float = 0
+    score_distances: tuple[float, ...] | None = None
 
     @property
     def distances(self) -> tuple[float, ...]:
-        """Return Euclidean movement distances in request order."""
+        """Return source score metadata, or geometric distances for generic jobs."""
+        if self.score_distances is not None:
+            return self.score_distances
         return tuple(
             hypot(move.target.x - move.source.x, move.target.y - move.source.y)
             for move in self.moves
@@ -71,6 +93,23 @@ class PlacementJob:
     """Ordered alternatives for one gate or atom placement."""
 
     options: tuple[PlacementOption, ...]
+    nearest_site: SLMSite | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PlacementCoordinates:
+    """Full source/free-target coordinates, independent of candidate windows.
+
+    Args:
+        sources: Positions of all atoms involved in the placement jobs.
+        targets: All free target sites used by source discretization.
+        nearest_storage_columns: Resolved nearest storage column coordinates,
+            including a nearest free column when the geometric column is full.
+    """
+
+    sources: tuple[Position, ...]
+    targets: tuple[SLMSite, ...]
+    nearest_storage_columns: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,18 +132,29 @@ class _Search:
         rules: StrictRules,
         config: PlacementConfig,
         stage: Literal["gate", "storage"],
+        coordinates: PlacementCoordinates | None = None,
     ) -> None:
         self.jobs, self.rules, self.config = jobs, rules, config
         moves = tuple(
             move for job in jobs for option in job.options for move in option.moves
         )
+        sources = (
+            coordinates.sources
+            if coordinates is not None
+            else tuple(move.source for move in moves)
+        )
+        targets = (
+            tuple(site.position for site in coordinates.targets)
+            if coordinates is not None
+            else tuple(move.target for move in moves)
+        )
         self.source_ranks = (
-            _ranks(tuple(move.source.y for move in moves)),
-            _ranks(tuple(move.source.x for move in moves)),
+            _ranks(tuple(point.y for point in sources)),
+            _ranks(tuple(point.x for point in sources)),
         )
         self.target_ranks = (
-            _ranks(tuple(move.target.y for move in moves)),
-            _ranks(tuple(move.target.x for move in moves)),
+            _ranks(tuple(point.y for point in targets)),
+            _ranks(tuple(point.x for point in targets)),
         )
         ratios = tuple(
             len(set(target.values())) / len(set(source.values()))
@@ -120,6 +170,11 @@ class _Search:
                 if (option := next((item for item in job.options if item.moves), None))
                 is not None
             ]
+            if coordinates is not None:
+                nearest_columns = [
+                    self.target_ranks[1][column]
+                    for column in coordinates.nearest_storage_columns
+                ]
             nearest_span = max(nearest_columns, default=0) - min(
                 nearest_columns, default=0
             )
@@ -230,6 +285,7 @@ def search_placement(
     config: PlacementConfig,
     *,
     stage: Literal["gate", "storage"] = "gate",
+    coordinates: PlacementCoordinates | None = None,
 ) -> tuple[PlacementOption, ...]:
     """Select complete site assignments with routing-aware bounded IDS.
 
@@ -238,6 +294,7 @@ def search_placement(
         rules: Shared strict geometry and capacity rules.
         config: Search budgets and heuristic parameters.
         stage: Select gate or storage axis scaling.
+        coordinates: Full free-array coordinates for source score discretization.
 
     Returns:
         Chosen options in job order. No jobs produce an empty tuple.
@@ -248,7 +305,7 @@ def search_placement(
     Scores use square-root distance proxies; Device timing is applied later
     when the selected layouts are translated into transport actions.
     """
-    search = _Search(jobs, rules, config, stage)
+    search = _Search(jobs, rules, config, stage, coordinates)
     result = iterative_diving_search(
         _Node(),
         expand=search.expand,

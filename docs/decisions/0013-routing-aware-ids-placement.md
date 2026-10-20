@@ -36,18 +36,24 @@ spectators. Local operations and readout keep the existing placement helper.
 
 ## Candidates
 
-Use the reference's full-candidate mode (`useWindow=false`) over the configured
+The initial implementation used the reference's full-candidate mode
+(`useWindow=false`) over the configured
 fixed gate catalogue and reachable storage SLM sites. A gate candidate chooses
 the orientation with the smaller sum of movement distances for that pair.
 Order gate jobs by descending nearest-pair maximum distance. For exit placement,
 start with the atom farthest from storage, then order the remaining atoms by
 distance from that atom.
 
-For the finite Device catalogue, nearest gate pairs minimize total distance
+In that initial adaptation, nearest gate pairs minimized total distance
 among available pairs; nearest storage sites and column span come from the
 available storage options. The reference instead has architecture-specific
 precomputed nearest-grid-site lookups. This adaptation changes job order and
-heuristic values when those geometric nearest sites are unavailable.
+heuristic values even when the geometric nearest sites are available.
+
+[ADR 0018](0018-source-placement-path.md) supersedes that adaptation with
+source nearest-SLM/site queries, default candidate windows and expansion,
+full-free-array score ranks, and automatic initial placement. Generic low-level
+candidate calls without array geometry retain the catalogue interface.
 
 Each matched reuse candidate receives both a stay option and storage options.
 Stay keeps its gate site and adds no movement to the exit groups. Actual
