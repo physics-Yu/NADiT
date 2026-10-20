@@ -236,3 +236,13 @@ advance the reasoning; avoid defensive filler.
 For this documentation baseline only, the user approved content, consistency,
 and diff checks as the commit gate because the workspace has no test suite.
 This exception does not change the standing rules in `agent.md`.
+
+## 11. Repository organization
+
+**Confirmed on 2026-10-20.** Use
+[modules/physical_compiler/](modules/physical_compiler/README.md) as the physical
+compiler workspace, with `src/`, `tests/`, `docs/`, and `configs/` for implementation,
+tests, module design notes, and example device configurations. The module README
+is its entry point. Organization within those folders remains open.
+Global rules and architecture stay at the root; shared decisions stay in
+`docs/decisions/`. See [ADR 0001](docs/decisions/0001-module-workspaces.md).
