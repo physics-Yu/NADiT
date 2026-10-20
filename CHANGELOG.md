@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Lookahead can use already compiled measurement results during planned
+  feedback latency; actual conditional actions still wait for result availability.
+- Reuse comparison reports both atom-load and atom-store counts alongside
+  transfer batches and predicted transport time.
 - QASM import now translates to a configurable native GateSet before building
   PhysicalDAG; the default basis is RX/RY/RZ/CZ.
 - Measurement references use stable pre-translation source identities,
@@ -19,7 +23,7 @@
 
 ### Added
 
-- Pure next-CZ preview using compiler progress and available results, stopping
+- Pure next-CZ preview using compiler progress and compiled results, stopping
   at unresolved feedback without sampling measurements.
 - Maximum matching of shared CZ endpoints and reuse-aware placement that
   retains gate-site anchors across partner changes and addressed rotations.

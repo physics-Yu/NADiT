@@ -141,7 +141,9 @@ branch decisions remain unchanged. See
 
 Optional matching reuse retains atoms between known CZ layers. The compiler
 previews the next layer using a local frontier and dependency-count overlay.
-Unknown or unavailable feedback stops the preview without sampling. Maximum
+Uncompiled measurements stop the preview without sampling. Compiled results
+can select a known branch during planning; actual conditional operations
+still wait for the result's availability time. Maximum
 matching chooses compatible retained atoms; placement reserves their gate
 pairs and strict transport moves the other participants. Transport batches
 and duration depend on placement and routing costs.

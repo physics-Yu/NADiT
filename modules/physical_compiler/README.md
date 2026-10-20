@@ -321,9 +321,17 @@ Without `reuse_analyzer`, the multi-pair storage-return baseline remains
 available. With it, the compiler previews the next selected CZ layer using
 a copied ready frontier and sparse dependency-count changes. It can pass
 resolved barriers, phase metadata, false conditions, and addressed rotations.
-It stops at a selected measurement, reset, unsupported operation, or any
-frontier condition whose result is not available at the current planned time.
-Preview does not sample, commit operations, or change the program phase.
+It stops at a selected uncompiled measurement, reset, unsupported operation,
+or a frontier condition without a compiled result. Already compiled results
+can resolve branches even while their planned feedback latency is pending.
+The compiler still delays actual conditional operations until measurement
+completion plus feedback latency. Preview does not sample, commit operations,
+or change the program phase. The existing FakeBackend is called once per
+measurement identity; later reads share the compiler's recorded result.
+
+An independent CZ layer can run before a previewed conditional layer while
+feedback is pending. Placement uses the actual selected layer and clears
+nonparticipating retained atoms from pulse coverage.
 
 `MatchingReuseAnalyzer.analyze(dag, current, following)` returns physical
 qubit IDs. It maximizes matching cardinality between the two layers' gates,
@@ -338,6 +346,10 @@ The existing strict transporter constructs all transfers around stationary
 atoms. The final CZ layer returns its participants to storage; individual
 storage assignments may differ from the entry layout.
 
+The current placer rejects a CZ whose two atoms are anchored in different
+catalogue pairs. Gate-only local control can create this case by moving a new
+atom into another pair; handling it requires a separate site-reassignment step.
+
 ```text
 uv run --locked python examples/compile_multipair.py --transport strict --bit 0 --reuse
 uv run --locked python examples/compile_multipair.py --transport strict --bit 1 --reuse
@@ -345,14 +357,15 @@ uv run --locked python examples/compile_multipair.py --transport strict --bit 1 
 
 With the checked-in device and pair capacity 2:
 
-| Bit | Reuse | Atom loads | LOAD batches | Transport time (us) |
-| --- | --- | ---: | ---: | ---: |
-| 0 | Off | 17 | 7 | 1340.949 |
-| 0 | On | 13 | 8 | 1472.926 |
-| 1 | Off | 25 | 9 | 1621.157 |
-| 1 | On | 21 | 12 | 2013.171 |
+| Bit | Reuse | Atom loads | Atom stores | LOAD / STORE batches | Transport time (us) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 0 | Off | 17 | 17 | 7 / 7 | 1340.949 |
+| 0 | On | 13 | 13 | 8 / 8 | 1472.926 |
+| 1 | Off | 25 | 25 | 9 / 9 | 1621.157 |
+| 1 | On | 21 | 21 | 12 / 12 | 2013.171 |
 
-Atom loads sum the atoms in every LOAD, including readout. Retained anchors
+Atom loads and stores sum the atoms in each transfer, including readout.
+Batch counts count LOAD and STORE actions. Retained anchors
 reduce this count but can split strict batches and change later storage
 assignments. Maximum matching optimizes retained atom count; transport-aware
 placement is needed to optimize duration. Both cases preserve source-operation

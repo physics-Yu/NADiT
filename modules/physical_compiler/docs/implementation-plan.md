@@ -181,7 +181,9 @@ clearing, and replay. Strict transport constructs simultaneous LOAD/MOVE/STORE
 batches; capacity, source ghosts, and target occupancy can split a batch.
 Staged pickup and offsets are subsequent constructors. Gate participants return
 to storage after CZ unless selected for following-layer reuse. Matching keeps
-compatible gate-site anchors; preview stops at unknown or unavailable feedback.
+compatible gate-site anchors. Preview uses compiled measurement records and
+stops at uncompiled measurements or unknown branches. Planned conditional
+actions still observe measurement completion and feedback latency.
 
 Complete the flexible zoned profile using fixed candidate interaction pairs:
 gate layering, reuse analysis, routing-aware placement with IDS, transport

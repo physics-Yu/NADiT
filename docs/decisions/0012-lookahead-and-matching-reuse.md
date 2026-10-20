@@ -19,9 +19,22 @@ The compiler previews the next CZ layer before lowering the current CZ layer.
 The preview copies the ready frontier and uses a sparse dependency-count
 overlay. It uses the same deterministic, stateless scheduler as compilation.
 It can pass resolved barriers, phase metadata, false conditions, and addressed
-rotations. It stops at a selected measurement, reset, unsupported operation, or a
-frontier condition whose result is not yet available at the current planned
-time. It never calls the measurement backend or commits progress or phase.
+rotations. It uses results from measurements already compiled, including
+results whose feedback latency has not elapsed in the planned timeline.
+It stops at a selected uncompiled measurement, reset, unsupported operation,
+or a frontier condition whose result has not been compiled.
+It never calls the measurement backend or commits progress or phase.
+
+The compiler remains the only owner of DAG progress and measurement records.
+FakeBackend is called once when a measurement is compiled; all later reads
+use that record. Actual conditional operations still require measurement
+completion plus feedback latency. Previewing a known branch does not release
+its operations early.
+
+An independent CZ layer may execute before a previewed conditional layer.
+Placement uses the actually selected layer and clears nonparticipating retained
+atoms from pulse coverage. The preview supplies a reuse opportunity rather
+than fixing the later schedule.
 
 The reuse analyzer constructs a bipartite graph of current and following CZ
 gates. A shared qubit labels an edge. Maximum matching selects one retained
@@ -52,13 +65,15 @@ equal the circuit entry sites. Atom IR and result identities are unchanged.
 
 Matching maximizes retained atom count. Stationary anchors can split strict
 movement batches, so fewer atom transfers can take more time. The study
-reports atom-load count, batch count, and transport duration separately.
+reports atom-load/store counts, batch counts, and transport duration separately.
 Transport-aware placement remains the next optimization step.
 
 ## Verification
 
 - Maximum matching, identical pairs, and both-endpoint candidate construction.
 - Preview immutability, capacity splits, known conditions, and measurement stops.
+- Compiled results usable during feedback latency, with conditional actions
+  still delayed until their recorded availability time.
 - Partner changes with stationary anchors and correct full-zone CZ interactions.
 - Both feedback cases, source coverage, result latency, legal strict transfers,
   and final Atom IR replay.

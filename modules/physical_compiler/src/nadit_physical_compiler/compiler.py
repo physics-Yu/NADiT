@@ -188,9 +188,7 @@ class _Compilation:
             remaining=self.remaining,
             successors=self.successors,
             results={
-                reference: record.value
-                for reference, record in self.results.items()
-                if record.available_at_us <= self.time_us
+                reference: record.value for reference, record in self.results.items()
             },
             scheduler=self.strategy,
         )

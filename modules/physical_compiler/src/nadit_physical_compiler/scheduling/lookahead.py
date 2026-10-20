@@ -24,7 +24,8 @@ def next_cz_layer(
         ready: Compiler frontier before current completes.
         remaining: Current unfinished-predecessor counts, indexed by node ID.
         successors: Compiler adjacency lists, indexed by node ID.
-        results: Measurement bits already available at the current planned time.
+        results: Bits recorded by measurements already compiled. Planned
+            feedback latency does not restrict reading these values in preview.
         scheduler: The compiler's deterministic, stateless layer selector.
             Preview also calls select and must not change its future decisions.
 
@@ -35,6 +36,8 @@ def next_cz_layer(
 
     Only the frontier is copied. A sparse decrement overlay tracks previewed
     completions; actual progress, measurement results, and phase stay unchanged.
+    Actual scheduling still enforces result availability, so independent gates
+    may execute before a previewed conditional layer.
     """
     if not current.operation_ids:
         return None

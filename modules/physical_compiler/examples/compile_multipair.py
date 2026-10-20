@@ -124,6 +124,11 @@ def main() -> None:
                     for action in actions
                     if isinstance(action, Load)
                 ),
+                "atom_store_count": sum(
+                    len(action.bindings)
+                    for action in actions
+                    if isinstance(action, Store)
+                ),
                 "program_duration_us": result.program.duration_us,
                 "measurements": [
                     {

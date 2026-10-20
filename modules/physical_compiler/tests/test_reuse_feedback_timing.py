@@ -36,7 +36,7 @@ def device() -> Device:
 
 
 @pytest.mark.parametrize("bit", [0, 1])
-def test_sampled_but_unavailable_result_cannot_enable_reuse_preview(
+def test_compiled_result_enables_reuse_while_actions_wait_for_feedback(
     device: Device, bit: int
 ) -> None:
     assert device.readout is not None
@@ -77,9 +77,54 @@ def test_sampled_but_unavailable_result_cannot_enable_reuse_preview(
     first_cz = result.operations[first_layer.operation_ids[0]]
     assert calls == (measurement.result,)
     assert first_cz.end_us < measurement.available_at_us
-    assert reuse_qubits == ()
+    assert reuse_qubits == (1, 2)
     assert backend.calls == [measurement.result]
     assert len(observations) == 2
+    dependent = next(node for node in dag.nodes if node.condition is not None)
+    assert result.operations[dependent.id].start_us >= measurement.available_at_us
+    for qubit in reuse_qubits:
+        assert (
+            sum(
+                atom == entry.qubit_to_atom[qubit]
+                for step in result.program.steps
+                for action in step.actions
+                if isinstance(action, Load)
+                for atom, _, _ in action.bindings
+            )
+            == 2
+        )
+
+
+@pytest.mark.parametrize("bit", [0, 1])
+@pytest.mark.parametrize("capacity", [1, 2])
+def test_independent_cz_can_run_before_the_previewed_conditional_layer(
+    device: Device, bit: int, capacity: int
+) -> None:
+    assert device.readout is not None
+    device = replace(device, readout=replace(device.readout, latency_us=100_000))
+    dag = _dag(
+        "c = measure q[4]; cz q[0],q[1]; cz q[2],q[3]; barrier q; "
+        "if(c) { cz q[0],q[1]; } cz q[2],q[3];",
+        5,
+    )
+    entry = _entry(device, 5)
+    backend = RecordingBackend(bit)
+    result = compile_physical(
+        dag,
+        device,
+        strategy=_strategy(device, capacity=capacity),
+        entry_state=entry,
+        measurement_backend=backend,
+    )
+
+    _audit(dag, result, device, entry)
+    measurement = result.measurements[0]
+    independent = dag.nodes[-1]
+    conditional = next(node for node in dag.nodes if node.condition is not None)
+    assert result.operations[independent.id].end_us < measurement.available_at_us
+    assert result.operations[conditional.id].start_us >= measurement.available_at_us
+    assert result.operations[conditional.id].status == ("emitted" if bit else "skipped")
+    assert backend.calls == [measurement.result]
 
 
 @pytest.mark.parametrize("bit", [0, 1])
