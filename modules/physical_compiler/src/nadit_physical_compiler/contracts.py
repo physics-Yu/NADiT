@@ -6,7 +6,7 @@ from typing import Protocol
 from .atom_ir import AtomStep
 from .device import Device
 from .physical_ir import PhysicalDAG
-from .state import AtomLayout
+from .state import AtomLayout, AtomState
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,10 +28,13 @@ class PlacementPlan:
     Args:
         execution_layout: Atom positions and holders for executing the layer.
         exit_layout: Positions and holders to retain after the layer.
+        preparation_layout: Optional intermediate layout before gate arrival,
+            used to clear nonretained atoms from pulse coverage.
     """
 
     execution_layout: AtomLayout
     exit_layout: AtomLayout
+    preparation_layout: AtomLayout | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,11 +46,14 @@ class AtomFragment:
         exit_layout: Layout after the selected steps.
         completed_operation_ids: Native DAG node IDs completed by the fragment.
             Transport alone does not complete a circuit operation.
+        retained_atoms: Actual selected stays carried to the next layer by
+            the compiler. These snapshots are compilation metadata.
     """
 
     steps: tuple[AtomStep, ...]
     exit_layout: AtomLayout
     completed_operation_ids: tuple[int, ...] = ()
+    retained_atoms: tuple[AtomState, ...] = ()
 
 
 class Scheduler(Protocol):
@@ -100,6 +106,7 @@ class Placer(Protocol):
         *,
         reuse_qubits: tuple[int, ...] = (),
         following: GateLayer | None = None,
+        retained_atoms: tuple[AtomState, ...] = (),
     ) -> PlacementPlan:
         """Choose layouts for a selected gate layer.
 
@@ -111,6 +118,8 @@ class Placer(Protocol):
             reuse_qubits: Current participants proposed to remain at their
                 execution sites in the exit layout for the following CZ layer.
             following: Known next CZ layer for partner-distance estimates.
+            retained_atoms: Incoming actual stays, including their positions
+                and holders. Only matching current participants are anchors.
 
         Returns:
             Selected execution and exit layouts.

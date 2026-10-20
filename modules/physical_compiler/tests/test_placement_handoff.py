@@ -3,11 +3,14 @@
 from nadit_physical_compiler import (
     AtomFragment,
     AtomLayout,
+    AtomState,
     Device,
     GateLayer,
     PhysicalDAG,
     PhysicalOperation,
     PlacementPlan,
+    Position,
+    SLMHolder,
     Timing,
 )
 from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
@@ -23,7 +26,13 @@ def test_strategy_passes_the_known_layer_and_reuse_candidates_to_placement() -> 
         ((0, 1),),
     )
     current, following = GateLayer((0,)), GateLayer((1,))
-    entry = AtomLayout(())
+    entry = AtomLayout(
+        (
+            AtomState(0, Position(0, 0), SLMHolder("left")),
+            AtomState(1, Position(2, 0), SLMHolder("right")),
+        ),
+        qubit_to_atom=(0, 1),
+    )
     device = Device("handoff", (), (), (), Timing(1, 1, 1))
     received: list[tuple[GateLayer, GateLayer | None, tuple[int, ...]]] = []
 
@@ -37,6 +46,7 @@ def test_strategy_passes_the_known_layer_and_reuse_candidates_to_placement() -> 
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             received.append((layer, following, reuse_qubits))
             return PlacementPlan(layout, layout)

@@ -52,7 +52,9 @@ heuristic values when those geometric nearest sites are unavailable.
 Each matched reuse candidate receives both a stay option and storage options.
 Stay keeps its gate site and adds no movement to the exit groups. Actual
 retention is determined by the selected exit layout, not by the matching set.
-The next placement reads actual holders.
+The strategy carries actual selected stays as explicit atom-state snapshots,
+as specified in [ADR 0014](0014-explicit-retained-atoms.md). The next placement
+anchors only unchanged retained participants.
 
 ## Score
 

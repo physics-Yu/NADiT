@@ -172,7 +172,13 @@ def test_actual_gate_holders_anchor_new_partners_before_unanchored_jobs() -> Non
     device = _device()
     placer = _placer(device)
     entry = _layout(device, ("s0", "s1", "g0", "s3"))
-    plan = placer.place(_dag(((0, 1), (2, 3))), GateLayer((0, 1)), entry, device)
+    plan = placer.place(
+        _dag(((0, 1), (2, 3))),
+        GateLayer((0, 1)),
+        entry,
+        device,
+        retained_atoms=(entry.atom(23),),
+    )
 
     assert plan.execution_layout.atom(23) == entry.atom(23)
     assert plan.execution_layout.atom(26).holder == SLMHolder("g1")
@@ -231,6 +237,7 @@ def test_retention_needs_no_reserved_storage_slot() -> None:
         device,
         reuse_qubits=(0, 1),
         following=GateLayer((1,)),
+        retained_atoms=entry.atoms,
     )
 
     assert plan.execution_layout == plan.exit_layout == entry

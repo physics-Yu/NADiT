@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
+- Carry actual retained-atom snapshots between compilation layers instead of
+  treating every occupied gate site as a reuse anchor.
+- Clear nonretained pulse-region occupants before greedy or IDS gate placement,
+  emitting the preparation transport and its duration. Local-control relocation
+  can no longer create false cross-pair anchors.
+
 ### Changed
 
 - Lookahead can use already compiled measurement results during planned

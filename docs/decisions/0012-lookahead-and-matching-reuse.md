@@ -45,7 +45,9 @@ Placement reserves gate pairs containing retained participants before assigning
 unanchored gates. A new partner occupies the other site of its anchor's pair.
 The current layer's selected reuse atoms remain at their execution sites in the
 exit layout; other participants and pulse-region spectators receive storage
-destinations. The following placement reads anchors from the actual layout.
+destinations. Following [ADR 0014](0014-explicit-retained-atoms.md), the compiler
+carries actual retained-atom snapshots. The following placement requires both
+explicit retention and an unchanged current state before fixing an anchor.
 Strict transport uses its existing occupancy and movement rules.
 
 No following layer means no new retention. Final CZ participants return to

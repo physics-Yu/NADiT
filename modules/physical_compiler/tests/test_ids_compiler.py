@@ -22,7 +22,7 @@ from nadit_physical_compiler.placement import (
 )
 from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
-from nadit_physical_compiler.state import AtomLayout, SLMHolder
+from nadit_physical_compiler.state import AtomLayout, AtomState, SLMHolder
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
 from nadit_physical_compiler.transport import StrictTransport
 
@@ -178,6 +178,7 @@ def test_ids_uses_compiled_results_before_latency_but_waits_for_conditional_acti
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             if dag.nodes[layer.operation_ids[0]].name == "cz":
                 observed.append((layer, following, reuse_qubits, tuple(backend.calls)))
@@ -188,6 +189,7 @@ def test_ids_uses_compiled_results_before_latency_but_waits_for_conditional_acti
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
 
     result = compile_physical(
@@ -236,6 +238,7 @@ def test_ids_cannot_sample_a_future_measurement_for_lookahead(
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             observations.append(
                 (
@@ -251,6 +254,7 @@ def test_ids_cannot_sample_a_future_measurement_for_lookahead(
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
 
     result = compile_physical(

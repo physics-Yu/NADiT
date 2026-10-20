@@ -147,8 +147,8 @@ DAG, Atom IR, and atom state types:
 | Record | Fields and meaning |
 | --- | --- |
 | `GateLayer` | `operation_ids`: selected native DAG nodes |
-| `PlacementPlan` | `execution_layout`: layout for the layer; `exit_layout`: desired layout after the layer |
-| `AtomFragment` | `steps`: generated AtomSteps; `exit_layout`: resulting state; `completed_operation_ids`: completed native DAG nodes |
+| `PlacementPlan` | `execution_layout`: layout for the layer; `exit_layout`: desired layout after the layer; optional `preparation_layout`: intermediate arrangement before arrival |
+| `AtomFragment` | `steps`: generated AtomSteps; `exit_layout`: resulting state; `completed_operation_ids`: completed native DAG nodes; `retained_atoms`: selected stays for the next layer |
 
 `Scheduler.select`, `ReuseAnalyzer.analyze`, `Placer.place`, and
 `Transporter.construct` are typing protocols for interchangeable helpers.
@@ -158,11 +158,14 @@ own compilation state. The initial implementations live in `scheduling/`,
 `reuse/`, `placement/`, `transport/`, and `emission/`.
 
 `CompilationStrategy.lookahead_enabled` requests a next-CZ preview;
-`lower(..., following=None)` receives that optional GateLayer. The compiler
+`lower(..., following=None, retained_atoms=())` receives that optional GateLayer
+and the previous fragment's actual retained-atom snapshots. The compiler
 owns the preview's progress inputs. Scheduler selection is deterministic
 and does not mutate scheduler state.
 The strategy forwards `following` to `Placer.place` for partner-distance
 estimates. The fixed placers accept the hint without changing their decisions.
+The strategy also forwards incoming `retained_atoms`, separately from outgoing
+`reuse_qubits` proposals. Retention metadata does not change Atom IR.
 
 ## One-pair compilation
 
@@ -344,16 +347,21 @@ retaining their shared endpoints. Identical unordered pairs retain both
 atoms. For `(a,b), (c,d)` followed by `(a,c), (b,d)`, two compatible anchors
 remain; the other two atoms return to storage before joining new partners.
 
-The placer reserves anchored pairs first. Its exit layout keeps the selected
-reuse atoms at execution sites; the next placement reads their actual holders.
-If a local operation relocates an anchor, placement uses the new position.
+The placer reserves pairs containing explicitly retained participants first.
+The strategy records outgoing reuse candidates only when their execution and
+exit states match. The next placement uses these snapshots together with the
+actual layout. A local operation that leaves an anchor elsewhere clears its
+retention; moving another atom into a gate site does not create a new anchor.
 The existing strict transporter constructs all transfers around stationary
 atoms. The final CZ layer returns its participants to storage; individual
 storage assignments may differ from the entry layout.
 
-The current placer rejects a CZ whose two atoms are anchored in different
-catalogue pairs. Gate-only local control can create this case by moving a new
-atom into another pair; handling it requires a separate site-reassignment step.
+Before CZ placement, any other atoms in pulse coverage receive initially
+vacant storage sites. Placement returns this optional preparation layout;
+the strategy emits its transport before gate arrival, including its time.
+Both greedy and IDS placement share this preparation. It requires sufficient
+vacant reachable storage and keeps valid retained participants stationary.
+See [ADR 0014](../../docs/decisions/0014-explicit-retained-atoms.md).
 
 ```text
 uv run --locked python examples/compile_multipair.py --transport strict --bit 0 --reuse

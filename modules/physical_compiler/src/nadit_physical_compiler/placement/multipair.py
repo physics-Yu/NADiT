@@ -9,6 +9,7 @@ from ..physical_ir import PhysicalDAG
 from ..state import AODHolder, AtomLayout, AtomState, SLMHolder
 from .catalog import GatePairCatalog
 from .pair import PairPlacer
+from .retention import prepare_gate_layout, reachable_storage_sites
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,7 @@ class MultiPairPlacer:
         *,
         reuse_qubits: tuple[int, ...] = (),
         following: GateLayer | None = None,
+        retained_atoms: tuple[AtomState, ...] = (),
     ) -> PlacementPlan:
         """Choose a shared-CZ arrangement and retain selected atoms for reuse.
 
@@ -45,6 +47,8 @@ class MultiPairPlacer:
             reuse_qubits: Current participating qubits to retain at their
                 execution gate sites for a known following CZ layer.
             following: Accepted next-layer hint; this baseline retains all candidates.
+            retained_atoms: Incoming retained snapshots; only unchanged current
+                participants can anchor their gate pairs.
 
         Returns:
             Execution and exit layouts preserving atom order and qubit bindings.
@@ -62,38 +66,39 @@ class MultiPairPlacer:
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
         if len(layer.operation_ids) > self.catalog.capacity:
             raise ValueError("CZ layer exceeds the gate-pair catalogue capacity.")
-        assignments = self._gate_assignments(dag, layer, layout, device)
+        participants = {
+            layout.qubit_to_atom[q]
+            for operation_id in layer.operation_ids
+            for q in dag.nodes[operation_id].qubits
+        }
+        storage = reachable_storage_sites(
+            device, self.aod_id, self.storage_zone_id, self.catalog.coverage
+        )
+        prepared, anchors = prepare_gate_layout(
+            layout, storage, self.catalog, participants, retained_atoms
+        )
+        assignments = self._gate_assignments(dag, layer, prepared, device, anchors)
         retained_ids = {
             layout.qubit_to_atom[q] for q in reuse_qubits
         } & assignments.keys()
         retained = {atom_id: assignments[atom_id] for atom_id in retained_ids}
-        exit_layout = self._storage_exit(layout, device, set(assignments), retained)
+        exit_layout = self._storage_exit(prepared, storage, participants, retained)
         execution = _replace_atoms(exit_layout, assignments)
-        return PlacementPlan(execution, exit_layout)
+        return PlacementPlan(
+            execution, exit_layout, prepared if prepared is not layout else None
+        )
 
     def _storage_exit(
         self,
         layout: AtomLayout,
-        device: Device,
+        sites: tuple[SLMSite, ...],
         participants: set[int],
         retained: dict[int, AtomState],
     ) -> AtomLayout:
-        zone = next(
-            (item for item in device.zones if item.id == self.storage_zone_id), None
-        )
-        if zone is None:
-            raise ValueError(f"Missing storage zone {self.storage_zone_id!r}.")
-        workspace = device.aod(self.aod_id).workspace
-        sites = tuple(
-            site
-            for site in device.slm_sites
-            if zone.bounds.contains(site.position)
-            and not self.catalog.coverage.contains(site.position)
-            and workspace.contains(site.position)
-        )
         site_ids = {site.id for site in sites}
         relocations = [
             atom
@@ -138,6 +143,7 @@ class MultiPairPlacer:
         layer: GateLayer,
         entry_layout: AtomLayout,
         device: Device,
+        retained_ids: frozenset[int],
     ) -> dict[int, AtomState]:
         workspace = device.aod(self.aod_id).workspace
         available = {
@@ -162,7 +168,9 @@ class MultiPairPlacer:
                 entry_layout.atom(entry_layout.qubit_to_atom[q])
                 for q in operation.qubits
             )
-            anchor = _anchor_pair(first, second, locations, self.catalog.pairs)
+            anchor = _anchor_pair(
+                first, second, locations, self.catalog.pairs, retained_ids
+            )
             if anchor is None:
                 unanchored.append((first, second))
                 continue
@@ -201,15 +209,16 @@ def _anchor_pair(
     second: AtomState,
     locations: dict[str, tuple[int, int]],
     pairs: tuple[tuple[SLMSite, SLMSite], ...],
+    retained_ids: frozenset[int],
 ) -> tuple[int, SLMSite, SLMSite] | None:
     first_anchor = (
         locations.get(first.holder.site_id)
-        if isinstance(first.holder, SLMHolder)
+        if first.id in retained_ids and isinstance(first.holder, SLMHolder)
         else None
     )
     second_anchor = (
         locations.get(second.holder.site_id)
-        if isinstance(second.holder, SLMHolder)
+        if second.id in retained_ids and isinstance(second.holder, SLMHolder)
         else None
     )
     if first_anchor is not None:

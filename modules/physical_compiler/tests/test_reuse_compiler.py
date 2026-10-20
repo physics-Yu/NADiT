@@ -8,6 +8,7 @@ from test_strict_compiler import RecordingBackend, _audit, _entry
 
 from nadit_physical_compiler import (
     AtomLayout,
+    AtomState,
     CompilationResult,
     CZPulse,
     Device,
@@ -203,6 +204,7 @@ def test_measurement_blocks_preview_and_is_sampled_only_when_emitted(
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             calls.append(
                 (
@@ -218,6 +220,7 @@ def test_measurement_blocks_preview_and_is_sampled_only_when_emitted(
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
 
     result = compile_physical(

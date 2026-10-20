@@ -14,7 +14,7 @@ from ..contracts import (
 from ..device import Device
 from ..emission import emit_layer
 from ..physical_ir import PhysicalDAG
-from ..state import AtomLayout
+from ..state import AtomLayout, AtomState
 
 type Emitter = Callable[[PhysicalDAG, GateLayer, AtomLayout, Device], AtomFragment]
 
@@ -57,6 +57,7 @@ class SearchSmarterStrategy:
         device: Device,
         *,
         following: GateLayer | None = None,
+        retained_atoms: tuple[AtomState, ...] = (),
     ) -> AtomFragment:
         """Construct a fragment, retaining selected atoms for a known CZ layer."""
         reuse_qubits = (
@@ -65,15 +66,59 @@ class SearchSmarterStrategy:
             else ()
         )
         plan = self.placer.place(
-            dag, layer, layout, device, reuse_qubits=reuse_qubits, following=following
+            dag,
+            layer,
+            layout,
+            device,
+            reuse_qubits=reuse_qubits,
+            following=following,
+            retained_atoms=retained_atoms,
         )
-        arrival = self.transporter.construct(layout, plan.execution_layout, device)
+        preparation = (
+            self.transporter.construct(layout, plan.preparation_layout, device)
+            if plan.preparation_layout is not None
+            else AtomFragment((), layout)
+        )
+        arrival = self.transporter.construct(
+            preparation.exit_layout, plan.execution_layout, device
+        )
         operation = self.emitter(dag, layer, arrival.exit_layout, device)
         departure = self.transporter.construct(
             operation.exit_layout, plan.exit_layout, device
         )
         return AtomFragment(
-            arrival.steps + operation.steps + departure.steps,
+            preparation.steps + arrival.steps + operation.steps + departure.steps,
             departure.exit_layout,
             operation.completed_operation_ids,
+            _retained_after(
+                dag,
+                layer,
+                layout,
+                arrival.exit_layout,
+                departure.exit_layout,
+                reuse_qubits,
+                retained_atoms,
+            ),
         )
+
+
+def _retained_after(
+    dag: PhysicalDAG,
+    layer: GateLayer,
+    entry: AtomLayout,
+    execution: AtomLayout,
+    exit_layout: AtomLayout,
+    reuse_qubits: tuple[int, ...],
+    retained_atoms: tuple[AtomState, ...],
+) -> tuple[AtomState, ...]:
+    final_atoms = {atom.id: atom for atom in exit_layout.atoms}
+    if layer.operation_ids and dag.nodes[layer.operation_ids[0]].name == "cz":
+        executing = {atom.id: atom for atom in execution.atoms}
+        candidates = (executing[execution.qubit_to_atom[q]] for q in reuse_qubits)
+        return tuple(atom for atom in candidates if final_atoms.get(atom.id) == atom)
+    initial_atoms = {atom.id: atom for atom in entry.atoms}
+    return tuple(
+        atom
+        for atom in retained_atoms
+        if initial_atoms.get(atom.id) == atom and final_atoms.get(atom.id) == atom
+    )

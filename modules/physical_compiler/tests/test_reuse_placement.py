@@ -100,7 +100,11 @@ def test_swapped_partners_keep_two_matched_anchors_then_return_to_storage() -> N
         )
 
     second = placer.place(
-        _dag(((0, 2), (1, 3))), GateLayer((0, 1)), first.exit_layout, device
+        _dag(((0, 2), (1, 3))),
+        GateLayer((0, 1)),
+        first.exit_layout,
+        device,
+        retained_atoms=(first.exit_layout.atom(42), first.exit_layout.atom(5)),
     )
     assert second.execution_layout.atom(42) == first.exit_layout.atom(42)
     assert second.execution_layout.atom(5) == first.exit_layout.atom(5)
@@ -122,7 +126,13 @@ def test_all_anchored_pairs_are_reserved_before_an_earlier_unanchored_gate() -> 
     device = _device()
     placer = _placer(device)
     entry = _layout(device, ("s0", "s1", "g0", "s3"))
-    plan = placer.place(_dag(((0, 1), (2, 3))), GateLayer((0, 1)), entry, device)
+    plan = placer.place(
+        _dag(((0, 1), (2, 3))),
+        GateLayer((0, 1)),
+        entry,
+        device,
+        retained_atoms=(entry.atom(8),),
+    )
 
     assert plan.execution_layout.atom(8) == entry.atom(8)
     assert plan.execution_layout.atom(5).holder == SLMHolder("g1")
@@ -139,9 +149,20 @@ def test_identical_gate_keeps_both_atoms_and_needs_no_storage_between_layers() -
     entry = _layout(device, ("s0", "s1"))
     first = placer.place(dag, GateLayer((0,)), entry, device, reuse_qubits=(0, 1))
     second = placer.place(
-        dag, GateLayer((0,)), first.exit_layout, device, reuse_qubits=(0, 1)
+        dag,
+        GateLayer((0,)),
+        first.exit_layout,
+        device,
+        reuse_qubits=(0, 1),
+        retained_atoms=first.exit_layout.atoms,
     )
-    final = placer.place(dag, GateLayer((0,)), second.exit_layout, device)
+    final = placer.place(
+        dag,
+        GateLayer((0,)),
+        second.exit_layout,
+        device,
+        retained_atoms=second.exit_layout.atoms,
+    )
 
     assert first.exit_layout == first.execution_layout
     assert second.execution_layout == first.exit_layout
@@ -159,13 +180,22 @@ def test_retained_atom_frees_its_storage_site_for_the_returning_partner() -> Non
     entry = _layout(device, ("s0", "g1"))
     dag = _dag(((0, 1),), num_qubits=2)
 
-    plan = placer.place(dag, GateLayer((0,)), entry, device, reuse_qubits=(0,))
+    plan = placer.place(
+        dag,
+        GateLayer((0,)),
+        entry,
+        device,
+        reuse_qubits=(0,),
+        retained_atoms=(entry.atom(101),),
+    )
 
     assert plan.exit_layout.atom(42).holder == SLMHolder("g0")
     assert plan.exit_layout.atom(101).holder == SLMHolder("s0")
     assert _edges(plan.execution_layout, placer.catalog) == {frozenset((42, 101))}
     with pytest.raises(ValueError, match="storage"):
-        placer.place(dag, GateLayer((0,)), entry, device)
+        placer.place(
+            dag, GateLayer((0,)), entry, device, retained_atoms=(entry.atom(101),)
+        )
 
 
 def test_two_retained_atoms_do_not_require_any_storage_slot() -> None:
@@ -178,6 +208,7 @@ def test_two_retained_atoms_do_not_require_any_storage_slot() -> None:
         entry,
         device,
         reuse_qubits=(0, 1),
+        retained_atoms=entry.atoms,
     )
 
     assert plan.execution_layout == plan.exit_layout == entry
@@ -235,7 +266,13 @@ def test_relocated_anchor_is_replanned_from_its_actual_holder() -> None:
             for atom in first.exit_layout.atoms
         ),
     )
-    plan = placer.place(_dag(((0, 2), (1, 3))), GateLayer((0, 1)), relocated, device)
+    plan = placer.place(
+        _dag(((0, 2), (1, 3))),
+        GateLayer((0, 1)),
+        relocated,
+        device,
+        retained_atoms=(first.exit_layout.atom(42), first.exit_layout.atom(5)),
+    )
 
     assert plan.execution_layout.atom(5) == relocated.atom(5)
     assert _edges(plan.execution_layout, placer.catalog) == {
@@ -255,10 +292,12 @@ def test_incompatible_retained_anchors_have_an_explicit_construction_error(
     sites: tuple[str, ...], gates: tuple[tuple[int, int], ...]
 ) -> None:
     device = _device()
+    entry = _layout(device, sites)
     with pytest.raises(ValueError, match="anchor"):
         _placer(device).place(
             _dag(gates),
             GateLayer(tuple(range(len(gates)))),
-            _layout(device, sites),
+            entry,
             device,
+            retained_atoms=entry.atoms,
         )

@@ -9,7 +9,7 @@ from .device import Device
 from .execution import FakeBackend, MeasurementBackend
 from .physical_ir import PhysicalDAG, ResultRef
 from .scheduling.lookahead import next_cz_layer
-from .state import AtomLayout, validate_layout
+from .state import AtomLayout, AtomState, validate_layout
 
 
 class CompilationStrategy(Protocol):
@@ -32,6 +32,7 @@ class CompilationStrategy(Protocol):
         device: Device,
         *,
         following: GateLayer | None = None,
+        retained_atoms: tuple[AtomState, ...] = (),
     ) -> AtomFragment:
         """Construct a fragment using an optional known following CZ layer."""
         ...
@@ -131,6 +132,7 @@ class _Compilation:
         self.device = device
         self.strategy = strategy
         self.layout = layout
+        self.retained_atoms: tuple[AtomState, ...] = ()
         self.backend = backend
         self.steps: list[AtomStep] = []
         self.time_us = 0.0
@@ -158,7 +160,12 @@ class _Compilation:
             layer = self.strategy.select(self.dag, ready)
             following = self._following(layer)
             fragment = self.strategy.lower(
-                self.dag, layer, self.layout, self.device, following=following
+                self.dag,
+                layer,
+                self.layout,
+                self.device,
+                following=following,
+                retained_atoms=self.retained_atoms,
             )
             if not fragment.completed_operation_ids:
                 raise ValueError(
@@ -254,6 +261,7 @@ class _Compilation:
             self.steps.append(step)
             self.time_us += step.duration_us
         self.layout = fragment.exit_layout
+        self.retained_atoms = fragment.retained_atoms
         for index in fragment.completed_operation_ids:
             start, end = intervals[index]
             self.operations[index] = CompiledOperation(index, "emitted", start, end)

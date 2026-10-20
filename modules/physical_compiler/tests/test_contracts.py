@@ -86,6 +86,7 @@ def test_modules_compose_through_structural_protocols() -> None:
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             assert dag.nodes[layer.operation_ids[0]].qubits == reuse_qubits
             assert layout is entry

@@ -9,10 +9,9 @@ HeuristicPlacer.cpp (MIT); see the repository third-party notice.
 # See docs/third-party-notices.md for the source revision and MIT license.
 
 from dataclasses import dataclass
-from math import hypot
 
 from ..contracts import GateLayer, PlacementPlan
-from ..device import Device, Position, SLMSite
+from ..device import Device, Position
 from ..physical_ir import PhysicalDAG
 from ..state import AtomLayout, AtomState
 from ..transport.rules import StrictRules
@@ -20,6 +19,7 @@ from .candidates import gate_jobs, storage_jobs
 from .catalog import GatePairCatalog
 from .multipair import _anchor_pair, _at_site, _replace_atoms
 from .pair import PairPlacer
+from .retention import prepare_gate_layout, reachable_storage_sites
 from .scoring import PlacementConfig, search_placement
 
 
@@ -48,6 +48,7 @@ class HeuristicPlacer:
         *,
         reuse_qubits: tuple[int, ...] = (),
         following: GateLayer | None = None,
+        retained_atoms: tuple[AtomState, ...] = (),
     ) -> PlacementPlan:
         """Search one CZ execution layout and its storage/stay exit layout.
 
@@ -58,6 +59,8 @@ class HeuristicPlacer:
             device: Fixed traps, transport constraints, and operation capabilities.
             reuse_qubits: Matched current qubits eligible for optional retention.
             following: Known next CZ layer supplying next-partner positions.
+            retained_atoms: Incoming retained snapshots; only unchanged current
+                participants can anchor their gate pairs.
 
         Returns:
             Selected layouts with actual retention encoded by exit holders.
@@ -69,7 +72,13 @@ class HeuristicPlacer:
         """
         if not layer.operation_ids or dag.nodes[layer.operation_ids[0]].name != "cz":
             return PairPlacer(self.aod_id).place(
-                dag, layer, layout, device, reuse_qubits=reuse_qubits
+                dag,
+                layer,
+                layout,
+                device,
+                reuse_qubits=reuse_qubits,
+                following=following,
+                retained_atoms=retained_atoms,
             )
         participants = tuple(
             layout.qubit_to_atom[q]
@@ -77,18 +86,22 @@ class HeuristicPlacer:
             for q in dag.nodes[operation_id].qubits
         )
         participant_ids = set(participants)
-        entry_partners = _partner_positions(dag, following, layout)
+        storage = reachable_storage_sites(
+            device, self.aod_id, self.storage_zone_id, self.catalog.coverage
+        )
+        prepared, anchors = prepare_gate_layout(
+            layout, storage, self.catalog, participant_ids, retained_atoms
+        )
+        entry_partners = _partner_positions(dag, following, prepared)
         reusable = frozenset(
             layout.qubit_to_atom[q]
             for q in reuse_qubits
             if layout.qubit_to_atom[q] in participant_ids
             and layout.qubit_to_atom[q] in entry_partners
         )
-        storage = self._storage_sites(device)
-        cleared = self._clear_spectators(layout, storage, participant_ids)
         rules = StrictRules(device.aod(self.aod_id), device.timing)
         execution = self._execution(
-            dag, layer, cleared, rules, reusable, entry_partners
+            dag, layer, prepared, rules, reusable, entry_partners, anchors
         )
         reserved = {
             atom.position for atom in execution.atoms if atom.id not in participant_ids
@@ -111,7 +124,9 @@ class HeuristicPlacer:
                 for atom_id, site in option.assignments
             },
         )
-        return PlacementPlan(execution, exit_layout)
+        return PlacementPlan(
+            execution, exit_layout, prepared if prepared is not layout else None
+        )
 
     def _execution(
         self,
@@ -121,6 +136,7 @@ class HeuristicPlacer:
         rules: StrictRules,
         reusable: frozenset[int],
         partners: dict[int, Position],
+        retained_ids: frozenset[int],
     ) -> AtomLayout:
         available = {
             index: pair
@@ -141,7 +157,9 @@ class HeuristicPlacer:
             first, second = (
                 atoms[layout.qubit_to_atom[q]] for q in dag.nodes[operation_id].qubits
             )
-            anchor = _anchor_pair(first, second, locations, self.catalog.pairs)
+            anchor = _anchor_pair(
+                first, second, locations, self.catalog.pairs, retained_ids
+            )
             if anchor is None:
                 unanchored.append((first, second))
                 continue
@@ -167,50 +185,6 @@ class HeuristicPlacer:
             for atom_id, site in option.assignments
         )
         return _replace_atoms(layout, assigned)
-
-    def _storage_sites(self, device: Device) -> tuple[SLMSite, ...]:
-        zone = next(
-            (zone for zone in device.zones if zone.id == self.storage_zone_id), None
-        )
-        if zone is None:
-            raise ValueError(f"Missing storage zone {self.storage_zone_id!r}.")
-        workspace = device.aod(self.aod_id).workspace
-        positions: dict[Position, SLMSite] = {}
-        for site in device.slm_sites:
-            if (
-                zone.bounds.contains(site.position)
-                and workspace.contains(site.position)
-                and not self.catalog.coverage.contains(site.position)
-            ):
-                positions.setdefault(site.position, site)
-        return tuple(positions.values())
-
-    def _clear_spectators(
-        self, layout: AtomLayout, sites: tuple[SLMSite, ...], participants: set[int]
-    ) -> AtomLayout:
-        occupied = {atom.position for atom in layout.atoms}
-        changes: dict[int, AtomState] = {}
-        for atom in layout.atoms:
-            if atom.id in participants or not self.catalog.coverage.contains(
-                atom.position
-            ):
-                continue
-            candidates = [site for site in sites if site.position not in occupied]
-            if not candidates:
-                raise ValueError("A pulse spectator needs initially vacant storage.")
-            selected = min(
-                candidates,
-                key=lambda site: (
-                    hypot(
-                        site.position.x - atom.position.x,
-                        site.position.y - atom.position.y,
-                    ),
-                    site.id,
-                ),
-            )
-            changes[atom.id] = _at_site(atom.id, selected)
-            occupied.add(selected.position)
-        return _replace_atoms(layout, changes) if changes else layout
 
 
 def _partner_positions(

@@ -13,6 +13,7 @@ from test_strict_compiler import RecordingBackend, _audit, _entry
 
 from nadit_physical_compiler import (
     AtomLayout,
+    AtomState,
     CZPulse,
     Device,
     GateLayer,
@@ -57,6 +58,7 @@ def test_compiled_result_enables_reuse_while_actions_wait_for_feedback(
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             if dag.nodes[layer.operation_ids[0]].name == "cz":
                 observations.append((layer, reuse_qubits, tuple(backend.calls)))
@@ -67,6 +69,7 @@ def test_compiled_result_enables_reuse_while_actions_wait_for_feedback(
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
 
     result = compile_physical(
@@ -226,6 +229,7 @@ def test_local_control_relocation_recomputes_actual_gate_anchors(
             *,
             reuse_qubits: tuple[int, ...] = (),
             following: GateLayer | None = None,
+            retained_atoms: tuple[AtomState, ...] = (),
         ) -> PlacementPlan:
             if dag.nodes[layer.operation_ids[0]].name == "cz":
                 observed.append((layout, reuse_qubits))
@@ -236,6 +240,7 @@ def test_local_control_relocation_recomputes_actual_gate_anchors(
                 device,
                 reuse_qubits=reuse_qubits,
                 following=following,
+                retained_atoms=retained_atoms,
             )
 
     result = compile_physical(
