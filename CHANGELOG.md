@@ -19,6 +19,12 @@
 
 ### Added
 
+- Shared strict movement rules, a pairwise conflict map, batch row/column
+  capacity checks, stable endpoint frames, and a distance-based batch cost.
+- Strict parallel transport with fixed-point source/target occupancy closure
+  and direct common LOAD/MOVE/STORE actions.
+- Sequential/strict comparison on the existing multi-pair example and
+  independent tests for phase legality, capacity, ghosts, feedback, and replay.
 - Multi-pair correctness baseline with explicit isolated SLM-pair catalogues,
   capacity-limited CZ layers, distinct pair assignments, spectator clearing,
   and storage returns between layers.

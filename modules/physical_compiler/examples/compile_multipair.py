@@ -10,7 +10,10 @@ from nadit_physical_compiler import (
     AtomState,
     CZPulse,
     FakeBackend,
+    Load,
+    Move,
     SLMHolder,
+    Store,
     compile_physical,
     load_device,
     load_qasm,
@@ -20,7 +23,7 @@ from nadit_physical_compiler.emission import WholeLayerEmitter
 from nadit_physical_compiler.placement import GatePairCatalog, MultiPairPlacer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
-from nadit_physical_compiler.transport import SequentialTransport
+from nadit_physical_compiler.transport import SequentialTransport, StrictTransport
 
 
 def main() -> None:
@@ -29,6 +32,9 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--bit", type=int, choices=(0, 1))
     parser.add_argument("--capacity", type=int, choices=(1, 2), default=2)
+    parser.add_argument(
+        "--transport", choices=("sequential", "strict"), default="sequential"
+    )
     args = parser.parse_args()
     module = Path(__file__).resolve().parents[1]
     device = load_device(module / "configs/multipair_flexible.json")
@@ -53,13 +59,18 @@ def main() -> None:
         for node in dag.nodes
         if (reference := node.result) is not None and args.bit is not None
     }
+    transporter = (
+        StrictTransport("transport")
+        if args.transport == "strict"
+        else SequentialTransport("transport")
+    )
     result = compile_physical(
         dag,
         device,
         strategy=SearchSmarterStrategy(
             ReadyScheduler(max_cz_gates=catalog.capacity),
             MultiPairPlacer("transport", catalog),
-            SequentialTransport("transport"),
+            transporter,
             WholeLayerEmitter(catalog.coverage),
         ),
         entry_state=entry,
@@ -72,6 +83,7 @@ def main() -> None:
             {
                 "native_nodes": len(dag.nodes),
                 "pair_capacity": catalog.capacity,
+                "transport": args.transport,
                 "cz_gates_per_pulse": [
                     len(action.source_ids)
                     for action in actions
@@ -80,6 +92,24 @@ def main() -> None:
                 "atom_steps": len(result.program.steps),
                 "action_counts": dict(
                     Counter(type(action).__name__ for action in actions)
+                ),
+                "load_batch_sizes": [
+                    len(action.bindings)
+                    for action in actions
+                    if isinstance(action, Load)
+                ],
+                "max_parallel_atoms": max(
+                    (
+                        len(action.targets)
+                        for action in actions
+                        if isinstance(action, Move)
+                    ),
+                    default=0,
+                ),
+                "transport_duration_us": sum(
+                    action.duration_us
+                    for action in actions
+                    if isinstance(action, Load | Move | Store)
                 ),
                 "program_duration_us": result.program.duration_us,
                 "measurements": [

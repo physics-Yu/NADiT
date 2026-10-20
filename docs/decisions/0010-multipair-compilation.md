@@ -1,7 +1,7 @@
 # 0010: Multi-Pair Compilation
 
-Status: Accepted on 2026-10-20. The correctness baseline is implemented;
-transport optimization, reuse, and IDS are subsequent increments.
+Status: Accepted on 2026-10-20. The correctness baseline and direct strict
+transport are implemented; reuse, IDS, and staged routing follow.
 
 ## Context
 

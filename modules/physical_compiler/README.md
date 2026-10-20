@@ -16,11 +16,12 @@ The compiler connects ready-layer selection, fixed-pair placement, transport,
 and Atom IR emission, including measurement feedback. The multi-pair baseline
 adds a fixed catalogue, capacity-limited CZ layers, sequential transfers, and
 one shared pulse per CZ layer. Direct replay reconstructs the exit layout.
+Strict parallel transport uses shared geometry rules, a conflict map, and
+current occupancy to construct common-load movement batches.
 
 ## Next step
 
-Next, add shared transport compatibility/cost rules and strict parallel batching,
-then following-layer reuse, IDS placement, and relaxed routing.
+Next, add following-layer reuse, IDS placement, and staged/relaxed routing.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -288,8 +289,86 @@ and the complete Atom IR. Integration tests enumerate actual interactions
 from illuminated atom positions, compare them with intended source gates,
 and check dependency timing and exit-state replay.
 
-Reuse, IDS, and parallel transport are subsequent increments in
+Reuse, IDS, and transport optimization follow the sequence in
 [ADR 0010](../../docs/decisions/0010-multipair-compilation.md).
+
+## Shared rules and strict parallel transport
+
+`StrictTransport(aod_id)` implements the same `construct` interface as
+`SequentialTransport`. Use it in the existing strategy composition to batch
+SLM-to-SLM movements. Retained singleton AOD readout uses the existing
+sequential path.
+
+The shared `transport.rules` API provides:
+
+| API | Meaning |
+| --- | --- |
+| `MoveRequest(atom_id, source, target)` | Positions involved in one requested atom movement |
+| `StrictRules(aod, timing).compatible(a, b)` | Pairwise axis equality, order, and minimum-spacing compatibility |
+| `build_conflict_map(moves, rules)` | Atom-ID adjacency for incompatible movement pairs |
+| `rules.can_fit(moves)` | Batch workspace, distinct-row/column capacity, and spacing, given pairwise compatibility |
+| `rules.frames(moves)` | Source/target grids with stable line IDs and atom bindings |
+| `rules.duration_us(moves)` | Load + longest movement + store time for the direct batch |
+
+```python
+from nadit_physical_compiler import Position, load_device
+from nadit_physical_compiler.transport import (
+    MoveRequest,
+    StrictRules,
+    build_conflict_map,
+)
+
+device = load_device("configs/multipair_flexible.json")
+rules = StrictRules(device.aod("transport"), device.timing)
+moves = (
+    MoveRequest(7, Position(0, 0), Position(0, 120)),
+    MoveRequest(10, Position(5, 0), Position(2, 120)),
+)
+assert all(not neighbors for neighbors in build_conflict_map(moves, rules).values())
+assert rules.can_fit(moves)
+assert rules.duration_us(moves) > device.timing.load_us + device.timing.store_us
+```
+
+The transporter builds the pairwise map once per layout transition. It selects
+compatible requests subject to row/column capacity and current occupancy.
+When a source or target grid intersection contains another pending atom, batch
+admission includes that atom and repeats the intersection queries until the
+group is closed. If an atom cannot join, that extension is deferred or split.
+Occupancy is updated after each completed batch.
+
+Each accepted batch produces one LOAD, a MOVE when positions change, and one
+STORE. Multiple rows and columns can be active. The direct template uses no
+intermediate offsets; cases requiring staged pickup are split into smaller
+batches. Source and destination frames preserve their active line identities
+and order. Group duration uses the maximum atom distance, with the same timing
+model as sequential transport.
+
+Full movement and state checks are used in tests. The transport constructor
+uses its compatibility, capacity, and occupancy rules directly.
+
+Compare transports on the same circuit, device, and measurement case:
+
+```text
+uv run --locked python examples/compile_multipair.py --transport sequential --bit 1
+uv run --locked python examples/compile_multipair.py --transport strict --bit 1
+uv run --locked python examples/compile_multipair.py --transport strict --bit 0
+```
+
+The example reports transport duration, load batch sizes, and maximum parallel
+atom count. See [ADR 0011](../../docs/decisions/0011-strict-parallel-transport.md)
+for the construction rules.
+
+With the checked-in device, pair capacity 2, and forced measurement values:
+
+| Bit | Sequential transport actions | Strict transport actions | Sequential transport time (us) | Strict transport time (us) |
+| --- | ---: | ---: | ---: | ---: |
+| 0 | 52 | 22 | 2741.133 | 1340.949 |
+| 1 | 76 | 28 | 3861.449 | 1621.157 |
+
+Transport actions count LOAD, MOVE, and STORE, including readout transport.
+Strict batches move up to four atoms together in this example. Both
+transports produce the same gate decisions, phase, measurement identities
+and values, and final layout. These times use the configured study model.
 
 ## Flexible device foundation
 
@@ -575,6 +654,8 @@ quantum-state simulation.
   one-pair stage composition, AOD readout, and compile-time feedback.
 - [ADR 0010](../../docs/decisions/0010-multipair-compilation.md):
   multi-pair baseline, shared transport rules, reuse, and search sequence.
+- [ADR 0011](../../docs/decisions/0011-strict-parallel-transport.md):
+  strict batch admission, occupancy closure, and direct parallel actions.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

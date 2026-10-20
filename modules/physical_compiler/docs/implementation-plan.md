@@ -3,7 +3,8 @@
 Date: 2026-10-20.
 Status: Steps 1 and 3, retained-readout replay and operation capabilities from
 step 2, and the multi-pair correctness baseline in step 4 are implemented.
-The next increment is shared transport rules and strict parallel batching.
+Step 4's shared rules and direct strict batching are also implemented.
+The next increment is following-layer preview and matching-based reuse.
 
 ## Compilation contract
 
@@ -68,6 +69,8 @@ their implementation step begins.
 | `configs/one_pair_flexible.json` | Explicit geometry and operation capabilities for the one-pair study |
 | `src/nadit_physical_compiler/placement/catalog.py`, `placement/multipair.py` | Fixed pair catalogue, multi-CZ allocation, and storage returns |
 | `src/nadit_physical_compiler/transport/sequential.py` | Singleton transfers with destination vacancy ordering |
+| `src/nadit_physical_compiler/transport/rules.py` | Shared strict geometry, conflict map, endpoint frames, and cost |
+| `src/nadit_physical_compiler/transport/occupancy.py`, `transport/strict.py` | Current occupancy, batch closure, and direct parallel actions |
 | `src/nadit_physical_compiler/emission/layer.py` | One region pulse for a complete placed CZ layer |
 | `examples/compile_multipair.py`, `examples/multipair_feedback.qasm3`, `configs/multipair_flexible.json` | Multi-pair compilation, partner changes, and conditional CZ study |
 | `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
@@ -168,10 +171,12 @@ Implement this stage in five increments, as defined in
 4. IDS placement search.
 5. Relaxed routing and its staged action construction.
 
-Item 1 is implemented. Its integration tests cover both forced feedback
+Items 1 and 2 are implemented. Integration tests cover both forced feedback
 branches, actual illuminated interaction pairs, capacity splitting, spectator
-clearing, and replay. Gate participants return to storage after CZ; reuse is
-added in item 3. Item 2 is next.
+clearing, and replay. Strict transport constructs simultaneous LOAD/MOVE/STORE
+batches; capacity, source ghosts, and target occupancy can split a batch.
+Staged pickup and offsets are subsequent constructors. Gate participants return
+to storage after CZ; reuse is added in item 3, which is next.
 
 Complete the flexible zoned profile using fixed candidate interaction pairs:
 gate layering, reuse analysis, routing-aware placement with IDS, transport
@@ -239,5 +244,5 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is shared movement compatibility/cost rules and strict
-parallel transport. Reuse and layout search follow that tested transport model.
+The next work item is following-layer preview and matching-based reuse.
+Placement search then uses the shared transport compatibility and cost.

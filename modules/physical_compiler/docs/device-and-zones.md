@@ -2,8 +2,9 @@
 
 Date: 2026-10-20.
 Status: Flexible geometry, state, transport checks, operation capabilities,
-and the one-pair and multi-pair baseline compilers are implemented. Parallel
-transport, reuse, layout search, AOD-held CZ strategies, and rigid support follow the
+the one-pair and multi-pair compilers, and direct strict parallel transport
+are implemented. Reuse, layout search, staged routing, AOD-held CZ strategies,
+and rigid support follow the
 [implementation plan](implementation-plan.md).
 
 ## Device and compiler responsibilities

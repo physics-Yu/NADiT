@@ -24,7 +24,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Atom-action state replay with retained readout | Implemented |
 | One-pair DAG-to-Atom-IR compilation with feedback | Implemented |
 | Multi-pair fixed placement, sequential transport, and shared pulses | Implemented |
-| Strict batching, reuse, IDS, and relaxed routing | Next |
+| Shared transport rules and direct strict parallel batches | Implemented |
+| Reuse, IDS, and staged/relaxed routing | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
 The module [README](modules/physical_compiler/README.md) defines the implemented API.
@@ -130,14 +131,21 @@ to storage afterward. Sequential transport moves one atom at a time; one CZ
 pulse executes the whole placed layer. The compiler and measurement protocol
 remain shared with the one-pair strategy.
 
+StrictTransport replaces the sequential constructor through the same interface.
+It uses a movement conflict map plus batch capacity and current occupancy.
+Occupied grid intersections are closed over compatible pending requests before
+emitting common LOAD/MOVE/STORE phases. Source measurement identities and
+branch decisions remain unchanged. See
+[ADR 0011](docs/decisions/0011-strict-parallel-transport.md).
+
 ## Development order
 
 1. Implement Device, atom state, and flexible transport constraints (complete).
 2. Implement Atom IR structures, text output, and retained-readout replay (complete).
 3. Implement native frontend translation, module handoffs, and one-pair case
    compilation (complete).
-4. Implement the multi-pair correctness baseline (complete), then strict
-   parallel transport, reuse, IDS placement, and relaxed routing.
+4. Implement the multi-pair baseline and direct strict transport (complete),
+   then reuse, IDS placement, and staged/relaxed routing.
 5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
 6. Package reusable components and connect logical QEC compilation.
 
