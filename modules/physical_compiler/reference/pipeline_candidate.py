@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -27,6 +27,7 @@ from nadit_physical_compiler.capabilities import (
 )
 from nadit_physical_compiler.compiler import compile_physical
 from nadit_physical_compiler.contracts import AtomFragment, GateLayer, PlacementPlan
+from nadit_physical_compiler.coverage import RegionSet
 from nadit_physical_compiler.device import AOD, Device, Position, Region, Timing, Zone
 from nadit_physical_compiler.emission import WholeLayerEmitter
 from nadit_physical_compiler.physical_ir import PhysicalDAG, PhysicalOperation
@@ -144,12 +145,15 @@ def _device(
         for array in geometry.storage_arrays
     )
     rydberg_ranges = case.get("rydberg_range")
+    separate_coverage = rydberg_ranges is not None and len(rydberg_ranges) != len(
+        geometry.entanglement_arrays
+    )
     gate_zones = tuple(
         Zone(
             f"gate_{index}",
             (
                 Region(*rydberg_ranges[index][0], *rydberg_ranges[index][1])
-                if rydberg_ranges is not None
+                if rydberg_ranges is not None and not separate_coverage
                 else _bounds(
                     tuple(
                         site.position
@@ -237,6 +241,12 @@ def _device(
             for index, (left, right) in enumerate(geometry.entanglement_arrays)
         ),
     )
+    if separate_coverage and rydberg_ranges is not None:
+        regions = tuple(Region(*bounds[0], *bounds[1]) for bounds in rydberg_ranges)
+        catalog = replace(
+            catalog,
+            coverage=regions[0] if len(regions) == 1 else RegionSet(regions),
+        )
     return device, catalog, global_region
 
 

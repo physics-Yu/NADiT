@@ -238,3 +238,13 @@ def test_explicit_rydberg_extent_survives_device_actions_and_normalized_trace(
     assert coverages == [expected_region, expected_region]
     assert result["zones"][0]["extent"] == [0, 70, 60, 100]
     assert compare_stages(source[case["name"]], result)["status"] == "matched"
+
+
+def test_one_illuminated_region_can_cover_two_entanglement_arrays() -> None:
+    case = next(case for case in CASES if case["name"] == "two_gate_zones")
+    actual = run_case({**case, "rydberg_range": [[[0, 70], [120, 100]]]})
+    pulses = [action for action in actual["actions"] if action["kind"] == "global_cz"]
+    assert len(actual["two_layers"][0]) == 4
+    assert actual["zones"][0] == {"name": "zone_cz0", "extent": [0, 70, 120, 100]}
+    assert len(actual["zones"]) == 2  # One CZ region and the source global-RY region.
+    assert pulses and all(action["zones"] == [0] for action in pulses)
