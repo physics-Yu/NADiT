@@ -1,7 +1,8 @@
 # Device Geometry and Capabilities
 
 Date: 2026-10-20.
-Status: Accepted design; implementation follows the
+Status: Flexible geometry, state, and transport checks implemented.
+CZ and readout policies, Atom IR, and rigid support follow the
 [implementation plan](implementation-plan.md).
 
 ## Device and compiler responsibilities

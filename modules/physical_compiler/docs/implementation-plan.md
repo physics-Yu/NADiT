@@ -1,8 +1,8 @@
 # Physical Compiler Implementation Plan
 
 Date: 2026-10-20.
-Status: Planned. The QASM frontend, Physical DAG, fake results, and feedback
-reference tester are implemented.
+Status: Step 1 implemented for flexible AOD. The QASM frontend, Physical DAG,
+fake results, and feedback reference tester are also implemented.
 
 ## Compilation contract
 
@@ -41,7 +41,7 @@ their implementation step begins.
 | --- | --- |
 | `src/nadit_physical_compiler/device.py` | Geometry, traps, operation capabilities, timing, configuration loading |
 | `src/nadit_physical_compiler/state.py` | Qubit-to-atom mapping, atom positions and holders, occupancy |
-| `src/nadit_physical_compiler/motion.py` | Grouped movement legality and the two AOD motion models |
+| `src/nadit_physical_compiler/motion.py` | Flexible AOD movement and line-controlled transfer checks; rigid rules follow in step 6 |
 | `src/nadit_physical_compiler/atom_ir.py` | Atom actions, parallel steps, source links, Stim-style text output |
 | `src/nadit_physical_compiler/validation.py` | Action replay, state transitions, parallel legality, timing and source coverage |
 | `src/nadit_physical_compiler/lowering.py` | Native gate decomposition with source operation and condition provenance |
@@ -50,7 +50,7 @@ their implementation step begins.
 | `configs/zoned_flexible.json`, `configs/zoned_rigid_16.json` | Flexible reference and rigid-device study configurations |
 | `tests/fixtures/devices/zoned_small.json` | Small geometry shared by device and compilation tests |
 | `examples/compile_study.py` | QASM-to-Atom-IR study and compilation metrics |
-| `tests/test_device.py`, `tests/test_motion.py` | Geometry and grouped movement checks |
+| `tests/test_device.py`, `tests/test_state.py`, `tests/test_motion.py` | Geometry, atom state, and grouped transport checks |
 | `tests/test_atom_ir.py`, `tests/test_lowering.py`, `tests/test_compiler.py` | Action, native-gate, feedback and pipeline checks |
 
 Keep stage helpers together initially. Split a strategy by stage when its
@@ -58,26 +58,30 @@ implementation requires separate files.
 
 ## 1. Device, state, and motion capabilities
 
-Implement `device.py`, `state.py`, and `motion.py` from the
-[device design](device-and-zones.md). Use ordinary data records, direct calls,
-and JSON configuration through the standard library. Add the small device
-fixture at `tests/fixtures/devices/zoned_small.json`.
+Implemented: `device.py`, `state.py`, and `motion.py` provide the flexible
+reference's geometry, state, and transport checks. JSON loading uses the
+standard library. `tests/fixtures/devices/zoned_small.json` supplies a small
+study device. The [device design](device-and-zones.md) defines the broader
+target capabilities.
 
-Expose transport checks that receive current state, the selected AOD, and
-proposed line activations, transfers, and atom destinations. They evaluate
-affected intersections, shared lines, capacity, spacing, and the selected
-motion rule. Both models use the same inputs and return legality results
-with the violated rule.
+`validate_layout` checks an entry state. `check_load`, `check_move`, and
+`check_store` evaluate proposed target grids and atom bindings against that
+state, returning `ConstraintResult`. The checks preserve their inputs.
+LOAD adds lines, MOVE repositions existing lines, and STORE removes lines.
 
 Acceptance:
 
-- Load a small explicit zoned fixture with storage, interaction candidates,
-  and AOD-readable measurement positions.
-- Accept a rigid translation; reject a relative-spacing change under rigid
-  motion and accept it under order-preserving motion when its other rules hold.
+- Load a small explicit zoned fixture with storage, paired gate SLM sites,
+  and a measurement region without SLM traps.
+- Accept parallel moves that change line spacing while preserving line
+  identity, order, minimum spacing, and workspace bounds.
 - Detect a carried atom omitted from a shared-control movement and an
   unintended pickup at an activated intersection.
+- Detect an unintended release when an unloaded atom shares a deactivated line.
 - Keep region membership independent of holder type.
+
+CZ pulse policies, readout policies, and action replay begin in step 2.
+Rigid constraints are implemented with the rigid profile in step 6.
 
 ## 2. Atom IR and action replay
 
@@ -159,7 +163,8 @@ Acceptance:
 ## 6. Rigid and shared-zone variants
 
 After the flexible pipeline passes the study, implement placement and transport
-choices with `configs/zoned_rigid_16.json`. Use the same action and result contracts.
+choices with `configs/zoned_rigid_16.json`, including rigid grouped-motion
+checks. Use the same action and result contracts.
 Compare equal circuits, geometry, entry states, and measurement cases. Add a
 `configs/zoned_flexible_16.json` control when separating motion restrictions
 from capacity.
@@ -181,4 +186,4 @@ uv run --locked pytest -q
 ```
 
 Commit each passing step with its configuration, tests, and API documentation.
-The next work item is step 1.
+The next work item is step 2.

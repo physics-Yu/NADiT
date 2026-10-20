@@ -10,6 +10,10 @@
 
 ### Added
 
+- Flexible device geometry and JSON loading, explicit atom/holder and active
+  AOD line state, and collective loading, movement, and unloading checks.
+- A small zoned device fixture with 5 um storage spacing, paired gate sites,
+  and a measurement region without SLM traps.
 - Device and zoning design separating fixed SLM sites, interaction candidates,
   AOD motion, pulse coverage, and AOD-held measurement.
 - A staged physical compiler implementation plan with file ownership and

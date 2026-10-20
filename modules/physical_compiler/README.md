@@ -4,13 +4,15 @@
 
 Implemented: the OpenQASM 2.0 / 3.0 frontend, Physical DAG with measurement
 conditions, seeded `FakeBackend`, and `execute` as a feedback reference tester.
+The flexible device foundation provides geometry, atom holders, active AOD
+lines, and loading, movement, and unloading constraint checks.
 The frontend uses Qiskit for parsing, custom-gate expansion, and wire
 dependencies. The tester produces an abstract execution trace; Atom IR
 generation and replay are not implemented.
 
 ## Next step
 
-Start with Device geometry, atom state, and grouped movement capabilities.
+Next, implement Atom IR and action replay on the flexible device foundation.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -39,6 +41,9 @@ physical_compiler/
 │   ├── qasm.py       # QASM parsing and DAG adaptation
 │   ├── ir.py         # Operations, dependencies, and result references
 │   ├── execution.py  # Feedback reference tester
+│   ├── device.py     # Static geometry, timing, and JSON loading
+│   ├── state.py      # Atom holders, active AOD lines, entry-state validation
+│   ├── motion.py     # Flexible transport constraint checks
 │   └── py.typed      # Package typing marker
 ├── examples/     # Reproducible feedback study
 ├── tests/        # Frontend, IR, and execution tests
@@ -102,6 +107,69 @@ dag_from_file = load_qasm("circuit.qasm")
 
 Both entry points return NADiT records; downstream callers do not need Qiskit
 objects.
+
+## Flexible device foundation
+
+The device records zones, fixed SLM sites, flexible AOD capabilities, and
+transfer/movement timing. `AtomLayout` records atom identities, positions,
+holders, active lines, and the optional physical-qubit-to-atom mapping.
+An AOD holder binds an atom to one row and one column. Empty active lines
+are retained because their intersections can affect other atoms.
+
+```python
+from nadit_physical_compiler import (
+    AODGrid,
+    AODLine,
+    AtomLayout,
+    AtomState,
+    Position,
+    SLMHolder,
+    check_load,
+    load_device,
+    validate_layout,
+)
+
+device = load_device("tests/fixtures/devices/zoned_small.json")
+site = device.site("storage_r0_c0")
+layout = AtomLayout((AtomState(0, site.position, SLMHolder(site.id)),))
+validate_layout(device, layout)
+
+target_grid = AODGrid("transport", rows=(AODLine(0, 0),), columns=(AODLine(0, 0),))
+result = check_load(device, layout, target_grid, {0: (0, 0)})
+assert result.ok
+assert layout.atom(0).holder == SLMHolder(site.id)
+assert device.zones_at(Position(5, 245), "measure")
+```
+
+Run this example from the module directory. Fixture dimensions, AOD line
+spacing, and timing are explicit study values.
+
+| API | Contract |
+| --- | --- |
+| `load_device(path)` / `loads_device(source)` | Load JSON geometry; `slm_grids` generate fixed sites alongside explicit `slm_sites` |
+| `slm_grid(prefix, origin, rows, columns, pitch)` | Generate sites with IDs `{prefix}_r{row}_c{column}` |
+| `device.zones_at(position, operation=None)` | Query spatial capabilities independently of trap holders |
+| `device.timing.move_duration(distance)` | Linear distance-to-time conversion; distances in um and durations in us |
+| `validate_grid(device, grid)` | Check workspace, line capacity, and minimum spacing |
+| `validate_layout(device, layout)` | Validate entry-state bindings, occupied positions, and active intersections |
+| `check_move(device, layout, target_grid, targets)` | Check final grid coordinates against explicit atom destinations |
+| `check_load(device, layout, target_grid, loads)` | Check added lines and atom-to-intersection loading bindings |
+| `check_store(device, layout, target_grid, stores)` | Check removed lines and atom-to-SLM-site unloading bindings |
+
+The three transport checks return `ConstraintResult` with `ok`, `rule`, and
+`message`; `ok` is a derived property. They leave the layout unchanged.
+Validate the entry layout once, then evaluate candidate transports.
+
+MOVE preserves active line identities and spatial order; omitted atoms must
+remain stationary. LOAD preserves existing line coordinates and checks the
+full set of intersections for unintended SLM pickup. STORE preserves remaining
+line coordinates and checks every atom affected by deactivation. These
+transfer rules use the reference row/column activation model.
+
+Coordinates use an absolute comparison tolerance of `1e-9` um. Motion checks
+evaluate endpoints; later routing supplies intermediate movements. Transport
+checks enforce AOD geometry and occupancy. Zone operation permissions are
+available for the action compiler to query.
 
 ## Input scope
 

@@ -17,11 +17,11 @@ program for one measurement case under a selected Device and compiler strategy.
 | Measurement-result references and single-bit conditions | Implemented |
 | Seeded fake measurement backend | Implemented |
 | DAG feedback reference tester (`execute`) | Implemented |
+| Flexible Device geometry, atom state, and transport constraints | Implemented |
 | Device-aware DAG-to-Atom-IR compilation | Next |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
-The module has 131 passing tests. Its
-[README](modules/physical_compiler/README.md) defines the implemented API.
+The module [README](modules/physical_compiler/README.md) defines the implemented API.
 The [feedback study](modules/physical_compiler/docs/feedback-validation.md)
 covers all 512 assignments to the supplied circuit's nine measurement results.
 
@@ -97,7 +97,7 @@ will consume the generated action program in a later step.
 
 ## Development order
 
-1. Implement Device, atom state, and grouped movement capabilities.
+1. Implement Device, atom state, and flexible transport constraints (complete).
 2. Implement Atom IR and action replay.
 3. Connect native gate lowering and case compilation for a one-pair circuit.
 4. Complete the flexible zoned Search Smarter strategy and end-to-end study.
@@ -107,7 +107,7 @@ will consume the generated action program in a later step.
 The [implementation plan](modules/physical_compiler/docs/implementation-plan.md)
 specifies file ownership and acceptance criteria for these steps.
 
-The next implementation must emit the chosen source operations as legal atom
+Device-aware compilation must emit the chosen source operations as legal atom
 actions, preserve their dependencies and case decisions, and return the
 resulting layout and planned timeline. Validation checks source-operation
 coverage, movement legality, pulse addressing, and dependency timing.
