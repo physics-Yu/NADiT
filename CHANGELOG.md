@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+- Clarified the physical compiler route: compiler-owned DAG progress and
+  planned state, with fake results sampled during measurement compilation.
+  The existing event executor remains the DAG feedback reference tester.
+
 ### Added
 
 - A Python 3.12 physical compiler package with OpenQASM 2.0 and 3.0 loading

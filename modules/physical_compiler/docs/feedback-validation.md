@@ -11,9 +11,10 @@ uv run --locked pytest -q
 uv run --locked python examples/feedback_study.py --seed 17 --measurement-latency 2
 ```
 
-The study prints a JSON summary. It imports the circuit once, executes a seeded
-case twice, changes reporting latency, and enumerates every assignment to its
-nine measurement results.
+The study uses `execute`, the DAG feedback reference tester. It imports the
+circuit once, executes a seeded case twice, changes reporting latency, and
+enumerates every assignment to its nine measurement results. It prints a JSON
+summary.
 
 ## Input
 
@@ -66,10 +67,10 @@ operations while increasing completion time.
 ## Interpretation
 
 This validates QASM import, result binding, conditional execution, dependency
-release, and reproducible feedback traces. The fake backend supplies assigned
-test bits; these results do not establish the circuit's quantum output
-distribution or algorithmic correctness. Times are abstract test units,
-without device resources, atom transport, pulse generation, or noise.
+release, and reproducible feedback traces. Measurement values are assigned
+test inputs, and time is measured in abstract units.
 
 See [ADR 0004](../../../docs/decisions/0004-measurement-feedback.md) for the
-supported feedback contract.
+reference tester and
+[ADR 0005](../../../docs/decisions/0005-case-driven-physical-compilation.md)
+for the next physical compiler increment.

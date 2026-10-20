@@ -2,6 +2,9 @@
 
 Status: Accepted on 2026-10-20.
 
+The measurement-feedback extension is recorded in
+[ADR 0004](0004-measurement-feedback.md).
+
 ## Context
 
 The physical compiler needs a standard circuit input and an inspectable
@@ -10,8 +13,7 @@ approved static OpenQASM 2.0 and 3.0 support, a module-local Python package, and
 the proposed Qiskit-based parsing and conversion flow.
 
 This increment implements the input boundary of
-[ADR 0002](0002-pluggable-physical-compiler.md). It does not implement the complete
-physical-circuit-to-atom-action pipeline.
+[ADR 0002](0002-pluggable-physical-compiler.md).
 
 ## Decision
 
@@ -80,10 +82,10 @@ environment and lockfile.
 
 ## Consequences
 
-Downstream compilation receives explicit operations and dependencies without a
-parser-library dependency in the data model. Standard gates retain their
-semantics; the frontend does not perform optimization, native-gate lowering,
-placement, transport planning, or scheduling.
+Downstream compilation receives explicit operations and dependencies in
+independent records. Standard gates retain their semantics. Optimization,
+native-gate lowering, placement, transport planning, and scheduling belong
+to the physical compiler.
 
 Wire dependencies preserve original circuit order. Lack of a dependency does
 not imply that two operations can execute concurrently on a device.
