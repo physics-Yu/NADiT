@@ -7,6 +7,7 @@ Status: Atom IR and component design record; these layers are not implemented. C
 
 - Complete the physical compiler core before implementing reusable component packaging and binding.
 - Core compilation preserves Physical DAG dependencies and selects grouping, placement, movement, and timing to produce executable atom actions.
+- Components may contain measurement feedback. The initial feedback frontend and fake executor implement result references, single-bit conditions, and dependency release; component packaging will reuse these semantics. See [ADR 0004](../../../docs/decisions/0004-measurement-feedback.md).
 - Device configuration covers AOD motion constraints, optional zoning, SLM sites, transfer time, and pulse/addressing capabilities.
 - Compare fixed-grid translation with row/column-order-preserving movement. Use distance-to-time functions without velocity dynamics.
 - Atom-level output represents already selected parallel actions and supports translation to device commands; AOD intersections and all jointly affected atoms must be accounted for.
@@ -44,6 +45,6 @@ Changing an anchor does not move existing atoms: relocation requires explicit tr
 
 ## Open details
 
-- Device-dependent core contracts, completion criteria, and algorithms. The static QASM input and Python frontend are implemented as described in [ADR 0003](../../../docs/decisions/0003-qasm-physical-dag-frontend.md).
+- Device-dependent core contracts, completion criteria, and algorithms. The QASM frontend is implemented as described in [ADR 0003](../../../docs/decisions/0003-qasm-physical-dag-frontend.md) and extended with measurement feedback in ADR 0004.
 - Block parameter schema, protocol-defined atom correspondence, supported geometry changes, and binding ownership/failure handling.
 - Exact action grammar, resource binding representation, measurement feedback timing, and device-specific legality checks.

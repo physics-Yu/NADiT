@@ -1,7 +1,7 @@
 # NADiT Architecture
 
 Date: 2026-10-20
-Status: Static QASM frontend implemented; later compiler and runtime layers remain design work.
+Status: QASM frontend and fake measurement-feedback execution implemented; device compilation remains design work.
 
 This document records the agreed direction and the questions that remain open.
 **Confirmed** records decisions accepted in the discussion.
@@ -110,12 +110,16 @@ implementation is not yet chosen.
 the physical operations and dependencies supplied by the component or QEC
 protocol. Physical compilation must preserve the required ordering.
 
-**Implemented on 2026-10-20.** The static OpenQASM 2.0 / 3.0 frontend uses
+**Implemented on 2026-10-20.** The OpenQASM 2.0 / 3.0 frontend uses
 Qiskit parsing and DAG conversion to produce independent NADiT records.
 The records retain operations, quantum and classical wire dependencies,
 registers, and global phase. Device-dependent scheduling remains a later step.
 See [ADR 0003](docs/decisions/0003-qasm-physical-dag-frontend.md) and the
 [module API](modules/physical_compiler/README.md).
+
+Single-bit measurement conditions extend that input profile through
+[ADR 0004](docs/decisions/0004-measurement-feedback.md). Each condition reads
+a particular measurement result, even when a classical bit is later overwritten.
 
 **Proposed terminology:**
 
@@ -149,9 +153,15 @@ have to reconverge to a previously fixed schedule. The compiler should learn
 a result when the backend reports it, rather than receive all future outcomes
 at the start of the run.
 
-**Open.** Specify fake measurement-generation rules, result identifiers,
-feedback timing, and how logical measurement results are derived from
-physical measurement records.
+**Implemented on 2026-10-20.** A fake backend produces bits from a seed and
+measurement ID, or explicit test outcomes. The dependency executor publishes
+results after measurement completion plus a configurable reporting latency,
+evaluates conditions, and records executed or skipped operations. Time is
+abstract; this increment does not implement device scheduling or quantum-state
+simulation. See the [feedback validation](modules/physical_compiler/docs/feedback-validation.md).
+
+**Open.** Device timing and resources, component-instance result binding, and
+deriving logical results from physical measurements remain to be designed.
 
 ## 6. Mapping and placement
 

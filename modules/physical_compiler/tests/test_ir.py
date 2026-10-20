@@ -4,7 +4,13 @@ from math import inf, nan
 
 import pytest
 
-from nadit_physical_compiler import PhysicalDAG, PhysicalOperation, Register
+from nadit_physical_compiler import (
+    Condition,
+    PhysicalDAG,
+    PhysicalOperation,
+    Register,
+    ResultRef,
+)
 
 
 def test_minimal_dag_keeps_operation_and_register_information() -> None:
@@ -146,4 +152,48 @@ def test_operation_parameters_must_be_finite(parameter: float) -> None:
             num_clbits=0,
             nodes=(PhysicalOperation(0, "rx", (0,), (), (parameter,)),),
             edges=(),
+        )
+
+
+def test_condition_keeps_a_specific_measurement_result() -> None:
+    condition = Condition(ResultRef(0), 1)
+    dag = PhysicalDAG(
+        num_qubits=2,
+        num_clbits=1,
+        nodes=(
+            PhysicalOperation(0, "measure", (0,), (0,), ()),
+            PhysicalOperation(1, "x", (1,), (), (), condition),
+        ),
+        edges=((0, 1),),
+    )
+
+    assert dag.nodes[1].condition == condition
+
+
+@pytest.mark.parametrize("measurement_id", [-1, 1])
+def test_condition_requires_an_earlier_measurement(measurement_id: int) -> None:
+    with pytest.raises(ValueError, match="measurement"):
+        PhysicalDAG(
+            num_qubits=2,
+            num_clbits=1,
+            nodes=(
+                PhysicalOperation(0, "measure", (0,), (0,), ()),
+                PhysicalOperation(
+                    1, "x", (1,), (), (), Condition(ResultRef(measurement_id), 1)
+                ),
+            ),
+            edges=((0, 1),),
+        )
+
+
+def test_condition_requires_a_binary_comparison_value() -> None:
+    with pytest.raises(ValueError, match="0 or 1"):
+        PhysicalDAG(
+            num_qubits=2,
+            num_clbits=1,
+            nodes=(
+                PhysicalOperation(0, "measure", (0,), (0,), ()),
+                PhysicalOperation(1, "x", (1,), (), (), Condition(ResultRef(0), 2)),
+            ),
+            edges=((0, 1),),
         )

@@ -5,6 +5,30 @@ from math import isfinite
 
 
 @dataclass(frozen=True, slots=True)
+class ResultRef:
+    """Identify one measurement output, independently of later bit writes.
+
+    Args:
+        measurement_id: ID of the producing measurement operation in the DAG.
+    """
+
+    measurement_id: int
+
+
+@dataclass(frozen=True, slots=True)
+class Condition:
+    """Require a measurement result to equal a single bit.
+
+    Args:
+        result: The particular measurement output to read.
+        value: Required value, either 0 or 1.
+    """
+
+    result: ResultRef
+    value: int = 1
+
+
+@dataclass(frozen=True, slots=True)
 class PhysicalOperation:
     """An operation on circuit wires, before atom or device binding.
 
@@ -14,6 +38,7 @@ class PhysicalOperation:
         qubits: Ordered indices into the circuit's quantum wires.
         clbits: Ordered indices into the circuit's classical wires.
         params: Bound numeric operation parameters; angles are in radians.
+        condition: Optional measurement-result comparison controlling execution.
 
     Wire indices and identifiers are checked by the containing PhysicalDAG.
     """
@@ -23,6 +48,7 @@ class PhysicalOperation:
     qubits: tuple[int, ...]
     clbits: tuple[int, ...]
     params: tuple[float, ...]
+    condition: Condition | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,7 +72,7 @@ class PhysicalDAG:
         num_qubits: Total number of quantum wires, including unused wires.
         num_clbits: Total number of classical wires, including unused wires.
         nodes: Operations in normalized source order, with consecutive IDs.
-        edges: Sorted, unique ``(predecessor, successor)`` operation IDs.
+        edges: Sorted, unique wire and measurement-result dependency pairs.
         quantum_registers: Named quantum registers and their flat indices.
         classical_registers: Named classical registers and their flat indices.
         global_phase: Circuit global phase in radians.
@@ -81,6 +107,14 @@ class PhysicalDAG:
             _check_indices(node.clbits, self.num_clbits, f"Operation {index} clbits")
             if not all(isfinite(value) for value in node.params):
                 raise ValueError(f"Operation {index} parameters must be finite.")
+            if node.condition is not None:
+                producer = node.condition.result.measurement_id
+                if not 0 <= producer < index or self.nodes[producer].name != "measure":
+                    raise ValueError(
+                        f"Operation {index} must reference an earlier measurement."
+                    )
+                if node.condition.value not in (0, 1):
+                    raise ValueError("A condition must compare against 0 or 1.")
         _check_registers(self.quantum_registers, self.num_qubits, "Quantum")
         _check_registers(self.classical_registers, self.num_clbits, "Classical")
         if self.edges != tuple(sorted(set(self.edges))):

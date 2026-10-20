@@ -4,12 +4,16 @@
 
 ### Added
 
-- A Python 3.12 physical compiler package with static OpenQASM 2.0 and 3.0
-  loading functions.
+- A Python 3.12 physical compiler package with OpenQASM 2.0 and 3.0 loading
+  functions for static operations and single-bit measurement feedback.
 - A device-independent Physical DAG with operation records, quantum and
   classical wire dependencies, register metadata, and global phase.
 - Same-source custom-gate expansion and explicit rejection of unsupported
-  dynamic constructs and external includes. Text and file input accept only
+  control flow and external includes. Text and file input accept only
   the standard `qelib1.inc` (OpenQASM 2.0) or `stdgates.inc` (OpenQASM 3.0).
+- Measurement-occurrence references and fixed single-bit conditional bodies,
+  including `if` / `else`, with explicit result dependencies.
+- Dependency execution traces with reproducible fake measurement results,
+  explicit result overrides, and result latency separate from operation time.
 - Module-local dependency locking, frontend and IR tests, formatting, linting,
   and type-checking configuration.
