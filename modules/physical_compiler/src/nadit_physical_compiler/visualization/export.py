@@ -35,7 +35,10 @@ def write_html(
     replacements = {
         "TITLE": escape(title),
         "STYLE": assets.joinpath("viewer.css").read_text(encoding="utf-8"),
-        "MODEL": assets.joinpath("model.js").read_text(encoding="utf-8"),
+        "MODEL": "\n".join(
+            assets.joinpath(name).read_text(encoding="utf-8")
+            for name in ("paths.js", "model.js")
+        ),
         "SCRIPT": assets.joinpath("viewer.js").read_text(encoding="utf-8"),
         "DATA": data,
     }

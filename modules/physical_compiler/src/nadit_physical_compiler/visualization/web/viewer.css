@@ -165,12 +165,12 @@ label {
   overflow:hidden;
   box-shadow:0 2px 4px #20334403}
 .plot-toolbar {
-  height:49px;
+  min-height:49px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   border-bottom:1px solid #e8edf0;
-  padding:0 18px;
+  padding:8px 18px;
   gap:10px}
 .view-options {
   display:flex;
@@ -178,6 +178,13 @@ label {
   font-size:11px;
   color:#617180;
   flex-wrap:wrap}
+.view-options label {
+  display:flex;
+  align-items:center;
+  gap:4px}
+.view-options select {
+  padding:2px 4px;
+  font-size:11px}
 .quiet-button {
   padding:4px 9px;
   font-size:11px;

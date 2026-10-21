@@ -26,6 +26,11 @@
 
 ### Changed
 
+- Default viewer motion to diagonal departure followed by axis-aligned display
+  lanes, with matching trails and synchronized AOD lines. Keep Atom IR and
+  recorded timing unchanged; retain a direct-preview selector.
+- Pause the unfinished rigid partial-release optimization in ADR 0028.
+
 - Remove staged transport's two-column cap and Cartesian-mask completion.
   Cached source-template stages supply actual AOD capacity, spacing, workspace,
   and occupied intersections instead of broad geometry envelopes.

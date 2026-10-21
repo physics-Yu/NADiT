@@ -27,6 +27,16 @@ inspect transfers and simultaneous motion. The time field seeks in microseconds.
 Paced playback gives each step visible time; proportional playback preserves
 the relative durations. Neither mode changes the exported program times.
 
+`Path: Lanes` is the default display: a small diagonal departure, vertical
+travel in an offset column, horizontal alignment in an offset row, and vertical
+arrival. The AOD lines and all carried atoms share segment progress, including
+carried atoms omitted from sparse patches because their endpoints are unchanged.
+Dashed trails follow this same path. `Path: Direct` restores straight lines.
+Offsets use one quarter of the smallest coordinate gap, capped at 2 um and
+reduced or reversed to fit the workspace. If no common offset fits, the legend
+identifies direct-preview fallback. These are display lanes, not compiled
+collision-free trajectories; pulse timing and boundary observations are unchanged.
+
 Scroll the plot to zoom, drag to pan, and click an atom to inspect its physical
 qubit, position, and SLM/AOD holder. Toggle fixed sites, atom labels, movement
 segments, or active AOD lines. A CZ pulse shows its illuminated coverage and
@@ -127,7 +137,7 @@ parallel durations, holder changes, coverage, recorded results, and observations
 The DOM-independent browser model is checked separately:
 
 ```text
-node --test tests/web/replay-model.test.cjs
+node --test tests/web/*.test.cjs
 ```
 
 The initial release has 1,112 passing Python tests and 10 passing Node tests.

@@ -126,9 +126,9 @@
     for (const action of frame.actions) {
       if (action.kind !== 'Move') continue;
       context.strokeStyle = '#439b9880'; context.lineWidth = 1.3; context.setLineDash([4, 4]);
-      for (const destination of action.patch.atoms) {
-        const start = frame.entry.atoms.get(destination.id);
-        line(start.x, start.y, destination.x, destination.y);
+      for (const points of frame.movePaths.get(action).atoms.values()) {
+        const destination = points[points.length - 1];
+        for (let i = 1; i < points.length; i++) line(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
         circle(destination.x, destination.y, 4, null, '#439b9880');
       }
       context.setLineDash([]);
@@ -193,6 +193,8 @@
   function draw() {
     context.clearRect(0, 0, camera.width, camera.height);
     drawAxes(); drawZones(); drawMoves(); drawGrids(); drawPulses(); drawAtoms(); drawScale();
+    const fallback = [...frame.movePaths.values()].some(path => path.reason);
+    $('path-note').textContent = replay.motion === 'direct' ? 'Direct preview · recorded timing' : fallback ? 'No display lane · direct preview' : 'Lane preview · recorded timing';
   }
   function buildActionList() {
     const container = $('action-list'); container.replaceChildren(); actionCards = [];
@@ -309,7 +311,7 @@
     }
   }
   function loadTrace(index) {
-    setPlaying(false); trace = data.traces[index]; replay = new AtomReplayModel.Replay(trace);
+    setPlaying(false); trace = data.traces[index]; replay = new AtomReplayModel.Replay(trace, { motion: $('path-select').value });
     cursor = { step: 0, fraction: 0 }; selectedAtom = null; selectedIssue = null; currentStep = -1; currentMeasurementCount = -1;
     $('trace-title').textContent = trace.title; $('trace-description').textContent = trace.description;
     $('atom-count').textContent = trace.initial.atoms.length; $('step-count').textContent = trace.steps.length;
@@ -319,6 +321,10 @@
   }
   data.traces.forEach((record, index) => { const option = element('option', null, record.title); option.value = index; $('trace-select').append(option); });
   $('trace-select').addEventListener('change', event => loadTrace(Number(event.target.value)));
+  $('path-select').addEventListener('change', event => {
+    replay = new AtomReplayModel.Replay(trace, { motion: event.target.value });
+    render();
+  });
   $('play-button').addEventListener('click', () => {
     if (!playing && cursor.step === trace.steps.length && (cursor.fraction === 1 || trace.duration_us === trace.program_duration_us)) seek(0, 0);
     setPlaying(!playing);

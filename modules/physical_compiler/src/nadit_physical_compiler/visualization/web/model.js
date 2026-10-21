@@ -2,6 +2,7 @@
 (function (root) {
   'use strict';
   const CHECKPOINT_STRIDE = 64;
+  const paths = typeof module !== 'undefined' && module.exports ? require('./paths.js') : root.AtomReplayPaths;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const copyState = (state) => ({ atoms: new Map(state.atoms), grids: new Map(state.grids) });
   function actionProgress(durationUs, stepDurationUs, elapsedUs, stepFraction) {
@@ -26,8 +27,10 @@
     return target.map(line => ({ id: line.id, coordinate: (coordinates.get(line.id) ?? line.coordinate) * (1 - fraction) + line.coordinate * fraction }));
   }
   class Replay {
-    constructor(trace) {
+    constructor(trace, { motion = 'direct' } = {}) {
       this.trace = trace;
+      this.motion = motion;
+      this.movePaths = new Map();
       this.checkpoints = new Map();
       const state = initialState(trace.initial);
       this.checkpoints.set(0, copyState(state));
@@ -70,6 +73,9 @@
         this.cachedStep = index;
         this.entry = this.entryAt(index);
         this.display = copyState(this.entry);
+        this.movePaths = new Map((this.trace.steps[index]?.actions || [])
+          .filter(action => action.kind === 'Move')
+          .map(action => [action, paths.buildMovePath(action, this.entry, this.trace.device, this.motion)]));
       }
       const step = this.trace.steps[index];
       const elapsed = step ? step.duration_us * part : (this.trace.duration_us - this.trace.program_duration_us) * part;
@@ -77,6 +83,9 @@
       const actions = step ? step.actions : [];
       for (const action of actions) {
         // Reset only touched records so backward scrubbing does not copy all atoms.
+        if (action.kind === 'Move') {
+          for (const id of this.movePaths.get(action).atoms.keys()) this.display.atoms.set(id, this.entry.atoms.get(id));
+        }
         for (const target of action.patch.atoms) {
           if (this.entry.atoms.has(target.id)) this.display.atoms.set(target.id, this.entry.atoms.get(target.id));
           else this.display.atoms.delete(target.id);
@@ -91,6 +100,12 @@
         if (progress === 1) {
           applyPatch(this.display, action.patch);
         } else if (action.kind === 'Move') {
+          if (this.motion === 'lanes') {
+            const sample = paths.sampleMovePath(this.movePaths.get(action), progress);
+            for (const [id, position] of sample.atoms) this.display.atoms.set(id, { ...this.entry.atoms.get(id), ...position });
+            for (const [id, grid] of sample.grids) this.display.grids.set(id, grid);
+            continue;
+          }
           for (const target of action.patch.atoms) {
             const source = this.entry.atoms.get(target.id);
             this.display.atoms.set(target.id, { ...source, x: source.x + (target.x - source.x) * progress, y: source.y + (target.y - source.y) * progress });
@@ -103,7 +118,7 @@
       }
       return {
         ...this.display, step: index, fraction: part, time_us: time, elapsed_us: elapsed,
-        actions, entry: this.entry,
+        actions, entry: this.entry, movePaths: this.movePaths,
         measurements: (this.trace.measurements || []).filter(record => record.available_at_us <= time),
       };
     }
