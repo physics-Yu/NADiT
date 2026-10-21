@@ -1,5 +1,15 @@
 # Physical Compiler
 
+## Saved compilation results
+
+`serialization.py` encodes Atom IR, layouts, and compilation records as
+`nadit.result/1` JSON. `encode_result(result, entry_state=entry, job=job)`
+preserves the program and measurement identities; `decode_result(document)`
+and `decode_layout(document["entry_state"])` reconstruct replay inputs.
+`AtomProgram.to_text()` remains the human-readable display.
+See [ADR 0021](../../docs/decisions/0021-job-spec-and-result-document.md)
+for the job, metrics, validation, and CLI interfaces.
+
 ## Current status
 
 Implemented: the OpenQASM 2.0 / 3.0 frontend, Physical DAG with measurement

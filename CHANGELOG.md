@@ -45,6 +45,8 @@
 
 ### Added
 
+- Versioned `nadit.result/1` JSON serialization for all Atom IR actions,
+  layouts, result records, Device snapshots, and software provenance.
 - Offline Atom IR animation with sparse replay patches, step/time seeking,
   AOD and SLM geometry, pulse coverage, measurement availability, and atom
   inspection. Includes two feedback outcomes and a compiled 60-atom example.
