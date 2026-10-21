@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <style>{{STYLE}}</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">N</span><div><h1>Atom replay <span>/ NADiT</span></h1><p>Physical compiler · trace inspection</p></div></div>
+    <div class="trace-choice"><label for="trace-select">TRACE</label><select id="trace-select" aria-label="Select trace"></select></div>
+    <span class="offline-badge"><i></i> Offline replay</span>
+  </header>
+  <section class="trace-heading"><div><h2 id="trace-title"></h2><p id="trace-description"></p></div><div class="trace-stats"><div><strong id="atom-count">0</strong><span>ATOMS</span></div><div><strong id="step-count">0</strong><span>STEPS</span></div><div><strong id="duration-total">0</strong><span>DURATION · µs</span></div></div></section>
+  <main class="workspace">
+    <section class="plot-panel" aria-label="Atom layout and replay">
+      <div class="plot-toolbar"><div class="view-options"><label><input id="sites-toggle" type="checkbox" checked> SLM sites</label><label><input id="grid-toggle" type="checkbox" checked> AOD grid</label><label><input id="labels-toggle" type="checkbox"> Atom IDs</label><label><input id="trails-toggle" type="checkbox" checked> Move paths</label></div><button id="fit-button" class="quiet-button">Fit view</button></div>
+      <div class="canvas-wrap"><canvas id="atom-canvas" aria-label="Atom position map. Drag to pan, scroll to zoom, click an atom to inspect." tabindex="0"></canvas><div class="canvas-caption"><span id="view-position">x / y · µm</span><span>Drag to pan · scroll to zoom · click an atom</span></div><div id="selection-chip" hidden></div></div>
+      <div class="plot-legend"><span><i class="dot slm"></i> SLM atom</span><span><i class="dot aod"></i> AOD atom</span><span><i class="legend-line"></i> Active AOD lines</span><span><i class="dot pulse"></i> CZ pulse</span><span><i class="dot measurement"></i> Readout</span><span class="schematic-note">Linear path preview · distance-based timing</span></div>
+      <div class="transport-controls"><div class="playback-buttons"><button id="previous-step" class="step-button" aria-label="Previous step" title="Previous step">&#9664;|</button><button id="play-button" class="primary-button" aria-label="Play">&#9654; Play</button><button id="next-step" class="step-button" aria-label="Next step" title="Next step">|&#9654;</button></div><div class="step-progress"><div><label for="step-slider">STEP <strong id="step-position">0 / 0</strong></label><span id="step-kind">Initial layout</span></div><input id="step-slider" type="range" min="0" max="0" step="1" value="0" aria-label="Step"></div><label class="speed-label">SPEED<select id="speed-select"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></label></div>
+      <div class="time-controls"><label class="fraction-label" for="fraction-slider">Within step <output id="fraction-value">0%</output><input id="fraction-slider" type="range" min="0" max="1000" value="0" step="1"></label><label class="time-label" for="time-input">TIME · µs<input id="time-input" type="number" min="0" step="any" value="0"></label><label class="pacing-label" for="timing-select">PLAYBACK<select id="timing-select"><option value="paced">Paced · 0.8 s / step</option><option value="proportional">Proportional · 30 s / run</option></select></label></div>
+    </section>
+    <aside class="inspector-panel">
+      <section class="inspector-section"><div class="section-heading"><h3>Atom inspector</h3><span id="selected-atom-label" class="muted">No selection</span></div><div id="atom-inspector" class="empty-state">Select an atom in the layout to inspect its identity, position and trap.</div></section>
+      <section class="actions-section inspector-section"><div class="section-heading"><h3>Current step</h3><span id="action-count" class="count-badge">0 actions</span></div><div id="action-list" class="action-list"></div></section>
+      <section class="inspector-section"><div class="section-heading"><h3>Measurement records</h3><span id="measurement-count" class="count-badge">0 available</span></div><div id="measurement-list" class="record-list"></div></section>
+      <section class="inspector-section issues-section"><div class="section-heading"><h3>Boundary observations</h3><span id="issue-count" class="count-badge">0</span></div><p class="section-note">SLM atoms on active AOD intersections. Select an observation to inspect that boundary.</p><div id="issue-list" class="record-list"></div></section>
+    </aside>
+  </main>
+  <footer><span id="device-name"></span><span>Atom IR replay · coordinates µm · time µs</span><button id="ir-toggle" class="text-button" aria-expanded="false">View Atom IR</button></footer>
+  <section id="ir-panel" hidden><div class="section-heading"><h3>Atom IR</h3><button id="ir-close" class="quiet-button">Close</button></div><pre id="ir-source"></pre></section>
+  <script id="atom-replay-data" type="application/json">{{DATA}}</script>
+  <script>{{MODEL}}</script>
+  <script>{{SCRIPT}}</script>
+</body>
+</html>

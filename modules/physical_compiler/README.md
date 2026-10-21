@@ -89,6 +89,25 @@ select emitted operations or skips and release dependencies. Compilation
 decisions advance the DAG directly. Planned times still enforce measurement
 completion plus result latency before dependent operations.
 
+## Animated Atom IR replay
+
+Generate an offline viewer from three real compilations:
+
+```text
+uv run --locked python -m examples.visualize_compilation
+```
+
+Open `artifacts/atom-replay/index.html` in a browser. The adjacent `traces.json`
+contains the same replay data, input QASM, and compiler configuration. The
+examples cover both forced measurement outcomes and a local 60-atom parallel
+circuit. The latter is a demonstration circuit, not a paper benchmark input.
+
+The viewer supports playback, step and time seeking, zoom/pan, atom inspection,
+AOD lines, SLM sites, pulse coverage, and measurement availability. It reads
+compiled actions and uses linear endpoint interpolation to show MOVE. Boundary
+states come from the existing replay implementation. See the
+[viewer contract and usage](docs/atom-replay-viewer.md).
+
 ## Layout
 
 ```text
@@ -110,6 +129,7 @@ physical_compiler/
 │   ├── reuse/         # Maximum matching of shared CZ endpoints
 │   ├── placement/     # Fixed placement, candidates, scoring, and IDS
 │   ├── transport/     # Constructed AOD transfers and movement
+│   ├── visualization/ # Sparse Atom IR export and an offline browser viewer
 │   ├── emission/      # Bind gates to existing Atom IR actions
 │   ├── strategies/    # Compose stage implementations
 │   ├── replay.py      # Apply atom actions to positions and holders

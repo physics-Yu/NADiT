@@ -45,6 +45,9 @@
 
 ### Added
 
+- Offline Atom IR animation with sparse replay patches, step/time seeking,
+  AOD and SLM geometry, pulse coverage, measurement availability, and atom
+  inspection. Includes two feedback outcomes and a compiled 60-atom example.
 - Complete pinned C++ static-stage traces and first-divergence comparison,
   preserving original source failures separately from matching executions.
 - Original capacity-based ASAP scheduling and endpoint-priority reuse policies,
