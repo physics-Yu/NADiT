@@ -2,37 +2,13 @@
 
 import argparse
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
-from nadit_physical_compiler import (
-    FakeBackend,
-    SLMHolder,
-    compile_physical,
-    load_device,
-    load_qasm,
-    replay,
-)
-from nadit_physical_compiler.contracts import Transporter
-from nadit_physical_compiler.emission import WholeLayerEmitter
+from nadit_physical_compiler import FakeBackend, SLMHolder, replay
+from nadit_physical_compiler.job import compile_job, loads_job
 from nadit_physical_compiler.metrics import collect_metrics
-from nadit_physical_compiler.placement import (
-    GatePairCatalog,
-    HeuristicPlacer,
-    MultiPairPlacer,
-    PlacementConfig,
-    PlacementGeometry,
-    make_initial_layout,
-)
-from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
-from nadit_physical_compiler.scheduling import ReadyScheduler
-from nadit_physical_compiler.strategies import SearchSmarterStrategy
-from nadit_physical_compiler.transport import (
-    RelaxedTransport,
-    SequentialTransport,
-    StagedStrictTransport,
-    StrictTransport,
-)
+from nadit_physical_compiler.placement import HeuristicPlacer
 
 
 def main() -> None:
@@ -61,62 +37,52 @@ def main() -> None:
         help="Retain matched atoms for the next CZ layer.",
     )
     args = parser.parse_args()
-    module = Path(__file__).resolve().parents[1]
-    device = load_device(module / "configs/multipair_flexible.json")
-    dag = load_qasm(module / "examples/multipair_feedback.qasm3")
-    pairs = (("gate_0_left", "gate_0_right"), ("gate_1_left", "gate_1_right"))
-    catalog = GatePairCatalog.from_device(
-        device, "entanglement", pairs[: args.capacity]
+    path = Path(__file__).resolve().parent / "jobs" / "multipair.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["gate_zones"][0]["pairs"] = document["gate_zones"][0]["pairs"][
+        : args.capacity
+    ]
+    document["strategy"]["placement"] = (
+        {
+            "kind": "ids",
+            "trials": args.trials,
+            "queue_capacity": args.queue_capacity,
+            "reuse_level": args.reuse_level,
+            "use_window": args.window,
+            "window_min_width": args.window_min_width,
+            "window_ratio": args.window_ratio,
+            "window_share": args.window_share,
+        }
+        if args.placement == "ids"
+        else {"kind": "multipair"}
     )
-    geometry = PlacementGeometry.from_device(device, "transport", catalog)
-    entry = make_initial_layout(
-        dag.num_qubits,
-        geometry,
-        atom_ids=tuple(7 + q * 3 for q in range(dag.num_qubits)),
-    )
+    document["strategy"]["transport"] = {"kind": args.transport}
+    if args.transport == "relaxed":
+        document["strategy"]["transport"]["prefer_split"] = args.prefer_split
+    document["strategy"]["reuse"] = {"kind": "matching" if args.reuse else "none"}
+    job = loads_job(json.dumps(document), base_dir=path.parent)
+    dag, device, entry = job.dag, job.device, job.entry_state
+    catalog, placer = job.catalog, job.strategy.placer
+    assert catalog is not None
     overrides = {
         reference: args.bit
         for node in dag.nodes
         if (reference := node.result) is not None and args.bit is not None
     }
-    transports: dict[str, Transporter] = {
-        "sequential": SequentialTransport("transport"),
-        "strict": StrictTransport("transport"),
-        "staged": StagedStrictTransport("transport"),
-        "relaxed": RelaxedTransport("transport", prefer_split=args.prefer_split),
-    }
-    transporter = transports[args.transport]
-    placer = (
-        HeuristicPlacer(
-            "transport",
-            catalog,
-            config=PlacementConfig(
-                trials=args.trials,
-                queue_capacity=args.queue_capacity,
-                reuse_level=args.reuse_level,
-                use_window=args.window,
-                window_min_width=args.window_min_width,
-                window_ratio=args.window_ratio,
-                window_share=args.window_share,
-            ),
-            geometry=geometry,
-        )
-        if args.placement == "ids"
-        else MultiPairPlacer("transport", catalog)
-    )
-    result = compile_physical(
-        dag,
-        device,
-        strategy=SearchSmarterStrategy(
-            ReadyScheduler(max_cz_gates=catalog.capacity),
-            placer,
-            transporter,
-            WholeLayerEmitter(catalog.coverage),
-            reuse_analyzer=MatchingReuseAnalyzer() if args.reuse else None,
-        ),
-        entry_state=entry,
+    job = replace(
+        job,
+        document={
+            **job.document,
+            "case": {
+                "seed": args.seed,
+                "overrides": {
+                    str(ref.measurement_id): bit for ref, bit in overrides.items()
+                },
+            },
+        },
         measurement_backend=FakeBackend(args.seed, overrides),
     )
+    result = compile_job(job)
     assert replay(result.program, entry, device) == result.exit_state
     metrics = collect_metrics(result)
     print(

@@ -1,6 +1,6 @@
 # 0021: Job specification and result document
 
-Status: Accepted on 2026-10-21. Implementation follows the six steps below.
+Status: Implemented on 2026-10-21.
 
 ## Context
 
@@ -208,3 +208,8 @@ and exit code; `compare` locates a deliberately changed option's first
    difference.
 6. Update the module README, CHANGELOG, and convert the examples to load
    saved jobs where this does not change their output.
+
+The implementation and commands are documented in
+[Jobs and saved results](../../modules/physical_compiler/docs/jobs-and-results.md).
+The existing viewer has a saved-result adapter under ADR 0022; it accepts
+result and Device JSON without invoking the compiler.

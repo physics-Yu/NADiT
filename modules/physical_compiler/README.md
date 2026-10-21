@@ -26,7 +26,7 @@ strategy. Measurement overrides refer to source measurement IDs.
 Run saved jobs and inspect their results from the module directory:
 
 ```text
-uv run --locked nadit compile JOB.json -o RESULT.json --validate --text PROGRAM.txt
+uv run --locked nadit compile examples/jobs/multipair.json -o RESULT.json --validate --text PROGRAM.txt
 uv run --locked nadit validate RESULT.json
 uv run --locked nadit compare A.json B.json
 ```
@@ -36,6 +36,8 @@ saves the same result document; `--text` writes the display-only Atom IR.
 Exit codes are 0 for success, 1 for invalid input, 2 for compilation failure,
 and 3 for a failed validation report. Validation reads the saved program and
 its Device; it does not load the circuit again.
+See [Jobs and saved results](docs/jobs-and-results.md) for all stage options,
+entry bindings, result fields, metrics, and the saved-result viewer.
 
 ## Current status
 
@@ -127,6 +129,12 @@ decisions advance the DAG directly. Planned times still enforce measurement
 completion plus result latency before dependent operations.
 
 ## Animated Atom IR replay
+
+View a saved result without recompilation:
+
+```text
+uv run --locked python -m examples.visualize_compilation --result RESULT.json --output artifacts/result-viewer/index.html
+```
 
 Generate an offline viewer from three real compilations:
 

@@ -1,0 +1,27 @@
+{
+  "schema": "nadit.job/1",
+  "circuit": {
+    "qasm": "../pair_feedback.qasm3",
+    "gate_set": ["rx", "ry", "rz", "cz"]
+  },
+  "device": "../../configs/one_pair_flexible.json",
+  "aod": "transport",
+  "gate_zones": [
+    {
+      "zone": "entanglement",
+      "pairs": [["gate_0_left", "gate_0_right"], ["gate_1_left", "gate_1_right"]]
+    }
+  ],
+  "strategy": {
+    "scheduler": {"kind": "ready"},
+    "placement": {"kind": "pair"},
+    "transport": {"kind": "pair"},
+    "emitter": {"kind": "layer"},
+    "reuse": {"kind": "none"}
+  },
+  "entry": {
+    "kind": "explicit",
+    "atoms": [[7, "storage_r0_c0", 0], [11, "storage_r0_c1", 1]]
+  },
+  "case": {"seed": 17, "overrides": {}}
+}

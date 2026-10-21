@@ -45,6 +45,8 @@
 
 ### Added
 
+- Saved example jobs and a result-document input for the offline viewer;
+  existing example command options and output remain unchanged.
 - `nadit compile`, `nadit validate`, and `nadit compare` commands with JSON
   output, documented exit codes, and optional Atom IR text export.
 - Declarative `nadit.job/1` loading and a per-stage strategy registry, with

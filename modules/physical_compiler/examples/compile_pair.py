@@ -2,23 +2,12 @@
 
 import argparse
 import json
+from dataclasses import replace
 from pathlib import Path
 
-from nadit_physical_compiler import (
-    AtomLayout,
-    AtomState,
-    FakeBackend,
-    SLMHolder,
-    compile_physical,
-    load_device,
-    load_qasm,
-    replay,
-)
+from nadit_physical_compiler import FakeBackend, replay
+from nadit_physical_compiler.job import compile_job, load_job
 from nadit_physical_compiler.metrics import collect_metrics
-from nadit_physical_compiler.placement import PairPlacer
-from nadit_physical_compiler.scheduling import ReadyScheduler
-from nadit_physical_compiler.strategies import SearchSmarterStrategy
-from nadit_physical_compiler.transport import PairTransport
 
 
 def main() -> None:
@@ -27,30 +16,27 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--bit", type=int, choices=(0, 1))
     args = parser.parse_args()
-    module = Path(__file__).resolve().parents[1]
-    device = load_device(module / "configs/one_pair_flexible.json")
-    dag = load_qasm(module / "examples/pair_feedback.qasm3")
-    entry = AtomLayout(
-        tuple(
-            AtomState(atom, device.site(site).position, SLMHolder(site))
-            for atom, site in ((7, "storage_r0_c0"), (11, "storage_r0_c1"))
-        ),
-        qubit_to_atom=(7, 11),
-    )
+    job = load_job(Path(__file__).resolve().parent / "jobs" / "pair.json")
+    dag, device, entry = job.dag, job.device, job.entry_state
     overrides = {
         reference: args.bit
         for node in dag.nodes
         if (reference := node.result) is not None and args.bit is not None
     }
-    result = compile_physical(
-        dag,
-        device,
-        strategy=SearchSmarterStrategy(
-            ReadyScheduler(), PairPlacer("transport"), PairTransport("transport")
-        ),
-        entry_state=entry,
+    job = replace(
+        job,
+        document={
+            **job.document,
+            "case": {
+                "seed": args.seed,
+                "overrides": {
+                    str(ref.measurement_id): bit for ref, bit in overrides.items()
+                },
+            },
+        },
         measurement_backend=FakeBackend(args.seed, overrides),
     )
+    result = compile_job(job)
     assert replay(result.program, entry, device) == result.exit_state
     metrics = collect_metrics(result)
     print(

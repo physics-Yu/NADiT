@@ -8,9 +8,15 @@ coordinates are micrometres and action times are microseconds.
 From `modules/physical_compiler`:
 
 ```text
+uv run --locked python -m examples.visualize_compilation --result result.json --output artifacts/saved-result.html
 uv run --locked python -m examples.visualize_compilation
 uv run --locked python -m examples.visualize_compilation --output artifacts/my-run.html
 ```
+
+`--result` reads `nadit.result/1` and its recorded Device. Repeat it for
+multiple saved cases. Use `--device DEVICE.json` to supply a moved Device
+file. This mode does not read QASM, compile, or sample measurements. See
+[Jobs and saved results](jobs-and-results.md) for producing result files.
 
 The default output is `artifacts/atom-replay/index.html`, with `traces.json`
 beside it. HTML includes all data, styles, and scripts and can be opened offline.

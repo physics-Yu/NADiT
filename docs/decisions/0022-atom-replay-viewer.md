@@ -34,6 +34,11 @@ compiled feedback examples for both outcomes and a larger parallel circuit.
 The Python exporter, browser timeline model, rendering, and example generation
 are separate modules.
 
+The ADR 0021 adapter accepts `nadit.result/1` and Device JSON through
+`build_result_trace`. The example command's `--result` path uses this adapter
+without reading QASM or invoking compilation. It retains the same browser
+trace format and sparse replay model.
+
 ## Verification
 
 Compare exported boundary patches with apply_step and the compiler exit state.
