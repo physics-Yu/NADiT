@@ -14,7 +14,7 @@ from ..contracts import GateLayer, PlacementPlan
 from ..device import Device, Position
 from ..physical_ir import PhysicalDAG
 from ..state import AtomLayout, AtomState
-from ..transport.rules import StrictRules
+from ..transport.rules import TransportRules, rules_for
 from .candidates import gate_jobs, storage_jobs
 from .catalog import GatePairCatalog
 from .coordinates import build_coordinates
@@ -31,7 +31,7 @@ class HeuristicPlacer:
     """Search gate assignments and optional retention with shared transport rules.
 
     Args:
-        aod_id: Flexible AOD used to reach selected sites.
+        aod_id: AOD whose motion rules score the selected sites.
         catalog: Validated, isolated gate pairs and their pulse coverage.
         storage_zone_id: Region supplying fixed storage traps.
         config: Bounded IDS and source-aligned proxy-score parameters.
@@ -122,7 +122,7 @@ class HeuristicPlacer:
             if layout.qubit_to_atom[q] in participant_ids
             and layout.qubit_to_atom[q] in entry_partners
         )
-        rules = StrictRules(device.aod(self.aod_id), device.timing)
+        rules = rules_for(device.aod(self.aod_id), device.timing)
         qubit_ids = {atom: qubit for qubit, atom in enumerate(layout.qubit_to_atom)}
         execution = self._execution(
             dag,
@@ -174,7 +174,7 @@ class HeuristicPlacer:
         dag: PhysicalDAG,
         layer: GateLayer,
         layout: AtomLayout,
-        rules: StrictRules,
+        rules: TransportRules,
         reusable: frozenset[int],
         partners: dict[int, Position],
         retained_ids: frozenset[int],

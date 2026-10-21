@@ -12,7 +12,7 @@ from .pair import _without_empty_grids
 from .relaxed_groups import MovementGroups, route_relaxed
 from .relaxed_policy import RelaxedAdmission
 from .relaxed_rules import RelaxedRules
-from .rules import MoveRequest, StrictRules, build_conflict_map
+from .rules import MoveRequest, TransportRules, build_conflict_map, rules_for
 from .staged import StagedStrictTransport, _region_pairs, _StagedGroups
 from .staged_emission import emit_stages
 from .staged_plan import StagingPlans
@@ -50,12 +50,17 @@ class RelaxedTransport:
             Existing Atom IR steps and the constructed final layout.
 
         Raises:
-            ValueError: If the available transport constructors cannot realize
-                the endpoints or their occupancy dependencies.
+            ValueError: For a rigid AOD, or if the available constructors cannot
+                realize the endpoints or their occupancy dependencies.
 
         Cost or device rejection keeps the strict plan. No alternative action
         programs are generated for selection, and full checkers stay in tests.
         """
+        aod = device.aod(self.aod_id)
+        if aod.motion == "rigid":
+            raise ValueError(
+                f"Relaxed transport does not support rigid AOD {aod.id!r}."
+            )
         current = _without_empty_grids(layout)
         target = _without_empty_grids(target_layout)
         fallback = StagedStrictTransport(self.aod_id, self.geometry)
@@ -69,7 +74,7 @@ class RelaxedTransport:
             )
         ):
             return fallback.construct(current, target, device)
-        strict = StrictRules(device.aod(self.aod_id), device.timing)
+        strict = rules_for(aod, device.timing)
         destinations = {atom.id: atom for atom in target.atoms}
         moves = _requests(
             current,
@@ -112,7 +117,7 @@ def _strict_batches(
     layout: AtomLayout,
     destinations: dict[int, AtomState],
     device: Device,
-    rules: StrictRules,
+    rules: TransportRules,
     geometry: StagingGeometry,
     moves: tuple[MoveRequest, ...],
     plans: StagingPlans,

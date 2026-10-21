@@ -244,6 +244,12 @@ def build_strategy(
         if stage == "placement" and "method" in options and options["method"] != kind:
             raise ValueError(f"{path}.method: must agree with kind {kind!r}.")
         resolved[stage] = {"kind": kind, **options}
+    transport_kind = resolved["transport"]["kind"]
+    if transport_kind in ("staged", "relaxed") and device.aod(aod_id).motion == "rigid":
+        raise ValueError(
+            f"strategy.transport: {transport_kind} does not support rigid AOD "
+            f"{aod_id!r}."
+        )
     context = StrategyContext(dag, device, aod_id, catalog, resolved["placement"])
     objects: dict[str, Any] = {}
     for stage, options in resolved.items():

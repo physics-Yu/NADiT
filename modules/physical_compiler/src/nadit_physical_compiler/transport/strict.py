@@ -10,7 +10,7 @@ from ..replay import apply_step
 from ..state import AODGrid, AODHolder, AtomLayout, AtomState, SLMHolder
 from .occupancy import Occupancy
 from .pair import _without_empty_grids
-from .rules import MoveRequest, StrictRules, build_conflict_map
+from .rules import MoveRequest, TransportRules, build_conflict_map, rules_for
 from .sequential import SequentialTransport
 
 
@@ -19,7 +19,7 @@ class StrictTransport:
     """Use common LOAD/MOVE/STORE phases for compatible SLM movements.
 
     Args:
-        aod_id: Flexible transport device used by every constructed batch.
+        aod_id: Transport device used by every constructed batch.
     """
 
     aod_id: str
@@ -32,7 +32,7 @@ class StrictTransport:
         Args:
             layout: Current atom positions, holders, and physical-qubit binding.
             target_layout: Requested endpoints for the same atoms.
-            device: Fixed traps, flexible AOD capabilities, and transport timing.
+            device: Fixed traps, AOD motion capabilities, and transport timing.
 
         Returns:
             Atom IR steps and their resulting layout. Singleton AOD readout
@@ -55,7 +55,7 @@ class StrictTransport:
             )
         ):
             return SequentialTransport(self.aod_id).construct(current, target, device)
-        rules = StrictRules(device.aod(self.aod_id), device.timing)
+        rules = rules_for(device.aod(self.aod_id), device.timing)
         sources = {atom.id: atom for atom in current.atoms}
         destinations = {atom.id: atom for atom in target.atoms}
         moves = _requests(current, target, sources, destinations, device, rules)
@@ -83,7 +83,7 @@ class StrictTransport:
 
 @dataclass
 class _BatchSelector:
-    rules: StrictRules
+    rules: TransportRules
     requests: dict[int, MoveRequest]
     conflicts: dict[int, frozenset[int]]
     occupied: Occupancy
@@ -147,7 +147,7 @@ def _requests(
     sources: dict[int, AtomState],
     destinations: dict[int, AtomState],
     device: Device,
-    rules: StrictRules,
+    rules: TransportRules,
 ) -> tuple[MoveRequest, ...]:
     if sources.keys() != destinations.keys():
         raise ValueError("Transport must retain the same atom identities.")
@@ -176,7 +176,7 @@ def _construct_batch(
     layout: AtomLayout,
     destinations: dict[int, AtomState],
     device: Device,
-    rules: StrictRules,
+    rules: TransportRules,
 ) -> AtomFragment:
     source, target, bindings = rules.frames(moves)
     actions: list[AtomAction] = [

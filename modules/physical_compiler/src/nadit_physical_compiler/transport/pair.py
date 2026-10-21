@@ -16,11 +16,12 @@ from ..state import (
     AtomState,
     SLMHolder,
 )
+from .rules import MoveRequest, TransportRules, rules_for
 
 
 @dataclass(frozen=True, slots=True)
 class PairTransport:
-    """Use a single flexible AOD for at most two atoms.
+    """Use a single flexible or rigid AOD for at most two atoms.
 
     Args:
         aod_id: Transport AOD in the device configuration.
@@ -36,7 +37,7 @@ class PairTransport:
         Args:
             layout: Current layout with at most two atoms.
             target_layout: Same atoms and wire mapping at selected destinations.
-            device: Fixed sites, flexible AOD capabilities, and transport timing.
+            device: Fixed sites, AOD motion capabilities, and transport timing.
 
         Returns:
             Atom steps and their replayed exit layout, omitting empty grids.
@@ -62,7 +63,7 @@ class PairTransport:
             steps.append(step)
             current = apply_step(current, step, device)
 
-        if _can_group(movers, destinations, aod):
+        if _can_group(movers, destinations, rules_for(aod, device.timing)):
             ordered = sorted(movers, key=lambda atom: atom.position.x)
             after = [destinations[atom.id] for atom in ordered]
             _transfer_pair(ordered, after, aod.id, device, emit)
@@ -127,8 +128,9 @@ def _require_profile(source: AtomLayout, target: AtomLayout, aod: AOD) -> None:
 
 
 def _can_group(
-    movers: list[AtomState], destinations: dict[int, AtomState], aod: AOD
+    movers: list[AtomState], destinations: dict[int, AtomState], rules: TransportRules
 ) -> bool:
+    aod = rules.aod
     if len(movers) != 2 or (aod.max_columns is not None and aod.max_columns < 2):
         return False
     before = sorted(movers, key=lambda atom: atom.position.x)
@@ -139,6 +141,10 @@ def _can_group(
         and after[0].position.y == after[1].position.y
         and before[1].position.x - before[0].position.x >= aod.min_spacing
         and after[1].position.x - after[0].position.x >= aod.min_spacing
+        and rules.compatible(
+            MoveRequest(before[0].id, before[0].position, after[0].position),
+            MoveRequest(before[1].id, before[1].position, after[1].position),
+        )
     )
 
 

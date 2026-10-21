@@ -1,8 +1,9 @@
-"""Strict simultaneous transport geometry, independent of layout occupancy."""
+"""Shared transport geometry and timing, independent of layout occupancy."""
 
 from dataclasses import dataclass
 from itertools import pairwise
 from math import hypot
+from typing import Protocol
 
 from ..device import AOD, Position, Timing
 from ..state import COORDINATE_TOLERANCE, AODGrid, AODLine
@@ -17,6 +18,38 @@ class MoveRequest:
     atom_id: int
     source: Position
     target: Position
+
+
+class TransportRules(Protocol):
+    """Motion compatibility shared by placement scores and transport batches."""
+
+    @property
+    def aod(self) -> AOD:
+        """Return the device geometry and motion model."""
+        ...
+
+    @property
+    def timing(self) -> Timing:
+        """Return the transfer and distance-based movement timing."""
+        ...
+
+    def compatible(self, first: MoveRequest, second: MoveRequest) -> bool:
+        """Return whether the requests can share one transport batch."""
+        ...
+
+    def can_fit(self, moves: tuple[MoveRequest, ...]) -> bool:
+        """Return whether compatible requests fit workspace, spacing, and capacity."""
+        ...
+
+    def frames(
+        self, moves: tuple[MoveRequest, ...]
+    ) -> tuple[AODGrid, AODGrid, tuple[tuple[int, int, int], ...]]:
+        """Return endpoint grids and atom-row-column bindings for a batch."""
+        ...
+
+    def duration_us(self, moves: tuple[MoveRequest, ...]) -> float:
+        """Return the complete LOAD, MOVE, and STORE duration of a batch."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,10 +155,46 @@ class StrictRules:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class RigidRules(StrictRules):
+    """Preserve source-axis sharing and translate all lines by one vector.
+
+    Capacity, endpoint frames, and timing use the same calculations as flexible
+    transport; compatibility additionally requires equal displacement.
+    """
+
+    def compatible(self, first: MoveRequest, second: MoveRequest) -> bool:
+        """Return whether both requests share a legal rigid translation."""
+        return (
+            abs((first.target.x - first.source.x) - (second.target.x - second.source.x))
+            <= COORDINATE_TOLERANCE
+            and abs(
+                (first.target.y - first.source.y) - (second.target.y - second.source.y)
+            )
+            <= COORDINATE_TOLERANCE
+            and StrictRules.compatible(self, first, second)
+        )
+
+
+def rules_for(aod: AOD, timing: Timing) -> TransportRules:
+    """Select the device's motion rules for placement and transport.
+
+    Args:
+        aod: AOD workspace, line capacities, and motion model.
+        timing: Transfer durations and distance-based movement timing.
+
+    Returns:
+        Rigid translation rules or the existing flexible strict rules.
+    """
+    return (
+        RigidRules(aod, timing) if aod.motion == "rigid" else StrictRules(aod, timing)
+    )
+
+
 def build_conflict_map(
-    moves: tuple[MoveRequest, ...], rules: StrictRules
+    moves: tuple[MoveRequest, ...], rules: TransportRules
 ) -> dict[int, frozenset[int]]:
-    """Build symmetric strict geometry conflicts, retaining isolated atom IDs.
+    """Build symmetric motion conflicts, retaining isolated atom IDs.
 
     Args:
         moves: Movement requests with distinct atom identities.

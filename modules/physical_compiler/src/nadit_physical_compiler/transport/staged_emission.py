@@ -6,7 +6,7 @@ from ..atom_ir import AtomAction, AtomStep, Load, Move, Store
 from ..contracts import AtomFragment
 from ..device import Device, Position
 from ..state import AODGrid, AODHolder, AODLine, AtomLayout, AtomState, SLMHolder
-from .rules import MoveRequest, StrictRules, _partition
+from .rules import MoveRequest, TransportRules, _partition
 from .staging import StageEvent
 
 
@@ -16,7 +16,7 @@ def emit_stages(
     layout: AtomLayout,
     destinations: dict[int, AtomState],
     device: Device,
-    rules: StrictRules,
+    rules: TransportRules,
 ) -> AtomFragment:
     """Emit admitted staging events without replay or full-state checking.
 

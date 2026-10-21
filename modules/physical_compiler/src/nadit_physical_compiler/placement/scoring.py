@@ -12,7 +12,7 @@ from typing import Literal, Self
 
 from ..device import Position, SLMSite
 from ..state import COORDINATE_TOLERANCE
-from ..transport.rules import MoveRequest, StrictRules
+from ..transport.rules import MoveRequest, TransportRules
 from .arithmetic import f32, sum32
 from .astar import a_star_tree_search
 from .ids import iterative_diving_search
@@ -151,7 +151,7 @@ class _Search:
     def __init__(
         self,
         jobs: tuple[PlacementJob, ...],
-        rules: StrictRules,
+        rules: TransportRules,
         config: PlacementConfig,
         stage: Literal["gate", "storage"],
         coordinates: PlacementCoordinates | None = None,
@@ -311,7 +311,7 @@ def _ranks(coordinates: tuple[float, ...]) -> dict[float, int]:
 
 def search_placement(
     jobs: tuple[PlacementJob, ...],
-    rules: StrictRules,
+    rules: TransportRules,
     config: PlacementConfig,
     *,
     stage: Literal["gate", "storage"] = "gate",
@@ -321,7 +321,7 @@ def search_placement(
 
     Args:
         jobs: Placement jobs in the candidate generator's search order.
-        rules: Shared strict geometry and capacity rules.
+        rules: Shared device motion, geometry, and capacity rules.
         config: Search budgets and heuristic parameters.
         stage: Select gate or storage axis scaling.
         coordinates: Full free-array coordinates for source score discretization.

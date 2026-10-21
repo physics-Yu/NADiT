@@ -10,7 +10,7 @@ from ..device import Device
 from ..state import AODHolder, AtomLayout, AtomState, SLMHolder
 from .occupancy import Occupancy
 from .pair import _without_empty_grids
-from .rules import MoveRequest, StrictRules, build_conflict_map
+from .rules import MoveRequest, TransportRules, build_conflict_map, rules_for
 from .sequential import SequentialTransport
 from .staged_emission import emit_stages
 from .staged_plan import StagingPlans
@@ -49,9 +49,12 @@ class StagedStrictTransport:
             Complete LOAD/MOVE/STORE steps, including intermediate offsets.
 
         Raises:
-            ValueError: If endpoints are inconsistent or the available
-                constructors cannot resolve a transport dependency.
+            ValueError: For a rigid AOD, inconsistent endpoints, or an
+                unresolved transport dependency.
         """
+        aod = device.aod(self.aod_id)
+        if aod.motion == "rigid":
+            raise ValueError(f"Staged transport does not support rigid AOD {aod.id!r}.")
         current = _without_empty_grids(layout)
         target = _without_empty_grids(target_layout)
         if (
@@ -64,7 +67,7 @@ class StagedStrictTransport:
             or target.aod_grids
         ):
             return SequentialTransport(self.aod_id).construct(current, target, device)
-        rules = StrictRules(device.aod(self.aod_id), device.timing)
+        rules = rules_for(aod, device.timing)
         destinations = {atom.id: atom for atom in target.atoms}
         requests = _requests(
             current,
@@ -149,7 +152,7 @@ def _region_pairs(
 
 @dataclass
 class _StagedGroups:
-    rules: StrictRules
+    rules: TransportRules
     requests: dict[int, MoveRequest]
     conflicts: dict[int, frozenset[int]]
     region_pairs: dict[int, tuple[str, str]]
