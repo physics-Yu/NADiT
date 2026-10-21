@@ -1,11 +1,11 @@
 # Device Geometry and Capabilities
 
-Date: 2026-10-20.
-Status: Flexible geometry, state, transport checks, operation capabilities,
-the one-pair and multi-pair compilers, and direct strict parallel transport
-are implemented. Reuse, layout search, staged routing, AOD-held CZ strategies,
-and rigid support follow the
-[implementation plan](implementation-plan.md).
+Date: 2026-10-21.
+Status: Flexible geometry, atom state, operation capabilities, semantic
+validation, reuse, layout search, and direct/staged/relaxed routing are
+implemented. Rigid motion, shared placement/transport rules, and the three
+comparison profiles are implemented under
+[ADR 0024](../../../docs/decisions/0024-rigid-aod-motion.md).
 
 ## Device and compiler responsibilities
 
@@ -118,6 +118,17 @@ motion permits line separation changes while preserving shared lines, line
 order, minimum separation, and valid pickup/drop-off behavior. Every
 intermediate movement follows the selected model.
 
+`AOD.motion` selects `flexible` (the default) or `rigid`. In rigid mode all
+active rows share one vertical displacement and all active columns share one
+horizontal displacement, including unoccupied lines. A carrying rigid AOD
+cannot add lines during LOAD. STORE can deactivate lines. The rigid and
+flexible profiles share transfer times and the distance-to-time function.
+
+Placement scoring and transport use `TransportRules` selected by `rules_for`.
+`RigidRules` batches only equal-displacement requests; `StrictRules` retains
+the flexible relation. Pair, sequential, and direct strict transport support
+rigid motion. Staged and relaxed transport reject it explicitly.
+
 Movement time is computed from distance. Transfer and native-operation times
 are configured separately. Code generation expands a planned transport batch
 into the required transfer and movement steps.
@@ -127,12 +138,14 @@ into the required transfer and movement steps.
 | Profile | AOD model | Capacity | Purpose |
 | --- | --- | --- | --- |
 | `zoned_flexible` | Order-preserving rows/columns | No row/column count limit | First complete Search Smarter-based pipeline |
+| `zoned_flexible_16` | Order-preserving rows/columns | Up to 16 rows and 16 columns | Isolate capacity effects |
 | `zoned_rigid_16` | Rigid translation | Up to 16 rows and 16 columns | Experimental-device comparison |
 
-Both profiles use the geometry above. Unlimited capacity removes only the
+All three profiles use the geometry above. Unlimited capacity removes only the
 row/column count bound; intersection coupling and motion constraints remain.
-An optional flexible 16-by-16 profile separates capacity effects from motion
-model effects in comparisons.
+The flexible 16-by-16 profile separates capacity effects from motion-model
+effects in comparisons. The comparison files specify a 4-by-32 storage grid,
+20 gate pairs at y=140 um, and measurement starting at y=260 um.
 
 The first reference strategy can use SLM-held gate configurations and
 SLM-to-SLM transport boundaries. Subsequent planning can use AOD-held gates

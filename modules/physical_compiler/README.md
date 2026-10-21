@@ -88,7 +88,7 @@ offsets, and release; see
 [ADR 0015](../../docs/decisions/0015-staged-strict-transport.md).
 Relaxed routing adds compatible batch merging and staged reordering; see
 [ADR 0016](../../docs/decisions/0016-relaxed-routing.md).
-The rigid-device comparison follows separately.
+Rigid motion uses the same interfaces; see the comparison below.
 The [device design](docs/device-and-zones.md) records the accepted zoning,
 interaction-position, and AOD measurement requirements. The
 [implementation plan](docs/implementation-plan.md) gives the file paths and
@@ -139,6 +139,40 @@ using the seed and stable source measurement ID. Successor conditions then
 select emitted operations or skips and release dependencies. Compilation
 decisions advance the DAG directly. Planned times still enforce measurement
 completion plus result latency before dependent operations.
+
+## Rigid AOD comparison
+
+`AOD.motion` selects `"flexible"` (default) or `"rigid"`. Rigid MOVE translates
+all active rows and columns by one vector, including empty lines. A rigid AOD
+carrying atoms cannot activate additional lines during LOAD. Transfer and
+distance-based timing are shared with flexible motion.
+
+`rules_for(aod, timing)` supplies `TransportRules` to placement scoring and
+transport. `RigidRules` groups requests only when their displacement vectors
+agree and their source-axis relations permit a common grid. Pair, sequential,
+and strict transport support this model. Staged and relaxed reject rigid jobs
+at loading; direct Python construction rejects them before any fallback.
+This rejection currently uses CLI exit code 1; ADR 0025 defines the later
+strategy-support interface.
+
+Three configurations share zones, sites, operation capabilities, and timing:
+`configs/zoned_flexible.json` (unlimited), `configs/zoned_flexible_16.json`
+(16 by 16), and `configs/zoned_rigid_16.json` (16 by 16). Storage pitch is 5 um;
+20 isolated gate pairs occupy one row, with 2 um separation within each pair.
+
+From this module directory, compare identical circuits and measurement cases:
+
+```text
+uv run --locked python -m examples.compare_motion --output artifacts/rigid-aod/comparison.json --results-dir artifacts/rigid-aod/results
+```
+
+The report includes a 40-qubit capacity case and both outcomes of the existing
+feedback circuit. Each row has action counts, atom transfers, transport time,
+semantic validation, and final replay equality. Each saved result embeds its
+Device and DAG and can be passed to the viewer below. `--placement multipair`
+selects fixed placement; `--transport sequential` selects singleton transport.
+See [ADR 0024](../../docs/decisions/0024-rigid-aod-motion.md) for the contract
+and remaining hardware questions.
 
 ## Animated Atom IR replay
 

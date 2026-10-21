@@ -48,6 +48,14 @@
 
 ### Added
 
+- Add `AOD.motion`, rigid MOVE and loaded-grid checks, and shared
+  `TransportRules`/`RigidRules` selected by `rules_for` in placement and routing.
+  Pair, sequential, and strict support rigid translation; staged and relaxed
+  reject it before compilation or fallback.
+- Add unlimited flexible, 16-by-16 flexible, and 16-by-16 rigid profiles with
+  identical geometry and timing, plus a capacity/feedback comparison that
+  saves validated self-contained results and checks final replay.
+
 - Self-contained `nadit.result/2` documents with native DAG and Device snapshots,
   captured input hashes, location-independent job identity, and `git_dirty`.
 - Independent CZ, addressing, readout, dependency, branch, and feedback checks;

@@ -15,6 +15,8 @@ windows are implemented. ADR 0019 adds complete static source-stage comparison,
 the original scheduling/reuse policies, multiple gate regions, source controls,
 A*, and paper timing. Its benchmark evidence records the execution budget and
 first differing stage; passing tests alone does not complete source reproduction.
+ADR 0024 implements rigid motion and the three-device comparison in step 6;
+shared-zone and AOD-held gate planning remain separate work.
 
 ## Compilation contract
 
@@ -59,7 +61,7 @@ their implementation step begins.
 | `src/nadit_physical_compiler/device.py` | Geometry, traps, operation capabilities, timing, configuration loading |
 | `src/nadit_physical_compiler/capabilities.py` | CZ, local control, and readout channel/holder/timing records |
 | `src/nadit_physical_compiler/state.py` | Qubit-to-atom mapping, atom positions and holders, occupancy |
-| `src/nadit_physical_compiler/motion.py` | Flexible AOD movement and line-controlled transfer checks; rigid rules follow in step 6 |
+| `src/nadit_physical_compiler/motion.py` | Flexible/rigid movement and line-controlled transfer checks |
 | `src/nadit_physical_compiler/atom_ir.py` | Atom actions, parallel steps, source links, Stim-style text output |
 | `src/nadit_physical_compiler/validation.py` | Explicit test/debug validation of action legality and source coverage |
 | `src/nadit_physical_compiler/replay.py` | Action state transitions and timing |
@@ -72,7 +74,8 @@ their implementation step begins.
 | `src/nadit_physical_compiler/placement/` | Candidate locations, cost evaluation, and IDS |
 | `src/nadit_physical_compiler/transport/` | Shared compatibility/cost rules, batching, and legal transport construction |
 | `src/nadit_physical_compiler/emission/` | Lightweight Atom IR parameter and timing binding |
-| `configs/zoned_flexible.json`, `configs/zoned_rigid_16.json` | Flexible reference and rigid-device study configurations |
+| `configs/zoned_flexible.json`, `configs/zoned_flexible_16.json`, `configs/zoned_rigid_16.json` | Identical geometry with separate capacity and motion controls |
+| `examples/compare_motion.py` | Capacity and feedback comparison, semantic validation, and saved v2 results |
 | `tests/fixtures/devices/zoned_small.json` | Small geometry shared by device and compilation tests |
 | `examples/compile_study.py` | QASM-to-Atom-IR study and compilation metrics |
 | `examples/atom_ir_example.py` | Manually constructed atom program and text output |
@@ -80,7 +83,7 @@ their implementation step begins.
 | `configs/one_pair_flexible.json` | Explicit geometry and operation capabilities for the one-pair study |
 | `src/nadit_physical_compiler/placement/catalog.py`, `placement/multipair.py` | Fixed pair catalogue, multi-CZ allocation, and storage returns |
 | `src/nadit_physical_compiler/transport/sequential.py` | Singleton transfers with destination vacancy ordering |
-| `src/nadit_physical_compiler/transport/rules.py` | Shared strict geometry, conflict map, endpoint frames, and cost |
+| `src/nadit_physical_compiler/transport/rules.py` | Shared flexible/rigid rules, conflict map, endpoint frames, and cost |
 | `src/nadit_physical_compiler/transport/occupancy.py`, `transport/strict.py` | Current occupancy, batch closure, and direct parallel actions |
 | `src/nadit_physical_compiler/emission/layer.py` | One region pulse for a complete placed CZ layer |
 | `examples/compile_multipair.py`, `examples/multipair_feedback.qasm3`, `configs/multipair_flexible.json` | Multi-pair compilation, partner changes, and conditional CZ study |
@@ -116,7 +119,7 @@ Acceptance:
 - Keep region membership independent of holder type.
 
 CZ, local-control, and readout capability records are implemented in step 2.
-Rigid constraints are implemented with the rigid profile in step 6.
+Rigid constraints and profiles are implemented in step 6 under ADR 0024.
 
 ## 2. Atom IR and action replay
 
@@ -234,12 +237,12 @@ Acceptance:
 
 ## 6. Rigid and shared-zone variants
 
-After the flexible pipeline passes the study, implement placement and transport
-choices with `configs/zoned_rigid_16.json`, including rigid grouped-motion
-checks. Use the same action and result contracts.
-Compare equal circuits, geometry, entry states, and measurement cases. Add a
-`configs/zoned_flexible_16.json` control when separating motion restrictions
-from capacity.
+Implemented by [ADR 0024](../../../docs/decisions/0024-rigid-aod-motion.md):
+`rules_for` selects the device's compatibility rules for placement and
+transport. Pair, sequential, and strict support rigid translation; staged
+and relaxed reject it. The three profiles and `examples/compare_motion.py`
+compare equal circuits, geometry, entry states, and measurement cases.
+`zoned_flexible_16` separates capacity from the motion-model effect.
 
 Then exercise overlapping storage/entanglement regions and planning that
 retains atoms in AOD for gates. Component packaging follows the complete

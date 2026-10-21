@@ -1,0 +1,144 @@
+{
+  "name": "zoned_rigid_16",
+  "zones": [
+    {
+      "id": "storage",
+      "bounds": {
+        "x_min": 0,
+        "y_min": 0,
+        "x_max": 160,
+        "y_max": 20
+      },
+      "operations": [
+        "load",
+        "store",
+        "rotate",
+        "reset"
+      ]
+    },
+    {
+      "id": "entanglement",
+      "bounds": {
+        "x_min": 0,
+        "y_min": 140,
+        "x_max": 160,
+        "y_max": 140
+      },
+      "operations": [
+        "load",
+        "store",
+        "cz",
+        "rotate",
+        "reset"
+      ]
+    },
+    {
+      "id": "measurement",
+      "bounds": {
+        "x_min": 0,
+        "y_min": 260,
+        "x_max": 160,
+        "y_max": 270
+      },
+      "operations": [
+        "measure"
+      ]
+    }
+  ],
+  "slm_grids": [
+    {
+      "prefix": "storage",
+      "origin": {
+        "x": 0,
+        "y": 0
+      },
+      "rows": 4,
+      "columns": 32,
+      "pitch": {
+        "x": 5,
+        "y": 5
+      }
+    },
+    {
+      "prefix": "gate_left",
+      "origin": {
+        "x": 0,
+        "y": 140
+      },
+      "rows": 1,
+      "columns": 20,
+      "pitch": {
+        "x": 8,
+        "y": 8
+      }
+    },
+    {
+      "prefix": "gate_right",
+      "origin": {
+        "x": 2,
+        "y": 140
+      },
+      "rows": 1,
+      "columns": 20,
+      "pitch": {
+        "x": 8,
+        "y": 8
+      }
+    }
+  ],
+  "aods": [
+    {
+      "id": "transport",
+      "workspace": {
+        "x_min": -10,
+        "y_min": -10,
+        "x_max": 170,
+        "y_max": 280
+      },
+      "min_spacing": 1,
+      "max_rows": 16,
+      "max_columns": 16,
+      "motion": "rigid"
+    }
+  ],
+  "timing": {
+    "load_us": 10,
+    "store_us": 10,
+    "move_us_per_um": 1
+  },
+  "cz": {
+    "channel": "rydberg",
+    "radius_um": 4.6,
+    "duration_us": 0.5,
+    "holder_pairs": [
+      [
+        "slm",
+        "slm"
+      ],
+      [
+        "slm",
+        "aod"
+      ],
+      [
+        "aod",
+        "aod"
+      ]
+    ]
+  },
+  "local": {
+    "channel": "raman",
+    "rotation_us": 1,
+    "reset_us": 5
+  },
+  "readout": {
+    "channel": "camera",
+    "duration_us": 10,
+    "latency_us": 500,
+    "min_spacing_um": 5,
+    "retain_atoms": true,
+    "holders": [
+      "slm",
+      "aod"
+    ]
+  }
+}

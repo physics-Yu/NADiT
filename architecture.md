@@ -25,6 +25,7 @@ program for one measurement case under a selected Device and compiler strategy.
 | One-pair DAG-to-Atom-IR compilation with feedback | Implemented |
 | Multi-pair fixed placement, sequential transport, and shared pulses | Implemented |
 | Shared transport rules and direct strict parallel batches | Implemented |
+| Rigid motion rules shared by placement and pair/sequential/strict transport | Implemented |
 | Next-CZ preview and matching-based atom reuse | Implemented |
 | Routing-aware IDS placement and optional reuse | Implemented |
 | Staged/relaxed routing | Implemented |
@@ -155,6 +156,15 @@ emitting common LOAD/MOVE/STORE phases. Source measurement identities and
 branch decisions remain unchanged. See
 [ADR 0011](docs/decisions/0011-strict-parallel-transport.md).
 
+`AOD.motion` selects flexible order preservation or rigid translation.
+`rules_for` supplies the same compatibility relation to layout scoring and
+transport batching. Rigid batches require equal displacement vectors;
+active lines keep their relative positions. A carrying rigid AOD cannot add
+lines during LOAD. Pair, sequential, and strict support rigid motion;
+staged and relaxed reject it. Three otherwise identical device profiles
+separate unlimited flexible motion, 16-by-16 capacity, and rigid translation.
+See [ADR 0024](docs/decisions/0024-rigid-aod-motion.md).
+
 Optional matching reuse retains atoms between known CZ layers. The compiler
 previews the next layer using a local frontier and dependency-count overlay.
 Uncompiled measurements stop the preview without sampling. Compiled results
@@ -179,8 +189,9 @@ See [ADR 0013](docs/decisions/0013-routing-aware-ids-placement.md).
 3. Implement native frontend translation, module handoffs, and one-pair case
    compilation (complete).
 4. Implement the multi-pair baseline, direct strict transport, matching reuse,
-   and IDS placement (complete), then staged/relaxed routing.
-5. Implement the rigid 16-by-16 variant and compare shared-zone layouts.
+   and IDS placement, then staged/relaxed routing (complete).
+5. Implement the rigid 16-by-16 variant and compare equal zoned layouts
+   (complete). Shared-zone layouts follow separately.
 6. Package reusable components and connect logical QEC compilation.
 
 The [implementation plan](modules/physical_compiler/docs/implementation-plan.md)
