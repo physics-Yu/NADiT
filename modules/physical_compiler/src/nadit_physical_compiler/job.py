@@ -1,18 +1,21 @@
 """Load a declarative compilation job and compose the existing Python pipeline."""
 
+import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .compiler import CompilationResult, compile_physical
 from .device import Device, load_device, loads_device
 from .execution import FakeBackend
-from .frontend import DEFAULT_GATE_SET, GateSet, load_qasm
+from .frontend import DEFAULT_GATE_SET, GateSet, loads_qasm
 from .job_fields import array_at, integer_at, keys_at, object_at, required, string_at
 from .physical_ir import PhysicalDAG, ResultRef
 from .placement import GatePairCatalog, make_initial_layout
+from .provenance import canonical_hash
 from .registry import StrategyContext, build_strategy
+from .serialization import encode_device
 from .state import AtomLayout, AtomState, SLMHolder, validate_layout
 from .strategies import SearchSmarterStrategy
 
@@ -34,6 +37,7 @@ class CompilationJob:
     entry_state: AtomLayout
     strategy: SearchSmarterStrategy
     measurement_backend: FakeBackend
+    inputs: dict[str, str] = field(default_factory=dict)
 
 
 def load_job(path: str | Path) -> CompilationJob:
@@ -86,7 +90,7 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
     if data.get("schema") != JOB_SCHEMA:
         raise ValueError(f"schema: expected {JOB_SCHEMA!r}.")
     base = Path(base_dir).resolve()
-    dag, circuit = _circuit(required(data, "circuit", "job"), base)
+    dag, circuit, qasm_hash = _circuit(required(data, "circuit", "job"), base)
     device, device_document = _device(required(data, "device", "job"), base)
     aod = string_at(required(data, "aod", "job"), "aod")
     try:
@@ -114,7 +118,13 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         "entry": entry_document,
         "case": case,
     }
-    return CompilationJob(document, dag, device, catalog, entry, strategy, backend)
+    inputs = {
+        "qasm_sha256": qasm_hash,
+        "device_sha256": canonical_hash(encode_device(device)),
+    }
+    return CompilationJob(
+        document, dag, device, catalog, entry, strategy, backend, inputs
+    )
 
 
 def compile_job(job: CompilationJob) -> CompilationResult:
@@ -134,7 +144,7 @@ def compile_job(job: CompilationJob) -> CompilationResult:
     )
 
 
-def _circuit(value: Any, base: Path) -> tuple[PhysicalDAG, dict[str, Any]]:
+def _circuit(value: Any, base: Path) -> tuple[PhysicalDAG, dict[str, Any], str]:
     data = object_at(value, "circuit")
     keys_at(data, {"qasm", "gate_set"}, "circuit")
     path = (
@@ -149,10 +159,15 @@ def _circuit(value: Any, base: Path) -> tuple[PhysicalDAG, dict[str, Any]]:
         )
     ]
     try:
-        dag = load_qasm(path, gate_set=GateSet(tuple(names)))
+        source = path.read_bytes()
+        dag = loads_qasm(source.decode("utf-8-sig"), gate_set=GateSet(tuple(names)))
     except (ValueError, OSError, UnicodeError) as error:
-        raise ValueError(f"circuit.qasm: {error}") from error
-    return dag, {"qasm": str(path), "gate_set": names}
+        raise ValueError(f"circuit.qasm {path}: {error}") from error
+    return (
+        dag,
+        {"qasm": str(path), "gate_set": names},
+        hashlib.sha256(source).hexdigest(),
+    )
 
 
 def _device(value: Any, base: Path) -> tuple[Device, str | dict[str, Any]]:

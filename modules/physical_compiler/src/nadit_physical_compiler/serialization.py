@@ -1,14 +1,9 @@
 """Versioned JSON documents for executable Atom IR and compilation results."""
 
-import hashlib
 import json
-import platform
-import subprocess
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import asdict, fields, is_dataclass
-from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
 from typing import Any
 
 from .atom_ir import (
@@ -29,12 +24,14 @@ from .atom_ir import (
 from .compiler import CompilationResult, CompiledOperation, MeasurementRecord
 from .contracts import GateLayer
 from .coverage import RegionSet
-from .device import Device, Position, Region
+from .device import Device, Position, Region, loads_device
 from .metrics import collect_metrics
-from .physical_ir import ResultRef
+from .physical_ir import Condition, PhysicalDAG, PhysicalOperation, Register, ResultRef
+from .provenance import collect_provenance as collect_provenance
 from .state import AODGrid, AODHolder, AODLine, AtomLayout, AtomState, SLMHolder
 
 RESULT_SCHEMA = "nadit.result/1"
+RESULT_SCHEMA_V2 = "nadit.result/2"
 _ACTION_CLASSES: dict[str, type[AtomAction]] = {
     action.__name__: action
     for action in (
@@ -246,45 +243,61 @@ def encode_device(device: Device) -> dict[str, Any]:
     return result
 
 
-def _package_version(package: str) -> str | None:
-    try:
-        return version(package)
-    except PackageNotFoundError:
-        return None
-
-
-def collect_provenance(job: Mapping[str, Any]) -> dict[str, Any]:
-    """Return software versions, canonical job hash, and available git revision.
+def encode_dag(dag: PhysicalDAG) -> dict[str, Any]:
+    """Return native operations, dependencies, registers, and measurement identities.
 
     Args:
-        job: Resolved JSON job whose canonical representation is hashed.
-
+        dag: Device-independent native circuit used by the compiler.
     Returns:
-        Provenance without timestamps; unavailable package or git data is null.
-
-    Raises:
-        TypeError: If the job contains values that cannot be represented as JSON.
-        ValueError: If the job contains nonfinite numbers.
+        Lossless JSON fields, including each node's derived ResultRef.
     """
-    canonical = json.dumps(job, sort_keys=True, separators=(",", ":"), allow_nan=False)
-    try:
-        git_commit = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=Path(__file__).parent,
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=5,
-        ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        git_commit = None
-    return {
-        "package_version": _package_version("nadit-physical-compiler"),
-        "git_commit": git_commit,
-        "job_hash": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
-        "python_version": platform.python_version(),
-        "qiskit_version": _package_version("qiskit"),
-    }
+    result: dict[str, Any] = _arrays(dag)
+    for encoded, node in zip(result["nodes"], dag.nodes, strict=True):
+        encoded["result"] = _arrays(node.result)
+    return result
+
+
+def _read_operation(value: Mapping[str, Any], index: int) -> PhysicalOperation:
+    encoded = dict(value)
+    result = encoded.pop("result")
+    for name in ("qubits", "clbits", "params"):
+        encoded[name] = tuple(encoded[name])
+    if encoded["condition"] is not None:
+        condition = encoded["condition"]
+        encoded["condition"] = Condition(
+            ResultRef(**condition["result"]), condition["value"]
+        )
+    node = PhysicalOperation(**encoded)
+    if result != _arrays(node.result):
+        raise ValueError(
+            f"dag.nodes[{index}].result disagrees with the measurement source_id."
+        )
+    return node
+
+
+def decode_dag(document: Mapping[str, Any]) -> PhysicalDAG:
+    """Reconstruct the native DAG without reading QASM or compiling.
+
+    Args:
+        document: The ``dag`` member of a version-two result document.
+    Returns:
+        Immutable PhysicalDAG records equal to the encoded circuit.
+    Raises:
+        ValueError: DAG invariants or a derived measurement identity are invalid.
+        KeyError: A required field is missing.
+        TypeError: Fields do not match the physical record constructors.
+    """
+    encoded = dict(document)
+    encoded["nodes"] = tuple(
+        _read_operation(node, index) for index, node in enumerate(encoded["nodes"])
+    )
+    encoded["edges"] = tuple(tuple(edge) for edge in encoded["edges"])
+    for name in ("quantum_registers", "classical_registers"):
+        encoded[name] = tuple(
+            Register(register["name"], tuple(register["bits"]))
+            for register in encoded[name]
+        )
+    return PhysicalDAG(**encoded)
 
 
 def encode_result(
@@ -295,8 +308,11 @@ def encode_result(
     provenance: Mapping[str, Any] | None = None,
     metrics: Mapping[str, Any] | None = None,
     validation: Mapping[str, Any] | None = None,
+    dag: PhysicalDAG | None = None,
+    device: Device | None = None,
+    inputs: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Return a version-one result document without replaying or recompiling.
+    """Return a result snapshot without replaying or recompiling.
 
     Args:
         result: Completed case-specific compilation.
@@ -305,18 +321,29 @@ def encode_result(
         provenance: Explicit provenance, or collect local software versions.
         metrics: Explicit metric snapshot, or compute the shared metric set.
         validation: Optional reference-validation report; omitted when absent.
+        dag: Native circuit snapshot for a version-two document.
+        device: Expanded Device snapshot for a version-two document.
+        inputs: Captured content hashes; required together with dag and device.
 
     Returns:
         A JSON result document containing lossless program and result records.
         Nested job and metadata values are copied into an independent snapshot.
+        Omitting all three snapshot arguments retains version-one serialization.
+    Raises:
+        ValueError: Only part of the version-two snapshot arguments is supplied.
     """
+    snapshots = (dag is not None, device is not None, inputs is not None)
+    if any(snapshots) and not all(snapshots):
+        raise ValueError(
+            "Version-two results require dag, device, and inputs together."
+        )
     job_snapshot = deepcopy(dict(job))
     document = {
-        "schema": RESULT_SCHEMA,
+        "schema": RESULT_SCHEMA_V2 if all(snapshots) else RESULT_SCHEMA,
         "job": job_snapshot,
         "provenance": deepcopy(dict(provenance))
         if provenance is not None
-        else collect_provenance(job_snapshot),
+        else collect_provenance(job_snapshot, inputs=inputs),
         "program": encode_program(result.program),
         "entry_state": encode_layout(entry_state),
         "exit_state": encode_layout(result.exit_state),
@@ -329,14 +356,41 @@ def encode_result(
     }
     if validation is not None:
         document["validation"] = deepcopy(dict(validation))
+    if dag is not None and device is not None and inputs is not None:
+        document["dag"] = encode_dag(dag)
+        document["device"] = encode_device(device)
+        document["inputs"] = deepcopy(dict(inputs))
     return document
 
 
+def _check_v2(document: Mapping[str, Any]) -> None:
+    try:
+        for name in ("dag", "device", "inputs"):
+            if name not in document:
+                raise ValueError(f"missing {name} snapshot")
+        decode_dag(document["dag"])
+        loads_device(json.dumps(document["device"], allow_nan=False))
+        for name in ("qasm_sha256", "device_sha256"):
+            value = document["inputs"].get(name)
+            if (
+                not isinstance(value, str)
+                or len(value) != 64
+                or any(char not in "0123456789abcdef" for char in value)
+            ):
+                raise ValueError(
+                    f"inputs.{name}: expected a SHA-256 hexadecimal digest"
+                )
+    except (KeyError, TypeError, ValueError, AttributeError) as error:
+        raise ValueError(
+            f"Invalid result schema {RESULT_SCHEMA_V2!r}: {error}"
+        ) from error
+
+
 def decode_result(document: Mapping[str, Any]) -> CompilationResult:
-    """Reconstruct compilation records from a version-one result document.
+    """Reconstruct compilation records from a version-one or version-two document.
 
     Args:
-        document: JSON object with schema ``nadit.result/1``.
+        document: JSON object with schema ``nadit.result/1`` or ``nadit.result/2``.
 
     Returns:
         The original CompilationResult; entry state is decoded separately.
@@ -346,8 +400,10 @@ def decode_result(document: Mapping[str, Any]) -> CompilationResult:
         KeyError: If a required result field is missing.
         TypeError: If fields do not match record constructors.
     """
-    if document.get("schema") != RESULT_SCHEMA:
+    if document.get("schema") not in (RESULT_SCHEMA, RESULT_SCHEMA_V2):
         raise ValueError(f"Unsupported result schema: {document.get('schema')!r}.")
+    if document["schema"] == RESULT_SCHEMA_V2:
+        _check_v2(document)
     return CompilationResult(
         decode_program(document["program"]),
         decode_layout(document["exit_state"]),
