@@ -1,0 +1,75 @@
+"""Rigid partial release, checked with the independent motion oracle."""
+
+from dataclasses import replace
+from math import hypot
+
+import pytest
+from test_rigid_transport import _rigid
+from test_strict_transport import _case, _loads, _verify
+
+from nadit_physical_compiler.atom_ir import Load, Move, Store
+from nadit_physical_compiler.device import Region, Timing
+from nadit_physical_compiler.transport.rigid_drop import RigidDropTransport
+from nadit_physical_compiler.transport.strict import StrictTransport
+
+
+def test_two_offsets_share_long_travel_and_release_separately() -> None:
+    device, entry, target = _case(((0, 15), (5, 15)), ((40, 140), (42, 140)))
+    device = replace(_rigid(device), timing=Timing(10, 10, 1))
+    fragment = RigidDropTransport("a").construct(entry, target, device)
+    assert _loads(fragment) == ((0, 1),)
+    assert [type(step.actions[0]) for step in fragment.steps] == [
+        Load, Move, Store, Move, Store
+    ]
+    assert sum(step.duration_us for step in fragment.steps) == pytest.approx(
+        30 + hypot(37, 125) + 3
+    )
+    _verify(fragment, entry, target, device)
+
+
+@pytest.mark.parametrize(
+    "sources,targets,stationary,rows,columns",
+    [
+        (((0, 0), (5, 0), (0, 5), (5, 5)),
+         ((10, 20), (17, 20), (10, 25), (17, 25)), (), None, None),
+        (((0, 0), (5, 5), (0, 5)),
+         ((10, 20), (17, 25), (12, 25)), (), None, None),
+        (((0, 0), (5, 0), (10, 0)),
+         ((10, 20), (17, 20), (24, 20)), (), 1, 2),
+        (((0, 0), (5, 0)), ((10, 20), (17, 20)), ((15, 20),), None, None),
+        (((0, 0), (5, 0)), ((10, 20), (17, 20)), ((12, 20),), None, None),
+        (((0, 0), (5, 0)), ((10, 20), (7, 20)), (), None, None),
+    ],
+)
+def test_grid_release_capacity_and_stationary_occupancy(
+    sources: tuple[tuple[float, float], ...],
+    targets: tuple[tuple[float, float], ...],
+    stationary: tuple[tuple[float, float], ...],
+    rows: int | None,
+    columns: int | None,
+) -> None:
+    device, entry, target = _case(
+        sources, targets, stationary=stationary, rows=rows, columns=columns
+    )
+    device = _rigid(device)
+    fragment = RigidDropTransport("a").construct(entry, target, device)
+    baseline = StrictTransport("a").construct(entry, target, device)
+    assert sum(step.duration_us for step in fragment.steps) <= sum(
+        step.duration_us for step in baseline.steps
+    )
+    _verify(fragment, entry, target, device)
+
+
+def test_retained_lines_must_fit_workspace_at_intermediate_stops() -> None:
+    device, entry, target = _case(((0, 0), (10, 0)), ((95, 20), (11, 20)))
+    device = _rigid(device)
+    device = replace(device, aods=(replace(device.aods[0], workspace=Region(0, 0, 100, 30)),))
+    fragment = RigidDropTransport("a").construct(entry, target, device)
+    _verify(fragment, entry, target, device)
+
+
+def test_noop_and_flexible_admission() -> None:
+    device, entry, _ = _case(((0, 0),), ((10, 20),))
+    assert not RigidDropTransport("a").construct(entry, entry, _rigid(device)).steps
+    with pytest.raises(ValueError, match="rigid"):
+        RigidDropTransport("a").construct(entry, entry, device)
