@@ -6,6 +6,10 @@
 `nadit.result/1` JSON. `encode_result(result, entry_state=entry, job=job)`
 preserves the program and measurement identities; `decode_result(document)`
 and `decode_layout(document["entry_state"])` reconstruct replay inputs.
+`metrics.collect_metrics(result)` computes the shared counts and durations;
+`encode_result` includes them automatically. Transport duration is the sum of
+Load/Move/Store action durations; program duration follows parallel steps,
+and result duration also includes pending measurement feedback latency.
 `AtomProgram.to_text()` remains the human-readable display.
 See [ADR 0021](../../docs/decisions/0021-job-spec-and-result-document.md)
 for the job, metrics, validation, and CLI interfaces.

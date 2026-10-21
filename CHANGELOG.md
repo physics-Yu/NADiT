@@ -45,6 +45,8 @@
 
 ### Added
 
+- Shared compilation metrics used by saved results, examples, and the candidate
+  benchmark runner, preserving the existing example output.
 - Versioned `nadit.result/1` JSON serialization for all Atom IR actions,
   layouts, result records, Device snapshots, and software provenance.
 - Offline Atom IR animation with sparse replay patches, step/time seeking,

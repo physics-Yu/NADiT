@@ -29,6 +29,7 @@ from .compiler import CompilationResult, CompiledOperation, MeasurementRecord
 from .contracts import GateLayer
 from .coverage import RegionSet
 from .device import Device, Position, Region
+from .metrics import collect_metrics
 from .physical_ir import ResultRef
 from .state import AODGrid, AODHolder, AODLine, AtomLayout, AtomState, SLMHolder
 
@@ -301,7 +302,7 @@ def encode_result(
         entry_state: Layout supplied to the compiler.
         job: Resolved job with defaults filled and paths made absolute.
         provenance: Explicit provenance, or collect local software versions.
-        metrics: Optional metric snapshot supplied by the metrics module.
+        metrics: Explicit metric snapshot, or compute the shared metric set.
         validation: Optional reference-validation report; omitted when absent.
 
     Returns:
@@ -319,7 +320,7 @@ def encode_result(
         "operations": [asdict(item) for item in result.operations],
         "measurements": [asdict(item) for item in result.measurements],
         "layers": [_arrays(asdict(item)) for item in result.layers],
-        "metrics": dict(metrics) if metrics is not None else {},
+        "metrics": dict(metrics) if metrics is not None else collect_metrics(result),
     }
     if validation is not None:
         document["validation"] = dict(validation)

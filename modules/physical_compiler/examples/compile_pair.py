@@ -14,6 +14,7 @@ from nadit_physical_compiler import (
     load_qasm,
     replay,
 )
+from nadit_physical_compiler.metrics import collect_metrics
 from nadit_physical_compiler.placement import PairPlacer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
@@ -51,14 +52,15 @@ def main() -> None:
         measurement_backend=FakeBackend(args.seed, overrides),
     )
     assert replay(result.program, entry, device) == result.exit_state
+    metrics = collect_metrics(result)
     print(
         json.dumps(
             {
                 "native_nodes": len(dag.nodes),
                 "layers": len(result.layers),
-                "atom_steps": len(result.program.steps),
-                "program_duration_us": result.program.duration_us,
-                "result_completion_us": result.duration_us,
+                "atom_steps": metrics["atom_steps"],
+                "program_duration_us": metrics["program_duration_us"],
+                "result_completion_us": metrics["duration_us"],
                 "measurements": [
                     {
                         "source_id": item.result.measurement_id,

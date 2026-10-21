@@ -30,6 +30,7 @@ from nadit_physical_compiler.contracts import AtomFragment, GateLayer, Placement
 from nadit_physical_compiler.coverage import RegionSet
 from nadit_physical_compiler.device import AOD, Device, Position, Region, Timing, Zone
 from nadit_physical_compiler.emission import WholeLayerEmitter
+from nadit_physical_compiler.metrics import program_metrics
 from nadit_physical_compiler.physical_ir import PhysicalDAG, PhysicalOperation
 from nadit_physical_compiler.placement import (
     GatePairCatalog,
@@ -404,6 +405,8 @@ def _actions(
 
 
 def _metrics(program: AtomProgram, elapsed: float) -> dict[str, float | int]:
+    shared = program_metrics(program)
+    counts = shared["action_counts"]
     actions = [action for step in program.steps for action in step.actions]
     loads = [action for action in actions if isinstance(action, Load)]
     stores = [action for action in actions if isinstance(action, Store)]
@@ -411,15 +414,15 @@ def _metrics(program: AtomProgram, elapsed: float) -> dict[str, float | int]:
     movement = sum(action.duration_us for action in moves)
     transfer = sum(action.duration_us for action in (*loads, *stores))
     return {
-        "load_actions": len(loads),
-        "store_actions": len(stores),
-        "loaded_atoms": sum(len(action.bindings) for action in loads),
-        "stored_atoms": sum(len(action.bindings) for action in stores),
-        "move_actions": len(moves),
+        "load_actions": counts.get("Load", 0),
+        "store_actions": counts.get("Store", 0),
+        "loaded_atoms": shared["atom_load_count"],
+        "stored_atoms": shared["atom_store_count"],
+        "move_actions": counts.get("Move", 0),
         "movement_us": movement,
         "transfer_us": transfer,
         "rearrangement_us": movement + transfer,
-        "total_us": program.duration_us,
+        "total_us": shared["program_duration_us"],
         "compilation_s": elapsed,
     }
 

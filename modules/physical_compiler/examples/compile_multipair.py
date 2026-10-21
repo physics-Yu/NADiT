@@ -2,17 +2,12 @@
 
 import argparse
 import json
-from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
 
 from nadit_physical_compiler import (
-    CZPulse,
     FakeBackend,
-    Load,
-    Move,
     SLMHolder,
-    Store,
     compile_physical,
     load_device,
     load_qasm,
@@ -20,6 +15,7 @@ from nadit_physical_compiler import (
 )
 from nadit_physical_compiler.contracts import Transporter
 from nadit_physical_compiler.emission import WholeLayerEmitter
+from nadit_physical_compiler.metrics import collect_metrics
 from nadit_physical_compiler.placement import (
     GatePairCatalog,
     HeuristicPlacer,
@@ -122,7 +118,7 @@ def main() -> None:
         measurement_backend=FakeBackend(args.seed, overrides),
     )
     assert replay(result.program, entry, device) == result.exit_state
-    actions = [action for step in result.program.steps for action in step.actions]
+    metrics = collect_metrics(result)
     print(
         json.dumps(
             {
@@ -144,44 +140,15 @@ def main() -> None:
                 if args.transport == "relaxed"
                 else None,
                 "reuse": args.reuse,
-                "cz_gates_per_pulse": [
-                    len(action.source_ids)
-                    for action in actions
-                    if isinstance(action, CZPulse)
-                ],
-                "atom_steps": len(result.program.steps),
-                "action_counts": dict(
-                    Counter(type(action).__name__ for action in actions)
-                ),
-                "load_batch_sizes": [
-                    len(action.bindings)
-                    for action in actions
-                    if isinstance(action, Load)
-                ],
-                "max_parallel_atoms": max(
-                    (
-                        len(action.targets)
-                        for action in actions
-                        if isinstance(action, Move)
-                    ),
-                    default=0,
-                ),
-                "transport_duration_us": sum(
-                    action.duration_us
-                    for action in actions
-                    if isinstance(action, Load | Move | Store)
-                ),
-                "atom_load_count": sum(
-                    len(action.bindings)
-                    for action in actions
-                    if isinstance(action, Load)
-                ),
-                "atom_store_count": sum(
-                    len(action.bindings)
-                    for action in actions
-                    if isinstance(action, Store)
-                ),
-                "program_duration_us": result.program.duration_us,
+                "cz_gates_per_pulse": metrics["cz_gates_per_pulse"],
+                "atom_steps": metrics["atom_steps"],
+                "action_counts": metrics["action_counts"],
+                "load_batch_sizes": metrics["load_batch_sizes"],
+                "max_parallel_atoms": metrics["max_parallel_atoms"],
+                "transport_duration_us": metrics["transport_duration_us"],
+                "atom_load_count": metrics["atom_load_count"],
+                "atom_store_count": metrics["atom_store_count"],
+                "program_duration_us": metrics["program_duration_us"],
                 "measurements": [
                     {
                         "source_id": item.result.measurement_id,
