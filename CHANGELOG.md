@@ -45,6 +45,8 @@
 
 ### Added
 
+- Optional result validation with the first transport constraint, source-operation
+  coverage, or replay mismatch, separate from normal compilation.
 - Shared compilation metrics used by saved results, examples, and the candidate
   benchmark runner, preserving the existing example output.
 - Versioned `nadit.result/1` JSON serialization for all Atom IR actions,

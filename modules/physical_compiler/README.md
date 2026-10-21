@@ -10,6 +10,9 @@ and `decode_layout(document["entry_state"])` reconstruct replay inputs.
 `encode_result` includes them automatically. Transport duration is the sum of
 Load/Move/Store action durations; program duration follows parallel steps,
 and result duration also includes pending measurement feedback latency.
+`validation.validate_result(result, entry_state=entry, device=device)` reports
+the first transport, source-coverage, or replay mismatch. It checks all actions
+against their common step-entry layout and is called only when requested.
 `AtomProgram.to_text()` remains the human-readable display.
 See [ADR 0021](../../docs/decisions/0021-job-spec-and-result-document.md)
 for the job, metrics, validation, and CLI interfaces.
