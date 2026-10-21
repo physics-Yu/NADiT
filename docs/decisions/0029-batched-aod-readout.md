@@ -1,6 +1,6 @@
 # 0029: Flexible AOD batch readout
 
-Status: Implemented on 2026-10-21; server comparison pending.
+Status: Implemented and server comparison completed on 2026-10-21.
 
 ## Contract
 
@@ -63,3 +63,41 @@ tests already exercise simultaneous measurements. New cases cover shared
 measurement identities, one sample per identity, all four two-bit feedback
 outcomes, repeated measurements, zero movement, pickup closure, occupied
 readout corners, finite line/region capacity, and independent replay.
+
+## Server comparison
+
+The two runs used implementation commit `a878fed`, the same 98-qubit,
+800-CZ, 240-measurement input (SHA-256
+`216b9970fd2886341e2f51945fb3afcd16ab473ff70fa57d33aa1598c43d85c3`),
+and the same 240 outcomes fixed by measurement identity. Geometry was 64x64
+storage sites, 8x40 gate pairs with 6 um row spacing, and the readout region
+at y=602..622 um. Both runs used IDS trials=16, queue_capacity=2000, strict
+CZ transport, matching reuse, and a 1,800-second worker budget. Only
+readout.max_atoms changed from 1 to null.
+
+| Metric | Singleton | Batch |
+| --- | ---: | ---: |
+| Compile wall time (s) | 210.938 | 213.293 |
+| Total time including result availability (ms) | 244.548 | 109.855 |
+| Transport time (ms) | 240.645 | 109.257 |
+| Readout-zone MOVE time (ms) | 144.080 | 16.932 |
+| Readout-zone MOVE actions | 480 | 56 |
+| Exposures / measurement identities | 240 / 240 | 28 / 240 |
+| LOAD / STORE actions | 771 / 771 | 559 / 559 |
+| Atom loads / stores | 2604 / 2604 | 2604 / 2604 |
+
+Batch counts by round were 4, 5, 6, 7, and 6, with at most 28 atoms in an
+exposure. All 28 batches returned to their exact entry layout. Both results
+passed independent semantic validation and final replay; QASM, DAG, strategy,
+geometry (apart from readout capacity), and measurement values were compared.
+Total time fell by 55.08%; readout-zone MOVE time fell by 88.25%. These are
+compiler timing-model results with FakeBackend outcomes, not logical-error
+or measured hardware performance.
+
+Local artifacts are in
+`modules/physical_compiler/artifacts/surface-d5x2-r5-batch-readout/`:
+`experiment.json`, `comparison.json`, `run/`, and `index.html`. The HTML
+contains both traces, with batch readout selected first. Its model checks
+preserve 10,026 action boundaries and AOD alignment at 5,013 intermediate
+samples, with no display-lane fallback. Browser visual acceptance remains
+open because the browser tool cannot inspect local file URLs.
