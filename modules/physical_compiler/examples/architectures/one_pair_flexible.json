@@ -1,0 +1,140 @@
+{
+  "family": "zoned/v1",
+  "params": {
+    "name": "one_pair_flexible",
+    "storage": [
+      {
+        "id": "storage",
+        "prefix": "storage",
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "rows": 2,
+        "columns": 3,
+        "pitch": {
+          "x": 5,
+          "y": 5
+        },
+        "bounds": {
+          "x_min": 0,
+          "y_min": 0,
+          "x_max": 20,
+          "y_max": 10
+        }
+      }
+    ],
+    "gate_zones": [
+      {
+        "id": "entanglement",
+        "position": {
+          "x": 0,
+          "y": 120
+        },
+        "rows": 1,
+        "pairs_per_row": 2,
+        "separation": 2,
+        "pitch": {
+          "x": 8,
+          "y": 8
+        },
+        "left_prefix": "gate_left",
+        "right_prefix": "gate_right",
+        "bounds": {
+          "x_min": 0,
+          "y_min": 0,
+          "x_max": 20,
+          "y_max": 0
+        },
+        "left_ids": [
+          [
+            "gate_0_left",
+            "gate_1_left"
+          ]
+        ],
+        "right_ids": [
+          [
+            "gate_0_right",
+            "gate_1_right"
+          ]
+        ]
+      }
+    ],
+    "measurement": {
+      "position": {
+        "x": 0,
+        "y": 240
+      },
+      "bounds": {
+        "x_min": 0,
+        "y_min": 0,
+        "x_max": 20,
+        "y_max": 10
+      },
+      "readout": {
+        "channel": "camera",
+        "duration_us": 10,
+        "latency_us": 150,
+        "min_spacing_um": 5,
+        "retain_atoms": true,
+        "holders": [
+          "slm",
+          "aod"
+        ]
+      }
+    },
+    "aod": {
+      "id": "transport",
+      "workspace": {
+        "x_min": -10,
+        "y_min": -10,
+        "x_max": 30,
+        "y_max": 260
+      },
+      "min_spacing": 1,
+      "max_rows": null,
+      "max_columns": null
+    },
+    "timing": {
+      "load_us": 10,
+      "store_us": 10,
+      "move_us_per_um": 1
+    },
+    "cz": {
+      "channel": "rydberg",
+      "radius_um": 4.6,
+      "duration_us": 0.5,
+      "holder_pairs": [
+        [
+          "slm",
+          "slm"
+        ],
+        [
+          "slm",
+          "aod"
+        ],
+        [
+          "aod",
+          "aod"
+        ]
+      ]
+    },
+    "local": {
+      "channel": "raman",
+      "rotation_us": 1,
+      "reset_us": 5
+    },
+    "site_order": [
+      "gate_0_left",
+      "gate_0_right",
+      "gate_1_left",
+      "gate_1_right",
+      "storage_r0_c0",
+      "storage_r0_c1",
+      "storage_r0_c2",
+      "storage_r1_c0",
+      "storage_r1_c1",
+      "storage_r1_c2"
+    ]
+  }
+}

@@ -128,7 +128,7 @@ def test_staged_and_relaxed_reject_rigid_before_fallbacks(
 
 
 @pytest.mark.parametrize("kind", ["staged", "relaxed"])
-def test_job_rejects_unsupported_rigid_transport_and_cli_reports_input_error(
+def test_job_rejects_unsupported_rigid_transport_and_cli_reports_unsupported(
     kind: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     base = load_job(MODULE / "examples/jobs/multipair.json")
@@ -141,10 +141,18 @@ def test_job_rejects_unsupported_rigid_transport_and_cli_reports_input_error(
 
     path = tmp_path / "job.json"
     path.write_text(json.dumps(document), encoding="utf-8")
-    assert main(["compile", str(path)]) == 1
+    assert main(["compile", str(path)]) == 4
     output = capsys.readouterr()
-    assert output.out == ""
-    assert "strategy.transport" in output.err and "rigid" in output.err
+    assert output.err == ""
+    report = json.loads(output.out)
+    assert report["status"] == "unsupported"
+    assert report["reasons"] == [
+        {
+            "stage": "strategy.transport",
+            "kind": kind,
+            "reason": "does not support rigid AOD 'transport'",
+        }
+    ]
 
 
 @pytest.mark.parametrize("transport", ["pair", "sequential", "strict"])

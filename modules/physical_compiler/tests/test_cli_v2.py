@@ -124,6 +124,8 @@ def test_explicit_device_override_is_used_and_recorded(tmp_path: Path) -> None:
     document = _feedback_document(tmp_path)
     override = deepcopy(document["device"])
     override["cz"]["radius_um"] = 0.1
+    # This hardware override has no valid pairs at the reduced radius.
+    override.pop("pair_arrays", None)
     override_path = _write(tmp_path / "override.json", override)
     result_path = _write(tmp_path / "result.json", document)
 

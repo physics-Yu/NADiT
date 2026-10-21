@@ -1,9 +1,10 @@
 """Construct existing strategy stages from named, independently scoped options."""
 
 from collections.abc import Callable
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Literal
 
+from . import support
 from .device import Device
 from .emission import WholeLayerEmitter, emit_layer
 from .job_fields import (
@@ -33,6 +34,7 @@ from .placement import (
 from .reuse import MatchingReuseAnalyzer, SourceReuseAnalyzer
 from .scheduling import ReadyScheduler, SourceASAPScheduler
 from .strategies import SearchSmarterStrategy
+from .support import Support, UnsupportedJob
 from .transport import (
     PairTransport,
     RelaxedTransport,
@@ -51,6 +53,7 @@ class StrategyContext:
     aod_id: str
     catalog: GatePairCatalog | None
     placement: dict[str, Any]
+    strategy: dict[str, Any] = field(default_factory=dict)
 
     def require_catalog(self) -> GatePairCatalog:
         """Require actual declared gate pairs only for a stage using them."""
@@ -64,7 +67,7 @@ class StrategyContext:
         explicit = placement_geometry(self.placement.get("geometry"), self.device, path)
         if explicit is not None:
             return explicit
-        storage = self.placement.get("storage_zone_id", "storage")
+        storage = self.placement.get("storage_zone_id", self.device.storage_zone_ids)
         return PlacementGeometry.from_device(
             self.device,
             self.aod_id,
@@ -79,10 +82,13 @@ class Registration:
 
     Add an entry to REGISTRY to register a stage implementation. Its options
     use JSON scalar types, plus the existing geometry and coverage records.
+    ``supports`` declares admission requirements; its docstring is exposed by
+    ``nadit describe``. Every predicate runs before any stage factory.
     """
 
     factory: Callable[[StrategyContext, dict[str, Any]], Any]
     defaults: dict[str, Any]
+    supports: Callable[[StrategyContext], Support] = support.unrestricted
 
 
 def _heuristic(context: StrategyContext, options: dict[str, Any]) -> HeuristicPlacer:
@@ -129,28 +135,39 @@ REGISTRY: dict[str, dict[str, Registration]] = {
         "ready": Registration(
             lambda context, options: ReadyScheduler(options["max_cz_gates"]),
             {"max_cz_gates": 1},
+            support.ready,
         ),
         "source_asap": Registration(
             lambda context, options: SourceASAPScheduler(
                 context.dag, context.geometry(), options["max_filling_factor"]
             ),
             {"max_filling_factor": 0.9},
+            support.source_scheduler,
         ),
     },
     "placement": {
-        "pair": Registration(lambda context, options: PairPlacer(context.aod_id), {}),
+        "pair": Registration(
+            lambda context, options: PairPlacer(context.aod_id), {}, support.pair_only
+        ),
         "multipair": Registration(
             lambda context, options: MultiPairPlacer(
                 context.aod_id, context.require_catalog(), options["storage_zone_id"]
             ),
             {"storage_zone_id": "storage"},
+            support.multipair,
         ),
-        "ids": Registration(_heuristic, _search_defaults("ids")),
-        "astar": Registration(_heuristic, _search_defaults("astar")),
+        "ids": Registration(
+            _heuristic, _search_defaults("ids"), support.placement_arrays
+        ),
+        "astar": Registration(
+            _heuristic, _search_defaults("astar"), support.placement_arrays
+        ),
     },
     "transport": {
         "pair": Registration(
-            lambda context, options: PairTransport(context.aod_id), {}
+            lambda context, options: PairTransport(context.aod_id),
+            {},
+            support.pair_only,
         ),
         "sequential": Registration(
             lambda context, options: SequentialTransport(context.aod_id), {}
@@ -166,6 +183,7 @@ REGISTRY: dict[str, dict[str, Registration]] = {
                 ),
             ),
             {"geometry": None},
+            support.staged,
         ),
         "relaxed": Registration(
             lambda context, options: RelaxedTransport(
@@ -176,6 +194,7 @@ REGISTRY: dict[str, dict[str, Registration]] = {
                 options["prefer_split"],
             ),
             {"geometry": None, "prefer_split": 1.0},
+            support.flexible,
         ),
     },
     "emitter": {
@@ -187,6 +206,7 @@ REGISTRY: dict[str, dict[str, Registration]] = {
                 else region_coverage(options["coverage"], "strategy.emitter.coverage")
             ),
             {"coverage": None},
+            support.whole_layer,
         ),
     },
     "reuse": {
@@ -219,6 +239,7 @@ def build_strategy(
 
     Raises:
         ValueError: Invalid kinds, fields, or values, with their job paths.
+        UnsupportedJob: Unsupported stages and reasons, before construction.
     """
     spec = object_at(spec, "strategy")
     keys_at(spec, set(REGISTRY), "strategy")
@@ -237,20 +258,47 @@ def build_strategy(
             )
             for name, default in registration.defaults.items()
         }
-        if stage == "scheduler" and options.get("max_cz_gates") == "catalog":
-            if catalog is None:
-                raise ValueError(f"{path}.max_cz_gates: catalog requires gate_zones.")
+        if (
+            stage == "scheduler"
+            and options.get("max_cz_gates") == "catalog"
+            and catalog is not None
+        ):
             options["max_cz_gates"] = catalog.capacity
+        if (
+            stage == "placement"
+            and "storage_zone_id" in options
+            and "storage_zone_id" not in stage_spec
+        ):
+            names = device.storage_zone_ids
+            options["storage_zone_id"] = names[0] if len(names) == 1 else list(names)
         if stage == "placement" and "method" in options and options["method"] != kind:
             raise ValueError(f"{path}.method: must agree with kind {kind!r}.")
         resolved[stage] = {"kind": kind, **options}
-    transport_kind = resolved["transport"]["kind"]
-    if transport_kind in ("staged", "relaxed") and device.aod(aod_id).motion == "rigid":
-        raise ValueError(
-            f"strategy.transport: {transport_kind} does not support rigid AOD "
-            f"{aod_id!r}."
-        )
-    context = StrategyContext(dag, device, aod_id, catalog, resolved["placement"])
+    context = StrategyContext(
+        dag, device, aod_id, catalog, resolved["placement"], resolved
+    )
+    # Malformed explicit geometry is input error, not unsupported architecture.
+    placement_geometry(
+        resolved["placement"].get("geometry"), device, "strategy.placement.geometry"
+    )
+    staging_geometry(
+        resolved["transport"].get("geometry"), device, "strategy.transport.geometry"
+    )
+    if resolved["emitter"].get("coverage") is not None:
+        region_coverage(resolved["emitter"]["coverage"], "strategy.emitter.coverage")
+    failures = []
+    for stage, options in resolved.items():
+        checked = REGISTRY[stage][options["kind"]].supports(context)
+        if not checked.ok:
+            failures.append(
+                {
+                    "stage": f"strategy.{stage}",
+                    "kind": options["kind"],
+                    "reason": checked.reason,
+                }
+            )
+    if failures:
+        raise UnsupportedJob(failures)
     objects: dict[str, Any] = {}
     for stage, options in resolved.items():
         kind = options["kind"]

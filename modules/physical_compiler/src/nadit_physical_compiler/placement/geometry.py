@@ -157,7 +157,7 @@ class PlacementGeometry:
         device: Device,
         aod_id: str,
         catalog: GatePairCatalog,
-        storage_zone_id: str | tuple[str, ...] = "storage",
+        storage_zone_id: str | tuple[str, ...] | None = None,
         *,
         staging: StagingGeometry | None = None,
     ) -> Self:
@@ -181,7 +181,13 @@ class PlacementGeometry:
         spacing = device.aod(aod_id).min_spacing
         zones = {zone.id: zone for zone in device.zones}
         names = (
-            (storage_zone_id,) if isinstance(storage_zone_id, str) else storage_zone_id
+            device.storage_zone_ids
+            if storage_zone_id is None
+            else (
+                (storage_zone_id,)
+                if isinstance(storage_zone_id, str)
+                else storage_zone_id
+            )
         )
         storage: list[SLMArray] = []
         assigned: set[str] = set()

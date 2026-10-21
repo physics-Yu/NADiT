@@ -14,7 +14,8 @@
         "store",
         "rotate",
         "reset"
-      ]
+      ],
+      "role": "storage"
     },
     {
       "id": "entanglement",
@@ -30,7 +31,8 @@
         "cz",
         "rotate",
         "reset"
-      ]
+      ],
+      "role": "entanglement"
     },
     {
       "id": "measurement",
@@ -42,7 +44,8 @@
       },
       "operations": [
         "measure"
-      ]
+      ],
+      "role": "measurement"
     }
   ],
   "slm_grids": [
@@ -140,5 +143,59 @@
       "slm",
       "aod"
     ]
-  }
+  },
+  "pair_arrays": [
+    {
+      "id": "entanglement",
+      "zone": "entanglement",
+      "left": [
+        [
+          "gate_left_r0_c0",
+          "gate_left_r0_c1",
+          "gate_left_r0_c2",
+          "gate_left_r0_c3",
+          "gate_left_r0_c4",
+          "gate_left_r0_c5",
+          "gate_left_r0_c6",
+          "gate_left_r0_c7",
+          "gate_left_r0_c8",
+          "gate_left_r0_c9",
+          "gate_left_r0_c10",
+          "gate_left_r0_c11",
+          "gate_left_r0_c12",
+          "gate_left_r0_c13",
+          "gate_left_r0_c14",
+          "gate_left_r0_c15",
+          "gate_left_r0_c16",
+          "gate_left_r0_c17",
+          "gate_left_r0_c18",
+          "gate_left_r0_c19"
+        ]
+      ],
+      "right": [
+        [
+          "gate_right_r0_c0",
+          "gate_right_r0_c1",
+          "gate_right_r0_c2",
+          "gate_right_r0_c3",
+          "gate_right_r0_c4",
+          "gate_right_r0_c5",
+          "gate_right_r0_c6",
+          "gate_right_r0_c7",
+          "gate_right_r0_c8",
+          "gate_right_r0_c9",
+          "gate_right_r0_c10",
+          "gate_right_r0_c11",
+          "gate_right_r0_c12",
+          "gate_right_r0_c13",
+          "gate_right_r0_c14",
+          "gate_right_r0_c15",
+          "gate_right_r0_c16",
+          "gate_right_r0_c17",
+          "gate_right_r0_c18",
+          "gate_right_r0_c19"
+        ]
+      ]
+    }
+  ]
 }

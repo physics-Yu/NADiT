@@ -40,7 +40,7 @@ class HeuristicPlacer:
 
     aod_id: str
     catalog: GatePairCatalog
-    storage_zone_id: str | tuple[str, ...] = "storage"
+    storage_zone_id: str | tuple[str, ...] | None = None
     config: PlacementConfig = PlacementConfig()
     geometry: PlacementGeometry | None = None
 

@@ -4,17 +4,20 @@
     {
       "id": "storage",
       "bounds": {"x_min": 0, "y_min": 0, "x_max": 20, "y_max": 15},
-      "operations": ["load", "store", "rotate", "reset"]
+      "operations": ["load", "store", "rotate", "reset"],
+      "role": "storage"
     },
     {
       "id": "entanglement",
       "bounds": {"x_min": 0, "y_min": 120, "x_max": 20, "y_max": 120},
-      "operations": ["load", "store", "cz", "rotate", "reset"]
+      "operations": ["load", "store", "cz", "rotate", "reset"],
+      "role": "entanglement"
     },
     {
       "id": "measurement",
       "bounds": {"x_min": 0, "y_min": 240, "x_max": 20, "y_max": 250},
-      "operations": ["measure"]
+      "operations": ["measure"],
+      "role": "measurement"
     }
   ],
   "slm_grids": [
@@ -56,5 +59,23 @@
     "min_spacing_um": 5,
     "retain_atoms": true,
     "holders": ["slm", "aod"]
-  }
+  },
+  "pair_arrays": [
+    {
+      "id": "entanglement",
+      "zone": "entanglement",
+      "left": [
+        [
+          "gate_0_left",
+          "gate_1_left"
+        ]
+      ],
+      "right": [
+        [
+          "gate_0_right",
+          "gate_1_right"
+        ]
+      ]
+    }
+  ]
 }

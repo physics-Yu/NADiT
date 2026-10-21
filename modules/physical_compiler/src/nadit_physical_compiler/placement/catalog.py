@@ -45,6 +45,13 @@ class GatePairCatalog:
         return self.array_groups or (self.pairs,)
 
     @classmethod
+    def from_pair_arrays(cls, device: Device) -> Self:
+        """Build the default catalogue from the Device's declared pair arrays."""
+        return cls.from_zones(
+            device, tuple((array.zone, array.pairs) for array in device.pair_arrays)
+        )
+
+    @classmethod
     def from_zones(
         cls,
         device: Device,
@@ -77,7 +84,9 @@ class GatePairCatalog:
                 for b in pair_b
             ):
                 raise ValueError("Sites from different CZ zones must not interact.")
-        regions = tuple(region for catalog in catalogs for region in catalog.regions)
+        regions = tuple(
+            dict.fromkeys(region for catalog in catalogs for region in catalog.regions)
+        )
         return cls(
             pairs,
             regions[0] if len(regions) == 1 else RegionSet(regions),

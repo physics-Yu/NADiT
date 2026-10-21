@@ -24,6 +24,7 @@ from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
 from nadit_physical_compiler.scheduling import ReadyScheduler
 from nadit_physical_compiler.serialization import encode_device, encode_program
 from nadit_physical_compiler.strategies import SearchSmarterStrategy
+from nadit_physical_compiler.support import UnsupportedJob
 from nadit_physical_compiler.transport import (
     PairTransport,
     RelaxedTransport,
@@ -211,6 +212,16 @@ def test_every_registered_kind_constructs(tmp_path: Path) -> None:
         for kind in implementations:
             strategy = json.loads(json.dumps(document["strategy"]))
             strategy[stage] = {"kind": kind}
+            if kind == "pair" and stage in ("placement", "transport"):
+                with pytest.raises(UnsupportedJob, match="at most two"):
+                    build_strategy(
+                        strategy,
+                        dag=base.dag,
+                        device=base.device,
+                        aod_id="transport",
+                        catalog=base.catalog,
+                    )
+                continue
             built, resolved = build_strategy(
                 strategy,
                 dag=base.dag,
@@ -330,6 +341,7 @@ def test_pair_explicit_entry_needs_no_catalog_or_regular_storage(
     base = loads_job(json.dumps(document), base_dir=MODULE)
     device = encode_device(base.device)
     device.pop("cz")
+    device.pop("pair_arrays")
     device["slm_sites"].append({"id": "irregular", "position": {"x": 19, "y": 2}})
     qasm = tmp_path / "local.qasm"
     qasm.write_text(

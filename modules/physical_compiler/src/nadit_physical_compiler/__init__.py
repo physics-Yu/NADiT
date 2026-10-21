@@ -28,6 +28,7 @@ from .coverage import RegionSet
 from .device import (
     AOD,
     Device,
+    PairArray,
     Position,
     Region,
     SLMSite,
@@ -62,6 +63,7 @@ from .state import (
 )
 
 __all__ = [
+    "PairArray",
     "AOD",
     "AODGrid",
     "AODHolder",

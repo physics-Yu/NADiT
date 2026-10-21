@@ -73,11 +73,38 @@ class Zone:
         id: Device-local zone identifier.
         bounds: Geometric extent, independent of atom holders.
         operations: Allowed operation names, such as ``cz`` or ``measure``.
+        role: Optional planning role, independent of allowed operations.
     """
 
     id: str
     bounds: Region
     operations: tuple[str, ...]
+    role: Literal["storage", "entanglement", "measurement"] | None = None
+
+    def __post_init__(self) -> None:
+        if self.role not in (None, "storage", "entanglement", "measurement"):
+            raise ValueError(f"Zone {self.id!r}: unknown role {self.role!r}.")
+
+
+@dataclass(frozen=True, slots=True)
+class PairArray:
+    """Device-owned pair array; matching matrix cells reference fixed site IDs."""
+
+    id: str
+    zone: str
+    left: tuple[tuple[str, ...], ...]
+    right: tuple[tuple[str, ...], ...]
+
+    @property
+    def pairs(self) -> tuple[tuple[str, str], ...]:
+        """Return row-major pairs, preserving declared side orientation."""
+        return tuple(
+            zip(
+                (site for row in self.left for site in row),
+                (site for row in self.right for site in row),
+                strict=True,
+            )
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,6 +216,7 @@ class Device:
         readout: Optional readout channel and result timing.
         local: Optional addressed rotation and reset channel.
         global_control: Optional global single-qubit rotation channel.
+        pair_arrays: Device-owned interaction pairs referencing fixed sites.
 
     Raises:
         ValueError: If a zone, site, or AOD ID is empty or duplicated.
@@ -203,6 +231,7 @@ class Device:
     readout: ReadoutCapability | None = None
     local: LocalControl | None = None
     global_control: GlobalControl | None = None
+    pair_arrays: tuple[PairArray, ...] = ()
     _sites_by_id: dict[str, SLMSite] = field(init=False, repr=False, compare=False)
     _aods_by_id: dict[str, AOD] = field(init=False, repr=False, compare=False)
 
@@ -211,6 +240,7 @@ class Device:
             ("zone", self.zones),
             ("SLM site", self.slm_sites),
             ("AOD", self.aods),
+            ("pair array", self.pair_arrays),
         ):
             ids = tuple(entry.id for entry in entries)
             if any(not identifier for identifier in ids):
@@ -221,6 +251,23 @@ class Device:
             self, "_sites_by_id", {site.id: site for site in self.slm_sites}
         )
         object.__setattr__(self, "_aods_by_id", {aod.id: aod for aod in self.aods})
+
+    @property
+    def storage_zone_ids(self) -> tuple[str, ...]:
+        """Return storage-role zones, or the legacy storage ID when unannotated."""
+        return tuple(zone.id for zone in self.zones if zone.role == "storage") or (
+            "storage",
+        )
+
+    @property
+    def storage_capacity(self) -> int:
+        """Count distinct fixed sites in the declared storage regions."""
+        names = set(self.storage_zone_ids)
+        zones = tuple(zone for zone in self.zones if zone.id in names)
+        return sum(
+            any(zone.bounds.contains(site.position) for zone in zones)
+            for site in self.slm_sites
+        )
 
     def site(self, id: str) -> SLMSite:
         """Return a fixed site by ID; raise KeyError when it is absent."""
@@ -283,11 +330,14 @@ def loads_device(source: str) -> Device:
         source: JSON using the Device field names. Positions use ``x`` and
             ``y``; regions use ``x_min``, ``y_min``, ``x_max``, ``y_max``.
             Optional ``slm_grids`` entries use the arguments of slm_grid.
+            Zone ``role`` selects planning defaults. ``pair_arrays`` sides are
+            grid descriptors or rectangular matrices referencing existing sites.
             Optional ``cz``, ``readout``, and ``local`` entries use the fields
             of the corresponding capability records.
 
     Returns:
-        A device containing explicit sites followed by generated grid sites.
+        A device containing explicit sites, then SLM grids, then pair grids.
+        Pair geometry is checked once; references generate no duplicate sites.
 
     Raises:
         ValueError: If JSON or device values are invalid.
@@ -320,10 +370,19 @@ def loads_device(source: str) -> Device:
                 Position(**grid["pitch"]),
             )
         )
-    return Device(
+    from .device_pairs import decode_pair_arrays, validate_pair_arrays
+
+    pairs, generated = decode_pair_arrays(data.get("pair_arrays", []))
+    sites.extend(generated)
+    device = Device(
         name=data["name"],
         zones=tuple(
-            Zone(entry["id"], Region(**entry["bounds"]), tuple(entry["operations"]))
+            Zone(
+                entry["id"],
+                Region(**entry["bounds"]),
+                tuple(entry["operations"]),
+                entry.get("role"),
+            )
             for entry in data["zones"]
         ),
         slm_sites=tuple(sites),
@@ -345,7 +404,11 @@ def loads_device(source: str) -> Device:
         global_control=(
             GlobalControl(**global_control) if global_control is not None else None
         ),
+        pair_arrays=pairs,
     )
+    if pairs:
+        validate_pair_arrays(device)
+    return device
 
 
 def load_device(path: str | Path) -> Device:

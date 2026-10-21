@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .architectures import generate
 from .compiler import CompilationResult, compile_physical
 from .device import Device, load_device, loads_device
 from .execution import FakeBackend
@@ -18,6 +19,7 @@ from .registry import StrategyContext, build_strategy
 from .serialization import encode_device
 from .state import AtomLayout, AtomState, SLMHolder, validate_layout
 from .strategies import SearchSmarterStrategy
+from .support import UnsupportedJob
 
 JOB_SCHEMA = "nadit.job/1"
 
@@ -49,6 +51,7 @@ def load_job(path: str | Path) -> CompilationJob:
         Resolved job and assembled public compiler objects.
     Raises:
         ValueError: Invalid job or unreadable input, with its path.
+        UnsupportedJob: A selected strategy or entry policy cannot handle the job.
     """
     path = Path(path).resolve()
     try:
@@ -68,6 +71,7 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         A compilation job with defaults filled and absolute input paths.
     Raises:
         ValueError: Invalid fields or source inputs, with their job paths.
+        UnsupportedJob: A selected strategy or entry policy cannot handle the job.
     """
     try:
         data = object_at(json.loads(source), "job")
@@ -97,7 +101,16 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         device.aod(aod)
     except KeyError as error:
         raise ValueError(f"aod: unknown AOD {aod!r}.") from error
-    catalog, zones = _catalog(required(data, "gate_zones", "job"), device)
+    catalog, zones = _catalog(
+        data.get(
+            "gate_zones",
+            [
+                {"zone": array.zone, "pairs": [list(pair) for pair in array.pairs]}
+                for array in device.pair_arrays
+            ],
+        ),
+        device,
+    )
     strategy, strategy_document = build_strategy(
         required(data, "strategy", "job"),
         dag=dag,
@@ -176,6 +189,19 @@ def _device(value: Any, base: Path) -> tuple[Device, str | dict[str, Any]]:
             path = (base / value).resolve()
             return load_device(path), str(path)
         data = object_at(value, "device")
+        if "architecture" in data:
+            keys_at(data, {"architecture"}, "device")
+            spec = object_at(data["architecture"], "device.architecture")
+            keys_at(spec, {"family", "params"}, "device.architecture")
+            family = string_at(
+                required(spec, "family", "device.architecture"),
+                "device.architecture.family",
+            )
+            params = object_at(
+                required(spec, "params", "device.architecture"),
+                "device.architecture.params",
+            )
+            return loads_device(json.dumps(generate(family, params))), data
         return loads_device(json.dumps(data)), data
     except (ValueError, KeyError, TypeError, OSError) as error:
         raise ValueError(f"device: {error}") from error
@@ -230,9 +256,35 @@ def _entry(value: Any, context: StrategyContext) -> tuple[AtomLayout, dict[str, 
                     for index, item in enumerate(array_at(raw_ids, "entry.atom_ids"))
                 )
             )
-            layout = make_initial_layout(
-                context.dag.num_qubits, context.geometry(), atom_ids=ids
+            try:
+                geometry = context.geometry()
+            except (ValueError, KeyError, IndexError) as error:
+                raise UnsupportedJob(
+                    [
+                        {
+                            "stage": "entry",
+                            "kind": kind,
+                            "reason": f"cannot infer initial storage arrays: {error}",
+                        }
+                    ]
+                ) from error
+            capacity = sum(
+                array.n_rows * array.n_cols for array in geometry.storage_arrays
             )
+            if context.dag.num_qubits > capacity:
+                raise UnsupportedJob(
+                    [
+                        {
+                            "stage": "entry",
+                            "kind": kind,
+                            "reason": (
+                                f"needs {context.dag.num_qubits} storage sites; "
+                                f"{capacity} available"
+                            ),
+                        }
+                    ]
+                )
+            layout = make_initial_layout(context.dag.num_qubits, geometry, atom_ids=ids)
             document = {"kind": kind, "atom_ids": None if ids is None else list(ids)}
         elif kind == "explicit":
             keys_at(data, {"kind", "atoms"}, "entry")
@@ -241,6 +293,8 @@ def _entry(value: Any, context: StrategyContext) -> tuple[AtomLayout, dict[str, 
         else:
             raise ValueError(f"entry.kind: unknown kind {kind!r}.")
         validate_layout(context.device, layout)
+    except UnsupportedJob:
+        raise
     except (ValueError, KeyError, IndexError) as error:
         raise ValueError(f"entry: {error}") from error
     return layout, document

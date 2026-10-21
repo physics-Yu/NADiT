@@ -18,6 +18,7 @@ from .serialization import (
     decode_result,
     encode_result,
 )
+from .support import UnsupportedJob
 from .validation import ValidationReport, validate_result
 
 
@@ -46,6 +47,10 @@ def _parser() -> argparse.ArgumentParser:
     compare_command = commands.add_parser("compare", help="Compare two saved results.")
     compare_command.add_argument("left", type=Path)
     compare_command.add_argument("right", type=Path)
+    describe_command = commands.add_parser(
+        "describe", help="Describe architectures, strategies, and schemas."
+    )
+    describe_command.add_argument("--json-schema", choices=("job",))
     return parser
 
 
@@ -218,14 +223,15 @@ def _compare(left_path: Path, right_path: Path) -> dict[str, Any]:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run compile, validate, or compare, writing JSON to stdout.
+    """Run compile, validate, compare, or describe, writing JSON to stdout.
 
     Args:
         argv: Command arguments, or process arguments when omitted.
 
     Returns:
         Zero on success, one for invalid input or output paths, two for compiler
-        errors, and three for a failed validation report. Diagnostics use stderr.
+        errors, three for failed validation, and four for unsupported jobs.
+        Unsupported reasons use JSON stdout; other diagnostics use stderr.
     """
     try:
         args = _parser().parse_args(argv)
@@ -233,10 +239,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             document, status = _compile(args)
         elif args.command == "validate":
             document, status = _validate(args.result, args.device)
+        elif args.command == "describe":
+            from .discovery import describe
+            from .schemas.job import job_schema
+
+            document, status = (job_schema() if args.json_schema else describe()), 0
         else:
             document, status = _compare(args.left, args.right), 0
         print(_json(document), end="")
         return status
+    except UnsupportedJob as error:
+        print(_json(error.document()), end="")
+        return 4
     except _CompilationError as error:
         print(f"nadit: compilation failed: {error}", file=sys.stderr)
         return 2

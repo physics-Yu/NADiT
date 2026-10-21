@@ -24,7 +24,7 @@ class MultiPairPlacer:
 
     aod_id: str
     catalog: GatePairCatalog
-    storage_zone_id: str = "storage"
+    storage_zone_id: str | None = None
 
     def place(
         self,
@@ -76,7 +76,12 @@ class MultiPairPlacer:
             for q in dag.nodes[operation_id].qubits
         }
         storage = reachable_storage_sites(
-            device, self.aod_id, self.storage_zone_id, self.catalog.coverage
+            device,
+            self.aod_id,
+            _storage_zone(device)
+            if self.storage_zone_id is None
+            else self.storage_zone_id,
+            self.catalog.coverage,
         )
         prepared, anchors = prepare_gate_layout(
             layout, storage, self.catalog, participants, retained_atoms
@@ -238,6 +243,13 @@ def _distance(first: Position, second: Position) -> float:
 
 def _at_site(atom_id: int, site: SLMSite) -> AtomState:
     return AtomState(atom_id, site.position, SLMHolder(site.id))
+
+
+def _storage_zone(device: Device) -> str:
+    names = device.storage_zone_ids
+    if len(names) != 1:
+        raise ValueError("multipair placement requires one storage zone; select an ID.")
+    return names[0]
 
 
 def _replace_atoms(
