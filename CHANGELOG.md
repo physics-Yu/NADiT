@@ -48,6 +48,12 @@
 
 ### Added
 
+- Add Device-owned pair arrays and zone roles, deterministic `zoned/v1`
+  architecture generation, and exact reproduction parameter files for the
+  existing five configurations.
+- Declare strategy support before object construction, report unsupported
+  jobs with CLI exit code 4, and expose `nadit describe` plus the job JSON Schema.
+
 - Add `AOD.motion`, rigid MOVE and loaded-grid checks, and shared
   `TransportRules`/`RigidRules` selected by `rules_for` in placement and routing.
   Pair, sequential, and strict support rigid translation; staged and relaxed

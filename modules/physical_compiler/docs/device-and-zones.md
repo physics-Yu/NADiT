@@ -9,6 +9,14 @@ comparison profiles are implemented under
 
 ## Device and compiler responsibilities
 
+Device `pair_arrays` own the interaction catalogue. Left/right grid cells are
+paired, or reference matrices identify existing sites. Loading validates
+pair isolation; result snapshots store references without duplicating sites.
+Optional zone roles select storage defaults independently of zone names.
+`architectures.generate("zoned/v1", params)` expands parameterized blocks
+and checks overlap, workspace coverage, and pair geometry before compilation.
+See [ADR 0025](../../../docs/decisions/0025-parametric-architectures-and-strategy-support.md).
+
 Device describes available geometry, traps, controls, and operation times.
 The compiler chooses atom assignments, interaction positions, transport
 batches, transfers, and pulse coverage within those capabilities.

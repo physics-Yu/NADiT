@@ -1,6 +1,38 @@
 # Physical Compiler
 
-## Saved compilation results
+## Parametric architecture and strategy discovery
+
+Device zones may declare `role: storage | entanglement | measurement`.
+Omitted storage options use those roles; explicit IDs still win. Device
+`pair_arrays` declare left/right grids paired by row and column, or matrices
+of existing site IDs. Their loader checks zone membership and interaction
+distances once. Omitting job `gate_zones` selects all Device pair arrays;
+an explicit catalogue, including an empty one, overrides them.
+
+Job `device` accepts a path, an inline Device, or
+`{"architecture": {"family": "zoned/v1", "params": {...}}}`. The generator
+expands storage blocks, gate arrays, measurement regions, one AOD, and timing.
+`examples/architectures/` contains parameter files that exactly reproduce
+all five current configs, including site identity/order and capabilities.
+Storage capacity is available as `Device.storage_capacity`; initial placement
+reports insufficient capacity before compiling gates. Parameters remain in
+the resolved job; results embed the expanded Device.
+
+```text
+uv run --locked nadit describe
+uv run --locked nadit describe --json-schema job
+uv run --locked nadit compile examples/jobs/generated_zoned.json --validate -o RESULT.json
+```
+
+Each registry stage declares `supports(context) -> Support`. Admission
+collects unsupported stages before constructing their objects. CLI exit code
+4 prints `{"status": "unsupported", "reasons": [...]}` and creates no result
+or Atom IR output. Invalid input remains exit 1, compiler failure exit 2,
+and semantic-validation failure exit 3. `source_asap` requires a static
+circuit; `ready` retains measurement feedback. See
+[ADR 0025](../../docs/decisions/0025-parametric-architectures-and-strategy-support.md).
+
+## Result documents
 
 The CLI writes self-contained `nadit.result/2` JSON: Atom IR, layouts,
 compilation records, the native DAG, an expanded Device snapshot, and input
@@ -152,8 +184,7 @@ transport. `RigidRules` groups requests only when their displacement vectors
 agree and their source-axis relations permit a common grid. Pair, sequential,
 and strict transport support this model. Staged and relaxed reject rigid jobs
 at loading; direct Python construction rejects them before any fallback.
-This rejection currently uses CLI exit code 1; ADR 0025 defines the later
-strategy-support interface.
+Job rejection uses the strategy-support interface and CLI exit code 4.
 
 Three configurations share zones, sites, operation capabilities, and timing:
 `configs/zoned_flexible.json` (unlimited), `configs/zoned_flexible_16.json`

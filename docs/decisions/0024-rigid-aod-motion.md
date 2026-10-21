@@ -74,7 +74,8 @@ them in the registry with `ValueError` at `strategy.transport`, before building
 the strategy. Direct Python calls reject them at the start of `construct`,
 including no-op and singleton fallback paths: the constructors themselves
 only carry an AOD ID and cannot inspect a Device. CLI job rejection retains
-exit code 1; the support-declaration framework and exit code 4 belong to 0025.
+exit code 1 at this stage. Implemented ADR 0025 supersedes job rejection with
+the support-declaration framework and exit code 4.
 
 ### Profiles
 

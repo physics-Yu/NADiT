@@ -17,6 +17,9 @@ A*, and paper timing. Its benchmark evidence records the execution budget and
 first differing stage; passing tests alone does not complete source reproduction.
 ADR 0024 implements rigid motion and the three-device comparison in step 6;
 shared-zone and AOD-held gate planning remain separate work.
+ADR 0025 adds Device-owned pair arrays and roles, zoned/v1 parameters,
+strategy admission, discovery, and the job JSON Schema. All five current
+configs have exact reproduction parameter files under examples/architectures/.
 
 ## Compilation contract
 
