@@ -15,6 +15,7 @@ from ..state import (
     AtomState,
     SLMHolder,
 )
+from .global_rotation import global_rotation_assignments
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,13 +70,12 @@ class PairPlacer:
             execution = self._place_measurement(layout, device, atom_id)
             return PlacementPlan(execution, layout)
         elif operation.name == "global_ry":
-            if device.global_control is None:
-                raise ValueError("Global RY requires a global-control capability.")
-            for atom in layout.atoms:
-                holder = "slm" if isinstance(atom.holder, SLMHolder) else "aod"
-                if holder not in device.global_control.holders:
-                    raise ValueError("Global RY does not support an occupied holder.")
-            execution = layout
+            replacements = global_rotation_assignments(
+                dag, layer, layout, device, self.aod_id
+            )
+            execution = (
+                self._replace_atoms(layout, replacements) if replacements else layout
+            )
         elif operation.name in ("rx", "ry", "rz", "u", "reset"):
             execution = self._place_local(dag, layer, layout, device)
         else:

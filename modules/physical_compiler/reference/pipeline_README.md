@@ -80,6 +80,14 @@ zone extent. At the second global RY, the original placement retains atom 0 in
 an entanglement zone outside that extent. This is a source output-region
 difference, not a reason to rewrite its trace.
 
+ADR 0023 semantic validation exposes that missing rotation. The local placer
+now moves the retained atom back inside the configured GlobalRY coverage.
+The corrected next CZ layout first differs at `placements[3][0][2]`: original
+column 1 versus local column 0. Source and corrected programs contain 28 and
+33 actions respectively. The oracle and its original-region defect test remain
+unchanged; the corrected program passes the same semantic checks as the other
+pipeline fixtures.
+
 Two source outcomes are retained separately:
 
 - `source_initial_slm_row_reset` crosses storage arrays and raises

@@ -48,7 +48,20 @@ def test_complete_pipeline_matches_source_or_preserves_its_failure(
     expected = source[case["name"]]
     actual = observations[case["name"]]
     comparison = compare_stages(expected, actual)
-    if expected["status"] == "ok":
+    if case["name"] == "global_ry_and_barrier":
+        # ADR 0023 restores the rotation omitted by the pinned source output.
+        # Keep the original oracle and check the exact resulting divergence.
+        assert expected["status"] == "ok"
+        assert comparison == {
+            "status": "different",
+            "first_stage": "placement",
+            "path": "placements[3][0][2]",
+            "expected": 1,
+            "actual": 0,
+        }
+        assert len(expected["result"]["actions"]) == 28
+        assert len(actual["actions"]) == 33
+    elif expected["status"] == "ok":
         assert comparison == {"status": "matched", "first_stage": None}
     else:
         assert expected["status"] in ("timeout", "source_failure")
