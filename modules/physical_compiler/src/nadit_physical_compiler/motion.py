@@ -1,4 +1,4 @@
-"""Reference checks for flexible AOD transport tests and explicit debugging.
+"""Reference checks for AOD transport tests and explicit debugging.
 
 Each check evaluates a concrete target grid against validated entry state.
 The default compiler construction path does not call these full-state checks.
@@ -51,13 +51,13 @@ def check_move(
     """Check a parallel move, including every atom carried by affected lines.
 
     Args:
-        device: Device geometry and flexible AOD capabilities.
+        device: Device geometry and AOD motion capabilities.
         layout: Validated starting layout.
         target_grid: Final coordinates of all currently active lines.
         targets: Explicit atom destinations; omitted atoms must stay in place.
 
     Returns:
-        Success or the first failed geometry, order, occupancy, or target rule.
+        Success or the first failed geometry, motion, occupancy, or target rule.
     """
     result = _check_grid_change(device, layout, target_grid, "move")
     if not result.ok:
@@ -103,9 +103,10 @@ def check_load(
     """Check SLM-to-AOD loading by activation of rows and columns.
 
     Args:
-        device: Device geometry and flexible AOD capabilities.
+        device: Device geometry and AOD motion capabilities.
         layout: Validated starting layout.
-        target_grid: Existing active lines plus newly activated lines.
+        target_grid: Existing lines plus new lines; a loaded rigid AOD cannot add
+            lines until its carried atoms have been released.
         loads: Atom IDs mapped to destination (row ID, column ID) bindings.
 
     Returns:
@@ -153,7 +154,7 @@ def check_store(
     """Check AOD-to-SLM unloading by deactivation of rows and columns.
 
     Args:
-        device: Device geometry and flexible AOD capabilities.
+        device: Device geometry and AOD motion capabilities.
         layout: Validated starting layout.
         target_grid: The subset of active lines remaining after unloading.
         stores: Atom IDs mapped to receiving SLM site IDs.
@@ -251,6 +252,43 @@ def _check_grid_change(
             if any(not _same(old[key], new[key]) for key in old.keys() & new.keys()):
                 return ConstraintResult(
                     "line_motion", "A transfer cannot reposition existing AOD lines."
+                )
+    if device.aod(target.aod_id).motion == "rigid":
+        return _check_rigid_change(layout, source, target, operation)
+    return ConstraintResult()
+
+
+def _check_rigid_change(
+    layout: AtomLayout,
+    source: AODGrid,
+    target: AODGrid,
+    operation: Literal["move", "load", "store"],
+) -> ConstraintResult:
+    if operation == "load" and any(
+        _carried_by(atom, target.aod_id) for atom in layout.atoms
+    ):
+        if len(source.rows) != len(target.rows) or len(source.columns) != len(
+            target.columns
+        ):
+            return ConstraintResult(
+                "rigid_loading", "A rigid AOD carrying atoms cannot activate new lines."
+            )
+    if operation == "move":
+        for name, before, after in (
+            ("row", source.rows, target.rows),
+            ("column", source.columns, target.columns),
+        ):
+            if not before:
+                continue
+            new = {line.id: line.coordinate for line in after}
+            displacement = new[before[0].id] - before[0].coordinate
+            if any(
+                not _same(new[line.id] - line.coordinate, displacement)
+                for line in before
+            ):
+                return ConstraintResult(
+                    "rigid_translation",
+                    f"Rigid AOD {name} lines must share one displacement.",
                 )
     return ConstraintResult()
 

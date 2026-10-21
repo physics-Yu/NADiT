@@ -95,7 +95,7 @@ class SLMSite:
 
 @dataclass(frozen=True, slots=True)
 class AOD:
-    """A flexible, order-preserving row/column transport device.
+    """A row/column transport device with flexible or rigid motion.
 
     Args:
         id: Device-local AOD identifier.
@@ -103,10 +103,11 @@ class AOD:
         min_spacing: Minimum separation of adjacent rows or columns.
         max_rows: Maximum active row count; None means no count limit.
         max_columns: Maximum active column count; None means no count limit.
+        motion: Order-preserving flexible motion or whole-grid rigid translation.
 
     Raises:
         ValueError: If spacing is not finite and positive or a capacity
-            is nonpositive.
+            is nonpositive, or the motion model is unknown.
     """
 
     id: str
@@ -114,6 +115,7 @@ class AOD:
     min_spacing: float
     max_rows: int | None = None
     max_columns: int | None = None
+    motion: Literal["flexible", "rigid"] = "flexible"
 
     def __post_init__(self) -> None:
         if not isfinite(self.min_spacing) or self.min_spacing <= 0:
@@ -124,6 +126,8 @@ class AOD:
         ):
             if capacity is not None and capacity <= 0:
                 raise ValueError(f"AOD {self.id} {name} capacity must be positive.")
+        if self.motion not in ("flexible", "rigid"):
+            raise ValueError(f"Unknown AOD {self.id} motion model: {self.motion!r}.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -330,6 +334,7 @@ def loads_device(source: str) -> Device:
                 min_spacing=entry["min_spacing"],
                 max_rows=entry.get("max_rows"),
                 max_columns=entry.get("max_columns"),
+                motion=entry.get("motion", "flexible"),
             )
             for entry in data["aods"]
         ),
