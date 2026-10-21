@@ -13,6 +13,9 @@ dependencies = [
     "qiskit-qasm3-import==0.6.0",
 ]
 
+[project.scripts]
+nadit = "nadit_physical_compiler.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.3,<10",

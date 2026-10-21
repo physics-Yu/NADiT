@@ -23,6 +23,20 @@ returns a `CompilationJob`. `job.compile_job(job)` runs the existing compiler.
 The job retains the resolved configuration, Device, DAG, entry layout, and
 strategy. Measurement overrides refer to source measurement IDs.
 
+Run saved jobs and inspect their results from the module directory:
+
+```text
+uv run --locked nadit compile JOB.json -o RESULT.json --validate --text PROGRAM.txt
+uv run --locked nadit validate RESULT.json
+uv run --locked nadit compare A.json B.json
+```
+
+Commands write JSON to stdout and diagnostics to stderr. `compile -o` also
+saves the same result document; `--text` writes the display-only Atom IR.
+Exit codes are 0 for success, 1 for invalid input, 2 for compilation failure,
+and 3 for a failed validation report. Validation reads the saved program and
+its Device; it does not load the circuit again.
+
 ## Current status
 
 Implemented: the OpenQASM 2.0 / 3.0 frontend, Physical DAG with measurement

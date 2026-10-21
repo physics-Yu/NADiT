@@ -1,7 +1,7 @@
 """Construct existing strategy stages from named, independently scoped options."""
 
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Literal
 
 from .device import Device
@@ -15,7 +15,12 @@ from .job_fields import (
     required,
     string_at,
 )
-from .job_geometry import placement_geometry, region_coverage, staging_geometry
+from .job_geometry import (
+    placement_geometry,
+    region_coverage,
+    resolve_geometry_defaults,
+    staging_geometry,
+)
 from .physical_ir import PhysicalDAG
 from .placement import (
     GatePairCatalog,
@@ -91,11 +96,24 @@ def _heuristic(context: StrategyContext, options: dict[str, Any]) -> HeuristicPl
         context.aod_id,
         context.require_catalog(),
         tuple(storage) if isinstance(storage, list) else storage,
-        PlacementConfig(**config_values),
+        _placement_config(config_values),
         placement_geometry(
             options["geometry"], context.device, "strategy.placement.geometry"
         ),
     )
+
+
+def _placement_config(values: dict[str, Any]) -> PlacementConfig:
+    try:
+        return PlacementConfig(**values)
+    except ValueError as error:
+        defaults = PlacementConfig.for_method(values["method"])
+        for name, value in values.items():
+            try:
+                replace(defaults, **{name: value})
+            except ValueError as field_error:
+                raise ValueError(f"strategy.placement.{name}: {field_error}") from error
+        raise
 
 
 def _search_defaults(method: Literal["ids", "astar"]) -> dict[str, Any]:
@@ -236,6 +254,14 @@ def build_strategy(
             )
         except (ValueError, KeyError, IndexError, TypeError) as error:
             raise ValueError(f"strategy.{stage}: {error}") from error
+    if "geometry" in resolved["placement"]:
+        resolved["placement"]["geometry"] = resolve_geometry_defaults(
+            resolved["placement"]["geometry"], stage="placement"
+        )
+    if "geometry" in resolved["transport"]:
+        resolved["transport"]["geometry"] = resolve_geometry_defaults(
+            resolved["transport"]["geometry"], stage="transport"
+        )
     return SearchSmarterStrategy(
         objects["scheduler"],
         objects["placement"],

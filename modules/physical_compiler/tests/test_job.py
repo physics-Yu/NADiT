@@ -1,6 +1,7 @@
 """Declarative jobs preserve the public Python compositions and input identities."""
 
 import json
+from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Literal
@@ -470,3 +471,112 @@ def test_default_numeric_types_match_constructor_json() -> None:
     for name, value in asdict(PlacementConfig()).items():
         assert type(configured[name]) is type(value)
         assert configured[name] == value
+
+
+def test_resolved_transport_geometry_fills_existing_default_without_mutation() -> None:
+    from nadit_physical_compiler.transport.staging_geometry import StagingGeometry
+
+    document = spec()
+    base = loads_job(json.dumps(document), base_dir=MODULE)
+    geometry = asdict(StagingGeometry.from_device(base.device, "transport"))
+    del geometry["coordinate_quantum"]
+    document["strategy"]["transport"] = {"kind": "staged", "geometry": geometry}
+    original = deepcopy(document["strategy"])
+
+    strategy, resolved = build_strategy(
+        document["strategy"],
+        dag=base.dag,
+        device=base.device,
+        aod_id="transport",
+        catalog=base.catalog,
+    )
+
+    assert resolved["transport"]["geometry"]["coordinate_quantum"] is None
+    assert document["strategy"] == original
+    document["strategy"] = resolved
+    restored = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(strategy.transporter, StagedStrictTransport)
+    assert isinstance(restored.strategy.transporter, StagedStrictTransport)
+    assert restored.strategy.transporter.geometry == strategy.transporter.geometry
+    assert restored.document["strategy"] == resolved
+
+
+def test_resolved_placement_geometry_fills_existing_array_defaults() -> None:
+    from nadit_physical_compiler.placement import PlacementGeometry
+
+    document = spec()
+    base = loads_job(json.dumps(document), base_dir=MODULE)
+    assert base.catalog is not None
+    geometry = PlacementGeometry.from_device(base.device, "transport", base.catalog)
+
+    def encode_array(array: Any) -> dict[str, Any]:
+        encoded = {
+            "id": array.id,
+            "kind": array.kind,
+            "pitch": asdict(array.pitch),
+            "sites": [[site.id for site in row] for row in array.sites],
+        }
+        if array.partner_sites:
+            encoded["partner_sites"] = [
+                [site.id for site in row] for row in array.partner_sites
+            ]
+        return encoded
+
+    encoded = {
+        "storage_arrays": [encode_array(array) for array in geometry.storage_arrays],
+        "entanglement_arrays": [
+            [encode_array(array) for array in pair]
+            for pair in geometry.entanglement_arrays
+        ],
+    }
+    document["strategy"]["placement"] = {"kind": "ids", "geometry": encoded}
+    original = deepcopy(document["strategy"])
+
+    strategy, resolved = build_strategy(
+        document["strategy"],
+        dag=base.dag,
+        device=base.device,
+        aod_id="transport",
+        catalog=base.catalog,
+    )
+
+    assert all(
+        array["partner_sites"] == []
+        for array in resolved["placement"]["geometry"]["storage_arrays"]
+    )
+    assert document["strategy"] == original
+    document["strategy"] = resolved
+    restored = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(strategy.placer, HeuristicPlacer)
+    assert isinstance(restored.strategy.placer, HeuristicPlacer)
+    assert restored.strategy.placer.geometry == strategy.placer.geometry == geometry
+    assert restored.document["strategy"] == resolved
+
+
+def test_resolved_null_geometry_preserves_constructor_inference() -> None:
+    document = spec()
+    document["strategy"]["placement"] = {"kind": "ids"}
+    document["strategy"]["transport"] = {"kind": "staged"}
+
+    job = loads_job(json.dumps(document), base_dir=MODULE)
+
+    assert job.document["strategy"]["placement"]["geometry"] is None
+    assert job.document["strategy"]["transport"]["geometry"] is None
+    assert isinstance(job.strategy.placer, HeuristicPlacer)
+    assert isinstance(job.strategy.transporter, StagedStrictTransport)
+    assert job.strategy.placer.geometry is None
+    assert job.strategy.transporter.geometry is None
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [("window_ratio", 0), ("window_share", -1), ("window_min_width", -1)],
+)
+def test_constructor_rejected_window_options_report_their_job_path(
+    field: str, value: int
+) -> None:
+    document = spec()
+    document["strategy"]["placement"] = {"kind": "ids", field: value}
+
+    with pytest.raises(ValueError, match=rf"strategy\.placement\.{field}:"):
+        loads_job(json.dumps(document), base_dir=MODULE)

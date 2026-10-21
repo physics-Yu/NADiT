@@ -1,5 +1,6 @@
 """Decode explicit geometry options using Device site identities."""
 
+from copy import deepcopy
 from dataclasses import fields
 from typing import Any, Literal, cast
 
@@ -8,6 +9,33 @@ from .device import Device, Position, Region, SLMSite
 from .job_fields import array_at, keys_at, number_at, object_at, required, string_at
 from .placement.geometry import PlacementGeometry, SLMArray
 from .transport.staging_geometry import SiteStagingGeometry, StagingGeometry
+
+
+def resolve_geometry_defaults(
+    value: dict[str, Any] | None, *, stage: Literal["placement", "transport"]
+) -> dict[str, Any] | None:
+    """Snapshot validated explicit geometry with its constructor defaults.
+
+    Args:
+        value: Geometry JSON already accepted by its stage decoder, or None.
+        stage: The placement or transport stage owning this geometry.
+    Returns:
+        An independent JSON object with omitted constructor defaults filled.
+        None remains None so geometry inference stays with the implementation.
+    """
+    if value is None:
+        return None
+    resolved = deepcopy(value)
+    if stage == "transport":
+        resolved.setdefault("coordinate_quantum", None)
+    else:
+        arrays = [
+            *resolved["storage_arrays"],
+            *(array for pair in resolved["entanglement_arrays"] for array in pair),
+        ]
+        for array in arrays:
+            array.setdefault("partner_sites", [])
+    return resolved
 
 
 def staging_geometry(value: Any, device: Device, path: str) -> StagingGeometry | None:

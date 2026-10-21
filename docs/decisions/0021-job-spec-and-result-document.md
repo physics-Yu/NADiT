@@ -151,7 +151,15 @@ nadit compare A.json B.json
 `compare` prints metric differences and the first differing layer, step, or
 action. Output is JSON on stdout and diagnostics on stderr. Exit codes are
 0 for success, 1 for an invalid job, 2 for a compilation error, and 3 for a
-validation failure. The CLI uses only the standard library.
+validation failure. Invalid result files and output paths also return 1.
+The CLI uses only the standard library.
+
+`compile` always prints the result JSON; `-o` also saves that document.
+`validate` reads the saved program, entry state, and Device without reopening
+the circuit. `compare` reports `equal`, changed `metrics`, and
+`first_difference`. Numeric metric deltas are right minus left. Comparison
+checks layers and program before operation, measurement, entry, and exit
+records; job and provenance differences do not imply different execution.
 
 ### Out of scope
 
@@ -196,7 +204,7 @@ Each step is one branch with tests and a full-suite run against the baseline.
    option) produce results equal to the scripts' Python composition; invalid
    kinds and unknown keys report their job paths.
 5. `cli.py` and the console script. Accept: subprocess tests for each command
-   and exit code; `compare` locates a deliberately changed option's first
+and exit code; `compare` locates a deliberately changed option's first
    difference.
 6. Update the module README, CHANGELOG, and convert the examples to load
    saved jobs where this does not change their output.

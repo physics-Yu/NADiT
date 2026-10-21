@@ -45,6 +45,8 @@
 
 ### Added
 
+- `nadit compile`, `nadit validate`, and `nadit compare` commands with JSON
+  output, documented exit codes, and optional Atom IR text export.
 - Declarative `nadit.job/1` loading and a per-stage strategy registry, with
   resolved paths/defaults, explicit or automatic entry layouts, and stable
   source-measurement overrides.
