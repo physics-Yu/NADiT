@@ -48,6 +48,12 @@
 
 ### Added
 
+- Add shared AtomActivity accounting and validated-result cost evaluation,
+  additive/v1, and a lazy hsim-aqc adapter pinned to an upstream commit.
+- Add fixed suites, Cartesian/zip/exclude experiment specs, isolated timeout
+  workers, version/content locks, resumable JSONL, independent noise reevaluation,
+  baseline statistics, coverage-aware Pareto summaries, and outlier commands.
+
 - Add Device-owned pair arrays and zone roles, deterministic `zoned/v1`
   architecture generation, and exact reproduction parameter files for the
   existing five configurations.

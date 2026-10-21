@@ -1,5 +1,69 @@
 # Physical Compiler
 
+## Cost and experiment workflows
+
+Cost evaluation reads a semantically validated `nadit.result/2`; it never
+compiles or samples measurements. `cost.prepare` revalidates content once and
+derives `AtomActivity`. Models share per-atom busy/idle intervals, transfer
+counts, movement endpoints/distances, gate targets, and pulse illumination.
+WAIT and feedback latency are idle. Short parallel actions change holder at
+their own completion time; stationary idle spans are stored between actual
+actions rather than expanded once per step.
+
+```text
+uv run --locked nadit cost RESULT.json --params cost_params/baseline.json
+uv run --locked nadit cost RESULT.json --params cost_params/ideal.json --into RESULT.json
+uv run --locked --extra cost-hsim nadit cost RESULT.json --model hsim-aqc --params cost_params/hsim_overrotation.json
+```
+
+`additive/v1` reports explicit log contributions. The baseline parameter file
+is illustrative. The optional `cost-hsim` extra pins `uftqc` to commit
+`8e71f80282e70fc03e771d3edee41a30dcb07dfa`. Its adapter uses upstream operation
+fidelities, with a declared additive background; the product does not model
+coherent circuit accumulation. Nonideal CZ pulse durations must match the
+compiled actions. See [ADR 0026](../../docs/decisions/0026-cost-model-adapter.md).
+
+```text
+uv run --locked nadit experiment plan examples/experiments/feedback.json
+uv run --locked nadit experiment run examples/experiments/feedback.json --workers 2
+uv run --locked nadit experiment status artifacts/experiments/feedback-motion
+uv run --locked nadit experiment summarize artifacts/experiments/feedback-motion
+uv run --locked nadit experiment cost artifacts/experiments/feedback-motion --model additive --params cost_params/ideal.json
+```
+
+Specs expand Cartesian axes, optional zip groups and exclusions over fixed
+suite hashes. Each worker has a timeout; unsupported inputs, errors, timeouts,
+and failed semantic checks remain JSONL records. Resume skips all completed
+IDs. Code commit/content checks run before dispatch and after completion;
+`--allow-dirty` records uncommitted source and `--new-version` uses a separate
+directory. The runner stops on code changes and terminates its active workers.
+
+Use `store: all` for later noise reevaluation. `experiment cost` only reads
+retained valid results and appends `costs.jsonl`; it reports missing results.
+Summaries keep failure counts, matched baseline ratios, and Pareto fronts
+within equal circuit/case coverage. Choose another evaluation with
+`summarize --cost-id HASH`. Outliers have a viewer command when a result was
+retained, otherwise a reproduction command. Unavailable process-memory/search
+instrumentation is null. See [ADR 0027](../../docs/decisions/0027-experiments.md).
+
+The paper suite uses exact archived bytes, not a generator during execution:
+
+```text
+uv run --locked python -m examples.materialize_paper_suite
+uv run --locked nadit experiment run examples/experiments/paper26-bounded.json --workers 2
+```
+
+This example has a **5-second whole-worker budget** to exercise the runner
+over all 26 inputs and three motion/capacity profiles. It is distinct from
+the paper's 900-second budget. The 14 MB of restored QASM remain ignored;
+their committed manifest and archive hash fix their identities.
+
+Verification, including the optional upstream integration:
+
+```text
+uv run --locked --extra cost-hsim pytest -q tests tests_hsim
+```
+
 ## Parametric architecture and strategy discovery
 
 Device zones may declare `role: storage | entanglement | measurement`.

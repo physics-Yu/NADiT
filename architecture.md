@@ -27,6 +27,8 @@ program for one measurement case under a selected Device and compiler strategy.
 | Shared transport rules and direct strict parallel batches | Implemented |
 | Rigid motion rules shared by placement and pair/sequential/strict transport | Implemented |
 | Device pair arrays/roles, zoned/v1, strategy admission, and discovery | Implemented (ADR 0025) |
+| Shared activity and post-compilation additive/hsim cost | Implemented (ADR 0026) |
+| Frozen suites, experiment runner, resume, and summaries | Implemented (ADR 0027) |
 | Next-CZ preview and matching-based atom reuse | Implemented |
 | Routing-aware IDS placement and optional reuse | Implemented |
 | Staged/relaxed routing | Implemented |
