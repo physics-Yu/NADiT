@@ -14,6 +14,7 @@ from ..contracts import (
 from ..device import Device
 from ..emission import emit_layer
 from ..physical_ir import PhysicalDAG
+from ..readout import BatchReadout
 from ..state import AtomLayout, AtomState
 
 type Emitter = Callable[[PhysicalDAG, GateLayer, AtomLayout, Device], AtomFragment]
@@ -29,6 +30,7 @@ class SearchSmarterStrategy:
         transporter: Construct legal transfers between layouts.
         emitter: Bind native operations to Atom IR actions and durations.
         reuse_analyzer: Optional matching policy for the next known CZ layer.
+        readout: Optional flexible AOD batch-readout lowering component.
 
     The compiler supplies lookahead without committing future operations.
     Placement decides which gate sites and holders to retain.
@@ -39,6 +41,7 @@ class SearchSmarterStrategy:
     transporter: Transporter
     emitter: Emitter = emit_layer
     reuse_analyzer: ReuseAnalyzer | None = None
+    readout: BatchReadout | None = None
 
     @property
     def lookahead_enabled(self) -> bool:
@@ -60,6 +63,14 @@ class SearchSmarterStrategy:
         retained_atoms: tuple[AtomState, ...] = (),
     ) -> AtomFragment:
         """Construct a fragment, retaining selected atoms for a known CZ layer."""
+        if (
+            self.readout is not None
+            and layer.operation_ids
+            and dag.nodes[layer.operation_ids[0]].name == "measure"
+        ):
+            return self.readout.lower(
+                dag, layer, layout, device, retained_atoms=retained_atoms
+            )
         reuse_qubits = (
             self.reuse_analyzer.analyze(dag, layer, following)
             if self.reuse_analyzer is not None and following is not None

@@ -435,6 +435,18 @@ def _check_readout_spacing(
 ) -> None:
     if device.readout is None:
         return
+    if device.readout.max_atoms is not None:
+        total = sum(
+            len(candidate.results)
+            for candidate in step.actions
+            if isinstance(candidate, Measure) and candidate.channel == action.channel
+        )
+        if total > device.readout.max_atoms:
+            failures.append(
+                ConstraintResult(
+                    "readout_capacity", "Concurrent readout exceeds device.max_atoms."
+                )
+            )
     atoms = {atom.id: atom for atom in layout.atoms}
     previous: list[int] = []
     for candidate in step.actions:

@@ -9,15 +9,21 @@ class ReadyScheduler:
 
     Args:
         max_cz_gates: Maximum number of disjoint CZ gates in one layer.
+        max_measurements: Ready measurements per layer; None imposes no count limit.
 
     Raises:
         ValueError: If CZ capacity is not positive.
     """
 
-    def __init__(self, max_cz_gates: int = 1) -> None:
+    def __init__(
+        self, max_cz_gates: int = 1, *, max_measurements: int | None = 1
+    ) -> None:
         if max_cz_gates <= 0:
             raise ValueError("CZ layer capacity must be positive.")
         self.max_cz_gates = max_cz_gates
+        if max_measurements is not None and max_measurements < 1:
+            raise ValueError("Measurement capacity must be positive or None.")
+        self.max_measurements = max_measurements
 
     def select(self, dag: PhysicalDAG, ready: tuple[int, ...]) -> GateLayer:
         """Drain ready local rotations before selecting a CZ layer.
@@ -28,7 +34,7 @@ class ReadyScheduler:
 
         Returns:
             Disjoint operations sharing the selected operation's name.
-            CZ layers respect the configured capacity; readout remains singular.
+            CZ and measurement layers respect their configured count capacities.
         """
         if not ready:
             return GateLayer(())
@@ -44,9 +50,11 @@ class ReadyScheduler:
                 first,
             )
         name = dag.nodes[first].name
-        if name not in ("rx", "ry", "rz", "u", "reset", "cz"):
+        if name not in ("rx", "ry", "rz", "u", "reset", "cz", "measure"):
             return GateLayer((ordered[0],))
         capacity = self.max_cz_gates if name == "cz" else len(ordered)
+        if name == "measure" and self.max_measurements is not None:
+            capacity = self.max_measurements
         selected: list[int] = []
         occupied: set[int] = set()
         for operation_id in ordered:

@@ -102,6 +102,7 @@ READOUT = obj(
         "duration_us": NONNEGATIVE,
         "latency_us": NONNEGATIVE,
         "min_spacing_um": NONNEGATIVE,
+        "max_atoms": nullable(COUNT),
         "retain_atoms": BOOLEAN,
         "holders": array(HOLDER),
     },

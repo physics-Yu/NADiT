@@ -125,7 +125,21 @@ def whole_layer(context: "StrategyContext") -> Support:
 
 
 def ready(context: "StrategyContext") -> Support:
-    """Catalogue-sized scheduling requires a gate-pair catalogue."""
+    """Catalogue CZ capacity; batched readout requires retained flexible AOD atoms."""
+    readout = context.device.readout
+    if (
+        readout is not None
+        and readout.max_atoms != 1
+        and any(node.name == "measure" for node in context.dag.nodes)
+    ):
+        if (
+            context.device.aod(context.aod_id).motion != "flexible"
+            or not readout.retain_atoms
+            or "aod" not in readout.holders
+        ):
+            return Support(
+                False, "batch readout requires retained flexible AOD readout"
+            )
     capacity = context.strategy["scheduler"].get("max_cz_gates")
     return Support(
         capacity != "catalog" or context.catalog is not None,

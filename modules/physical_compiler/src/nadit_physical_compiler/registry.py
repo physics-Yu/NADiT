@@ -31,6 +31,7 @@ from .placement import (
     PlacementConfig,
     PlacementGeometry,
 )
+from .readout import BatchReadout
 from .reuse import MatchingReuseAnalyzer, SourceReuseAnalyzer
 from .scheduling import ReadyScheduler, SourceASAPScheduler
 from .strategies import SearchSmarterStrategy
@@ -133,7 +134,12 @@ def _search_defaults(method: Literal["ids", "astar"]) -> dict[str, Any]:
 REGISTRY: dict[str, dict[str, Registration]] = {
     "scheduler": {
         "ready": Registration(
-            lambda context, options: ReadyScheduler(options["max_cz_gates"]),
+            lambda context, options: ReadyScheduler(
+                options["max_cz_gates"],
+                max_measurements=context.device.readout.max_atoms
+                if context.device.readout
+                else 1,
+            ),
             {"max_cz_gates": 1},
             support.ready,
         ),
@@ -322,6 +328,9 @@ def build_strategy(
         objects["transport"],
         objects["emitter"],
         objects["reuse"],
+        BatchReadout(aod_id)
+        if device.readout is not None and device.readout.max_atoms != 1
+        else None,
     ), resolved
 
 

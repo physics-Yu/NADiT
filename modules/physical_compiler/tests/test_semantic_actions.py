@@ -56,7 +56,7 @@ def _device() -> Device:
         Timing(1, 1, 1),
         cz=CZCapability("cz", 4.6, 1),
         local=LocalControl("local", 1, 1),
-        readout=ReadoutCapability("readout", 1, min_spacing_um=5),
+        readout=ReadoutCapability("readout", 1, min_spacing_um=5, max_atoms=None),
         global_control=GlobalControl("global", 1),
     )
 

@@ -9,6 +9,14 @@ comparison profiles are implemented under
 
 ## Device and compiler responsibilities
 
+Readout `max_atoms` is the per-channel concurrent exposure capacity: 1 by
+default, a positive integer for a finite capacity, or null for no count limit.
+Ready scheduling and the flexible batch-readout planner use this value.
+The batch remains in AOD traps for measurement and returns to its original
+SLM sites. Result identity and feedback latency do not depend on batch size.
+The semantic validator checks the total simultaneous measurement count,
+including multiple Measure actions on the same channel.
+
 Device `pair_arrays` own the interaction catalogue. Left/right grid cells are
 paired, or reference matrices identify existing sites. Loading validates
 pair isolation; result snapshots store references without duplicating sites.

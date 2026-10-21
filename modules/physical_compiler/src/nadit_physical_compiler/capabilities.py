@@ -35,6 +35,7 @@ class ReadoutCapability:
         min_spacing_um: Minimum separation for concurrent readout.
         retain_atoms: Whether measured atoms remain available afterward.
         holders: Allowed holder types, using slm and aod.
+        max_atoms: Atoms per exposure; 1 preserves singleton readout, None is unbounded.
     """
 
     channel: str
@@ -43,6 +44,13 @@ class ReadoutCapability:
     min_spacing_um: float = 0
     retain_atoms: bool = True
     holders: tuple[str, ...] = ("slm", "aod")
+    max_atoms: int | None = 1
+
+    def __post_init__(self) -> None:
+        if self.max_atoms is not None and (
+            type(self.max_atoms) is not int or self.max_atoms < 1
+        ):
+            raise ValueError("readout.max_atoms must be a positive integer or null.")
 
 
 @dataclass(frozen=True, slots=True)

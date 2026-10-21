@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Flexible AOD batch readout with Device `readout.max_atoms`, closed pickups,
+  monotone readout layouts, multi-result Measure, and return to entry sites.
+  Preserve singleton defaults, physical measurement identities, and feedback
+  latency. Validate per-channel concurrent readout capacity.
+
 ### Fixed
 
 - Place GlobalRY participants inside its configured coverage before pulsing,

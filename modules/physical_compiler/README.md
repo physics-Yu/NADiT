@@ -1,5 +1,18 @@
 # Physical Compiler
 
+## Flexible AOD batch readout
+
+Set Device `readout.max_atoms` (or `measurement.readout.max_atoms` in zoned/v1)
+to a positive exposure capacity or `null` for no count limit. The default is
+1, preserving singleton readout. The ready scheduler groups measurement
+nodes, and the batch-readout component constructs closed pickups, monotone
+readout layouts, one multi-result Measure per batch, and a return to the
+original SLM sites. Batch size also depends on spacing, available area, AOD
+line capacity, and occupied intersections. Retained flexible AOD readout is
+required. Each ResultRef is sampled once by the compiler; feedback availability
+is the batch exposure end plus Device latency. See
+[ADR 0029](../../docs/decisions/0029-batched-aod-readout.md).
+
 ## Cost and experiment workflows
 
 Cost evaluation reads a semantically validated `nadit.result/2`; it never
