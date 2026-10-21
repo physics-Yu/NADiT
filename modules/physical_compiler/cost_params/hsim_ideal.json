@@ -1,0 +1,9 @@
+{
+  "single": {
+    "backend": "ideal"
+  },
+  "cz": {
+    "backend": "ideal"
+  },
+  "background": {}
+}

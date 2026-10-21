@@ -1,0 +1,19 @@
+{
+  "schema": "nadit.suite/1",
+  "name": "feedback",
+  "circuits": [
+    {
+      "id": "multipair",
+      "file": "multipair.qasm3",
+      "sha256": "5fb3ca9b4eef65d559675ee75f93a93b0043ef3d0536bf41005b29dcada89063",
+      "qubits": 4
+    }
+  ],
+  "gate_set": [
+    "rx",
+    "ry",
+    "rz",
+    "cz"
+  ],
+  "source": "NADiT feedback regression"
+}

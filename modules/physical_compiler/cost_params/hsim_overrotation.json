@@ -1,0 +1,16 @@
+{
+  "single": {
+    "backend": "coherent_overrotation",
+    "parameters": {
+      "fractional_angle_error": 0.01
+    }
+  },
+  "cz": {
+    "backend": "ideal"
+  },
+  "background": {
+    "slm_t2_us": 1000000,
+    "aod_t2_us": 200000,
+    "transfer_loss": 0.0001
+  }
+}

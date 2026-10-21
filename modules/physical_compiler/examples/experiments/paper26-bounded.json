@@ -1,0 +1,63 @@
+{
+  "schema": "nadit.experiment/1",
+  "name": "paper26-motion-bounded",
+  "suite": "paper26",
+  "architectures": [
+    {
+      "family": "zoned/v1",
+      "base": "paper_zoned.json",
+      "sweep": {
+        "aod.motion": [
+          "flexible",
+          "flexible",
+          "rigid"
+        ],
+        "aod.max_rows": [
+          null,
+          16,
+          16
+        ],
+        "aod.max_columns": [
+          null,
+          16,
+          16
+        ]
+      },
+      "zip": [
+        [
+          "aod.motion",
+          "aod.max_rows",
+          "aod.max_columns"
+        ]
+      ]
+    }
+  ],
+  "strategies": {
+    "ids_strict": "ids_strict.json"
+  },
+  "cases": {
+    "seeds": [
+      17
+    ]
+  },
+  "cost": [
+    {
+      "model": "additive",
+      "params": "../../cost_params/baseline.json"
+    }
+  ],
+  "budget": {
+    "timeout_s": 5,
+    "placement.max_nodes": 1000000
+  },
+  "validate": "required",
+  "store": "all",
+  "baseline": {
+    "architecture": {
+      "aod.motion": "flexible",
+      "aod.max_rows": null,
+      "aod.max_columns": null
+    },
+    "strategy": "ids_strict"
+  }
+}

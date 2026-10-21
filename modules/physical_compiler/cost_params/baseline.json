@@ -1,0 +1,11 @@
+{
+  "cz_infidelity": 0.005,
+  "single_infidelity": 0.0001,
+  "readout_infidelity": 0.01,
+  "reset_infidelity": 0.001,
+  "transfer_loss": 0.0001,
+  "slm_t2_us": 1000000,
+  "aod_t2_us": 200000,
+  "heating_per_um": 1e-06,
+  "heating_us_per_um2": 0
+}

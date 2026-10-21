@@ -16,6 +16,11 @@ dependencies = [
 [project.scripts]
 nadit = "nadit_physical_compiler.cli:main"
 
+[project.optional-dependencies]
+cost-hsim = [
+    "uftqc",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3,<10",
@@ -49,3 +54,6 @@ exclude = ["build/", "dist/"]
 [[tool.mypy.overrides]]
 module = ["qiskit.*", "qiskit_qasm3_import.*", "openqasm3.*"]
 ignore_missing_imports = true
+
+[tool.uv.sources]
+uftqc = { git = "https://github.com/zhang-wenjun/hsim-aqc.git", rev = "8e71f80282e70fc03e771d3edee41a30dcb07dfa" }

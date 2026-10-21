@@ -1,0 +1,172 @@
+{
+  "schema": "nadit.suite/1",
+  "name": "paper26",
+  "circuits": [
+    {
+      "id": "graphstate_100",
+      "file": "graphstate_100.qasm",
+      "sha256": "0c149522a9f4b2bafb13e6af9ceb33d92a30744f8c55fb43b9c1e2f8cfd348e1",
+      "qubits": 100
+    },
+    {
+      "id": "graphstate_1000",
+      "file": "graphstate_1000.qasm",
+      "sha256": "bf58451f25f59e61d8b72e7ad7064821f83a133dc3933d73953f3db6a31eef76",
+      "qubits": 1000
+    },
+    {
+      "id": "graphstate_120",
+      "file": "graphstate_120.qasm",
+      "sha256": "09687015100fd8cf5f7f01a642d93ec348a0c12bab46536e5c94abb2849919bd",
+      "qubits": 120
+    },
+    {
+      "id": "graphstate_140",
+      "file": "graphstate_140.qasm",
+      "sha256": "b6673d35fe02f68b691da2422b5982dbd78f38ebaef57c02662df40862f584b6",
+      "qubits": 140
+    },
+    {
+      "id": "graphstate_160",
+      "file": "graphstate_160.qasm",
+      "sha256": "519786ac04dcbd4c2ed861e4e4c383bc4c17378d1064d3fd3e17bac326f36b90",
+      "qubits": 160
+    },
+    {
+      "id": "graphstate_180",
+      "file": "graphstate_180.qasm",
+      "sha256": "d35432c4b55f4b2cd42d341ff97b63656d077a5eba0fc2f5621a9f0dd034d5e6",
+      "qubits": 180
+    },
+    {
+      "id": "graphstate_200",
+      "file": "graphstate_200.qasm",
+      "sha256": "0b652c75ccc9ddf6ffab09600c4381820e6189aaf40e7ad7a607e6e27743d3a1",
+      "qubits": 200
+    },
+    {
+      "id": "graphstate_2000",
+      "file": "graphstate_2000.qasm",
+      "sha256": "aaa943709f6f0f84b452b27306494ca14dc4d359ebd3fb68e1089502f7762eae",
+      "qubits": 2000
+    },
+    {
+      "id": "graphstate_500",
+      "file": "graphstate_500.qasm",
+      "sha256": "ea139e95ba039a86bd6887776f59d38219a64fc622f694b36da2a9e7c622a5ac",
+      "qubits": 500
+    },
+    {
+      "id": "graphstate_5000",
+      "file": "graphstate_5000.qasm",
+      "sha256": "c64745eaa78ee1a7fc192353cd13bd946797ebf9b8657d8355193252d7bd600e",
+      "qubits": 5000
+    },
+    {
+      "id": "graphstate_60",
+      "file": "graphstate_60.qasm",
+      "sha256": "b0458fe32996db6d5040e49ed4f19948cf50cb13ab11340468041c37ccfcad51",
+      "qubits": 60
+    },
+    {
+      "id": "graphstate_80",
+      "file": "graphstate_80.qasm",
+      "sha256": "a3c9faed842a4161ae7ab65a2045f15f607dac959783807755a96b1c74e2c5d5",
+      "qubits": 80
+    },
+    {
+      "id": "qaoa_100",
+      "file": "qaoa_100.qasm",
+      "sha256": "679ba80434ebd1c26f8af902e81543a2c565adf8e6814954e3ad81dee11feacf",
+      "qubits": 100
+    },
+    {
+      "id": "qaoa_150",
+      "file": "qaoa_150.qasm",
+      "sha256": "38792cda805e5c8087085e7158f693e9699a5304cd9c4f5ab0a71ed4845a6a79",
+      "qubits": 150
+    },
+    {
+      "id": "qaoa_200",
+      "file": "qaoa_200.qasm",
+      "sha256": "957cc481fb978eb2f982c82f787bce9d897ab481bb4f49cfc162bf3a0b49733c",
+      "qubits": 200
+    },
+    {
+      "id": "qaoa_50",
+      "file": "qaoa_50.qasm",
+      "sha256": "d72d9ed36dd79d67faa9edd609363ef8f3bedc6846f664016ae17cb4189a49e8",
+      "qubits": 50
+    },
+    {
+      "id": "qft_1000",
+      "file": "qft_1000.qasm",
+      "sha256": "8b8822721f806dd497f44f60e8ad943c23cbe94209c35ff6a3f7e40917a2222a",
+      "qubits": 1000
+    },
+    {
+      "id": "qft_500",
+      "file": "qft_500.qasm",
+      "sha256": "e0fc250e71fed1363f4858a495d1701bdf3f140e70638dfbc3454e4d941c0d4e",
+      "qubits": 500
+    },
+    {
+      "id": "qpeexact_1000",
+      "file": "qpeexact_1000.qasm",
+      "sha256": "a2735b6745b4d8c6480a4295eb8ec2cfa3679c1280a553645f66b07ee02316ac",
+      "qubits": 1000
+    },
+    {
+      "id": "qpeexact_500",
+      "file": "qpeexact_500.qasm",
+      "sha256": "97e9487d26b906a53859de371dd49339b971200ce30beefd7031832d146271b1",
+      "qubits": 500
+    },
+    {
+      "id": "vqe_two_local_100",
+      "file": "vqe_two_local_100.qasm",
+      "sha256": "50d529e3d718cf0da106acea64a3b25dff7e7646293264f21a9868c13b40e4bd",
+      "qubits": 100
+    },
+    {
+      "id": "vqe_two_local_150",
+      "file": "vqe_two_local_150.qasm",
+      "sha256": "c8b97f3e707a61c94bf80e7a0cd3d253970bab6d5d5bbf4f4dd1c3fce4a5cda3",
+      "qubits": 150
+    },
+    {
+      "id": "vqe_two_local_200",
+      "file": "vqe_two_local_200.qasm",
+      "sha256": "534e0171d83cca337aafd13231672d8dcebc3fd2a0361e6598f8d6edc4d19144",
+      "qubits": 200
+    },
+    {
+      "id": "vqe_two_local_50",
+      "file": "vqe_two_local_50.qasm",
+      "sha256": "7756d383cc5bd00e5b0cedbc01e4b435c747d7321e20095d0192a9582220f408",
+      "qubits": 50
+    },
+    {
+      "id": "wstate_1000",
+      "file": "wstate_1000.qasm",
+      "sha256": "d6510d7b70a3a5c9b2e0a8f1e8ae2eaa6ccc0041f9c76fc6a1a5d0b40f8229ae",
+      "qubits": 1000
+    },
+    {
+      "id": "wstate_500",
+      "file": "wstate_500.qasm",
+      "sha256": "08d43419c46cc99d10b7c0695fb547401fbe6c858c9e393dd352463986c0efe2",
+      "qubits": 500
+    }
+  ],
+  "gate_set": [
+    "u",
+    "rz",
+    "cz"
+  ],
+  "source": {
+    "generator": "mqt.bench==2.1.0",
+    "qmap_commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+    "archive_sha256": "b21f72aa665cf095ae46e8ea8004769eff45fe9a4807ef9d3f8e97c9aa256ede"
+  }
+}

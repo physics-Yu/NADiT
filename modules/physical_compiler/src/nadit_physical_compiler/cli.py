@@ -51,6 +51,18 @@ def _parser() -> argparse.ArgumentParser:
         "describe", help="Describe architectures, strategies, and schemas."
     )
     describe_command.add_argument("--json-schema", choices=("job",))
+    cost_command = commands.add_parser("cost", help="Evaluate validated saved results.")
+    cost_command.add_argument("result", type=Path)
+    cost_command.add_argument("--model", default="additive")
+    cost_command.add_argument("--params", type=Path)
+    cost_command.add_argument("--into", type=Path)
+    from .experiments.cli import configure
+
+    configure(
+        commands.add_parser(
+            "experiment", help="Plan, run, and summarize fixed studies."
+        )
+    )
     return parser
 
 
@@ -244,6 +256,22 @@ def main(argv: Sequence[str] | None = None) -> int:
             from .schemas.job import job_schema
 
             document, status = (job_schema() if args.json_schema else describe()), 0
+        elif args.command == "cost":
+            from .cost.cli import cost_result
+
+            document, status = (
+                cost_result(
+                    args.result,
+                    model=args.model,
+                    params_path=args.params,
+                    into=args.into,
+                ),
+                0,
+            )
+        elif args.command == "experiment":
+            from .experiments.cli import execute
+
+            document, status = execute(args), 0
         else:
             document, status = _compare(args.left, args.right), 0
         print(_json(document), end="")

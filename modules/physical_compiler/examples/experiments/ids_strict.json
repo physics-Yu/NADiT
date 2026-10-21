@@ -1,0 +1,18 @@
+{
+  "scheduler": {
+    "kind": "ready",
+    "max_cz_gates": "catalog"
+  },
+  "placement": {
+    "kind": "ids"
+  },
+  "transport": {
+    "kind": "strict"
+  },
+  "emitter": {
+    "kind": "whole_layer"
+  },
+  "reuse": {
+    "kind": "matching"
+  }
+}

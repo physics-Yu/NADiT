@@ -1,0 +1,71 @@
+{
+  "schema": "nadit.experiment/1",
+  "name": "feedback-motion",
+  "suite": "feedback",
+  "architectures": [
+    {
+      "family": "zoned/v1",
+      "base": "../architectures/zoned_flexible.json",
+      "sweep": {
+        "aod.motion": [
+          "flexible",
+          "flexible",
+          "rigid"
+        ],
+        "aod.max_rows": [
+          null,
+          16,
+          16
+        ],
+        "aod.max_columns": [
+          null,
+          16,
+          16
+        ]
+      },
+      "zip": [
+        [
+          "aod.motion",
+          "aod.max_rows",
+          "aod.max_columns"
+        ]
+      ]
+    }
+  ],
+  "strategies": {
+    "ids_strict": "ids_strict.json"
+  },
+  "cases": {
+    "seeds": [
+      17
+    ],
+    "overrides": [
+      {
+        "12": 0
+      },
+      {
+        "12": 1
+      }
+    ]
+  },
+  "cost": [
+    {
+      "model": "additive",
+      "params": "../../cost_params/baseline.json"
+    }
+  ],
+  "budget": {
+    "timeout_s": 30,
+    "placement.max_nodes": 1000000
+  },
+  "validate": "required",
+  "store": "all",
+  "baseline": {
+    "architecture": {
+      "aod.motion": "flexible",
+      "aod.max_rows": null,
+      "aod.max_columns": null
+    },
+    "strategy": "ids_strict"
+  }
+}

@@ -12,7 +12,37 @@ from .serialization import RESULT_SCHEMA, RESULT_SCHEMA_V2
 
 def describe() -> dict[str, Any]:
     """Return versioned families and every registered stage's configuration."""
+    from .cost.additive import DEFAULTS
+    from .cost.hsim import HSIM_COMMIT
+
     return {
+        "cost_models": {
+            "additive/v1": {
+                "defaults": deepcopy(DEFAULTS),
+                "units": "us, um",
+                "scope": "independent log-additive estimate",
+            },
+            "hsim-aqc": {
+                "commit": HSIM_COMMIT,
+                "optional_extra": "cost-hsim",
+                "single_backends": ["ideal", "coherent_overrotation"],
+                "cz_backends": ["ideal", "four_level", "open_four_level"],
+                "scope": "gate-product proxy with additive background",
+            },
+        },
+        "experiments": {
+            "schema": "nadit.experiment/1",
+            "suite_schema": "nadit.suite/1",
+            "commands": ["plan", "run", "status", "summarize", "cost"],
+            "statuses": [
+                "ok",
+                "unsupported",
+                "invalid_job",
+                "compile_error",
+                "timeout",
+                "validation_failed",
+            ],
+        },
         "architectures": describe_families(),
         "strategies": {
             stage: {

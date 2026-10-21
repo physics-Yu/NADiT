@@ -8,3 +8,4 @@ __pycache__/
 build/
 dist/
 /modules/physical_compiler/artifacts/
+/modules/physical_compiler/suites/paper26/*.qasm
