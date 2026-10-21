@@ -76,7 +76,7 @@ ADR 0012.
 | Gate scheduling | Ready local rotations precede CZ selection; earliest measurement/reset boundaries remain compiler-controlled |
 | Reuse | All shared-endpoint matching edges; documented correction to the source's `else-if` omission |
 | Candidates | Existing finite Device catalogue and nearest-available-pair adaptation from ADR 0013; source distance and identity ordering |
-| IDS and scoring | Source proxy, configured trials and queue capacity; deterministic ordering for otherwise equal heap priorities |
+| IDS and scoring | Source proxy and configured budgets; ADR 0020 restores source float accumulation and indexed priority-queue operations |
 | Strict and relaxed routing | Source compatibility, distance ordering, donor scan, and merge cost; actual Device and occupancy binding |
 | Staged transfers | Source row/column loops with the upward-boundary correction and endpoint-specific pair separation |
 | Atom IR | Explicit complete active grids, Device distance-to-time timing, measurement feedback, and source operation coverage |

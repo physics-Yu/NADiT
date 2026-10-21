@@ -988,6 +988,8 @@ quantum-state simulation.
   pure next-CZ preview, feedback boundaries, and matching-based gate anchors.
 - [ADR 0013](../../docs/decisions/0013-routing-aware-ids-placement.md):
   source-aligned candidate generation, compatible-group scoring, and IDS.
+- [ADR 0020](../../docs/decisions/0020-placement-decision-parity.md):
+  first-decision traces for the seven observed source placement differences.
 - [Feedback validation](docs/feedback-validation.md):
   the supplied circuit's exhaustive study and reproduction commands.
 - [Atom IR and reusable components](docs/atom-ir-and-components.md):

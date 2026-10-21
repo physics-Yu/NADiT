@@ -266,3 +266,5 @@ batch counts and predicted time; no complete two-layer transport evaluator
 is used during search.
 The complete source comparison and benchmark route is specified in
 [ADR 0019](../../../docs/decisions/0019-full-source-pipeline.md).
+The seven observed placement differences are investigated at the first search
+decision under [ADR 0020](../../../docs/decisions/0020-placement-decision-parity.md).

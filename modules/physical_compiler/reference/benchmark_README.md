@@ -92,11 +92,11 @@ Matching scores or transport totals alone do not establish identical
 compilation. Stage comparison checks scheduling, reuse, placement, routing,
 then actions and reports the first mismatch.
 
-Local A* preserves the existing deterministic generation-order priority ties;
-the original `std::priority_queue` does not specify an equal-priority order.
-Local score arithmetic also retains the existing numerical representation.
-Any resulting first-goal difference remains in the report; A* with the source's
-weighted heuristic does not establish optimality.
+The historical study below predates the scorer and IDS queue corrections in
+[the decision-level comparison](placement_trace_README.md). A* still uses
+generation-order priority ties; the original `std::priority_queue` does not
+specify equal-priority order. A* with this weighted heuristic does not establish
+optimality.
 
 The checked-in `benchmark_results.json` records the completed bounded study.
 Raw native inputs and large traces stay in the study output directory.
@@ -139,10 +139,9 @@ the entire action trace: IDS strict and relaxed for graphstate sizes 60, 80,
 | graphstate 180 | IDS strict, IDS relaxed | Storage layout after the second CZ layer |
 | graphstate 200 | IDS strict, IDS relaxed | Fourth CZ execution layout |
 
-Scheduling and reuse matched before each of these differences. Their causal
-queue-pop or score difference has not been located. Known precision and
-equal-priority ordering differences are not a demonstrated explanation for
-these seven observations.
+Scheduling and reuse matched before each difference. At the time of this
+study, the first different search decision had not been located. The later
+decision-level comparison records the causes and the separate recheck.
 
 The complete JSON records each attempted run, native-input and QASM hashes,
 source hashes, metrics, first differing paths, source/local metric differences,

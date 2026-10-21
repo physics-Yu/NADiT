@@ -102,6 +102,12 @@ IDS dives directly into the lowest `g+h` child, queues alternatives with bounded
 capacity, restarts after a goal or dead end, and returns the best completed
 candidate found within the configured trial budget.
 
+[ADR 0020](0020-placement-decision-parity.md) restores the source's binary32
+expression boundaries and accumulation order. Group cost starts with lookahead
+and then adds each square-root distance. Axis deviations visit sorted source
+ranks. IDS uses the original indexed min/max heaps and strict priority
+comparisons, without an insertion-serial tie break.
+
 ## Consequences
 
 Search does not generate Atom IR, invoke transport for each candidate, sample

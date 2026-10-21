@@ -13,6 +13,7 @@ from typing import Literal, Self
 from ..device import Position, SLMSite
 from ..state import COORDINATE_TOLERANCE
 from ..transport.rules import MoveRequest, StrictRules
+from .arithmetic import f32, sum32
 from .astar import a_star_tree_search
 from .ids import iterative_diving_search
 
@@ -178,7 +179,7 @@ class _Search:
             _ranks(tuple(point.x for point in targets)),
         )
         ratios = tuple(
-            len(set(target.values())) / len(set(source.values()))
+            f32(len(set(target.values())) / len(set(source.values())))
             if source and target
             else 1.0
             for source, target in zip(self.source_ranks, self.target_ranks, strict=True)
@@ -200,11 +201,14 @@ class _Search:
                 nearest_columns, default=0
             )
             source_span = max(self.source_ranks[1].values(), default=0)
-            expansion = nearest_span / source_span if source_span > 0 else 1.0
+            expansion = f32(nearest_span / source_span) if source_span > 0 else 1.0
             column_scale = min(max(1.0, expansion), ratios[1])
         self.scale_factors = (min(1.0, ratios[0]), column_scale)
         self.mean_lookahead = tuple(
-            sum(option.lookahead_cost for option in job.options) / len(job.options)
+            f32(
+                sum32(option.lookahead_cost for option in job.options)
+                / len(job.options)
+            )
             if job.options
             else 0
             for job in jobs
@@ -236,14 +240,15 @@ class _Search:
                     node.occupied | option.site_ids,
                     tuple(groups),
                     tuple(distances),
-                    node.lookahead_cost + option.lookahead_cost,
+                    f32(node.lookahead_cost + option.lookahead_cost),
                 )
 
     @staticmethod
     def cost(node: _Node) -> float:
         """Sum group maximum-distance proxies and selected lookahead costs."""
-        return (
-            sum(sqrt(distance) for distance in node.max_distances) + node.lookahead_cost
+        return sum32(
+            (f32(sqrt(distance)) for distance in node.max_distances),
+            start=node.lookahead_cost,
         )
 
     def heuristic(self, node: _Node) -> float:
@@ -257,13 +262,15 @@ class _Search:
                     break
         placed = max(node.max_distances, default=0)
         remaining = len(self.jobs) - level
-        return (
-            max(0.0, sqrt(nearest) - sqrt(placed))
-            + sum(self.mean_lookahead[level:])
-            + self.config.deepening_factor
-            * (self._deviation(node) + self.config.deepening_value)
-            * remaining
+        distance_cost = (
+            f32(f32(sqrt(nearest)) - f32(sqrt(placed))) if nearest > placed else 0.0
         )
+        heuristic = f32(distance_cost + sum32(self.mean_lookahead[level:]))
+        deepening = f32(
+            f32(self.config.deepening_factor)
+            * f32(self._deviation(node) + f32(self.config.deepening_value))
+        )
+        return f32(heuristic + f32(deepening * remaining))
 
     def _deviation(self, node: _Node) -> float:
         """Sum population deviations over unique row and column assignments."""
@@ -277,13 +284,15 @@ class _Search:
                     for move in group
                 }
                 differences = [
-                    target - self.scale_factors[axis] * source
-                    for source, target in mapping.items()
+                    f32(target - f32(self.scale_factors[axis] * source))
+                    for source, target in sorted(mapping.items())
                 ]
-                mean = sum(differences) / len(differences)
-                total += sqrt(
-                    sum((value - mean) ** 2 for value in differences) / len(differences)
+                mean = f32(sum32(differences) / len(differences))
+                variance = f32(
+                    sum32(f32(f32(value - mean) ** 2) for value in differences)
+                    / len(differences)
                 )
+                total = f32(total + f32(sqrt(variance)))
         return total
 
 

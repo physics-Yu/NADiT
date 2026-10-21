@@ -1,0 +1,406 @@
+{
+  "source_commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "scope": "Read-only diagnosis of first differing routing transitions after all placement stages match; routing code unchanged.",
+  "full_input_layouts_and_all_movers": {
+    "path": "placement-parity-recheck/relaxed-first-divergences.json",
+    "sha256": "576d1d576d0f8b05c93c48b1fd3254346a9463df8069ea487c94ab12dcd0d325"
+  },
+  "cases": [
+    {
+      "name": "graphstate_120",
+      "transition": 2,
+      "first_batch": 7,
+      "source_batch": [
+        32,
+        38,
+        44,
+        58,
+        104,
+        108
+      ],
+      "local_batch": [
+        32,
+        38,
+        58,
+        104,
+        108
+      ],
+      "source_only": [
+        44
+      ],
+      "local_only": [],
+      "all_placements_equal": true,
+      "source_strict_matches_unfiltered_local_strict": true,
+      "source_relaxed_matches_unfiltered_local": true,
+      "production_matches_unfiltered_local": false,
+      "source_run_sha256": "871e947f5fccae94b363ba74472fd2de0e24b8d77d35b9bdf17ef8dc0f54d3dd",
+      "local_run_sha256": "078be089d7f40d81fa814af43a2183b3746cbd51066252d3d5587d4a45a5deb5",
+      "actual_original_batches_rejected_by_occupancy": [
+        {
+          "batch": 7,
+          "atoms": [
+            108,
+            58,
+            38,
+            32,
+            104,
+            44
+          ],
+          "endpoint_fit": true,
+          "staging_fit": true,
+          "blockers": [
+            92
+          ],
+          "occupied_targets": [],
+          "first_touched_event": {
+            "index": 5,
+            "kind": "move",
+            "spectators": [
+              {
+                "atom": 92,
+                "position": [
+                  171,
+                  309
+                ]
+              }
+            ],
+            "active_columns": [
+              13,
+              109,
+              126.0,
+              138.0,
+              162.0,
+              171.0
+            ],
+            "active_rows": [
+              309,
+              324.0
+            ],
+            "carried_atoms": [
+              32,
+              38,
+              44,
+              58,
+              104,
+              108
+            ]
+          },
+          "original_cpp_first_touched_event": {
+            "global_action": 269,
+            "batch_event": 5,
+            "kind": "move",
+            "spectators": [
+              {
+                "atom": 92,
+                "position": [
+                  171,
+                  309
+                ]
+              }
+            ],
+            "active_columns": [
+              13,
+              109,
+              126,
+              138,
+              162,
+              171
+            ],
+            "active_rows": [
+              309,
+              324
+            ],
+            "carried_atoms": [
+              32,
+              38,
+              44,
+              58,
+              104,
+              108
+            ]
+          },
+          "source_action_grid_matches_local_template": true,
+          "original_cpp_action": {
+            "kind": "move",
+            "atoms": [
+              104,
+              108
+            ],
+            "targets": [
+              [
+                13,
+                309
+              ],
+              [
+                109,
+                309
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          }
+        }
+      ],
+      "affected_movers": [
+        {
+          "atom": 32,
+          "source": [
+            128,
+            288
+          ],
+          "target": [
+            123,
+            329
+          ]
+        },
+        {
+          "atom": 38,
+          "source": [
+            152,
+            288
+          ],
+          "target": [
+            135,
+            329
+          ]
+        },
+        {
+          "atom": 44,
+          "source": [
+            176,
+            288
+          ],
+          "target": [
+            159,
+            329
+          ]
+        },
+        {
+          "atom": 58,
+          "source": [
+            200,
+            288
+          ],
+          "target": [
+            147,
+            329
+          ]
+        },
+        {
+          "atom": 104,
+          "source": [
+            12,
+            284
+          ],
+          "target": [
+            13,
+            309
+          ]
+        },
+        {
+          "atom": 108,
+          "source": [
+            28,
+            284
+          ],
+          "target": [
+            109,
+            309
+          ]
+        }
+      ],
+      "interpretation": "Original relaxed batch membership is reproduced without admission. The full AOD grid reaches a stationary spectator at an original MOVE endpoint; existing occupancy admission rejects that merge."
+    },
+    {
+      "name": "graphstate_180",
+      "transition": 4,
+      "first_batch": 13,
+      "source_batch": [
+        45,
+        104,
+        121,
+        141,
+        148,
+        167
+      ],
+      "local_batch": [
+        87,
+        95
+      ],
+      "source_only": [
+        45,
+        104,
+        121,
+        141,
+        148,
+        167
+      ],
+      "local_only": [
+        87,
+        95
+      ],
+      "all_placements_equal": true,
+      "source_strict_matches_unfiltered_local_strict": true,
+      "source_relaxed_matches_unfiltered_local": true,
+      "production_matches_unfiltered_local": false,
+      "source_run_sha256": "961cc4e3ebd37ebcf65d003fe232b92e4d43f34d1ec0cf77b31921b3c71c1932",
+      "local_run_sha256": "cd6cd3c679bf67a1950048ef3f005c7a505f74c2f2473f91aafc9bdf73baec16",
+      "actual_original_batches_rejected_by_occupancy": [
+        {
+          "batch": 15,
+          "atoms": [
+            59,
+            147,
+            87
+          ],
+          "endpoint_fit": true,
+          "staging_fit": true,
+          "blockers": [
+            175
+          ],
+          "occupied_targets": [],
+          "first_touched_event": {
+            "index": 5,
+            "kind": "move",
+            "spectators": [
+              {
+                "atom": 175,
+                "position": [
+                  231,
+                  309
+                ]
+              }
+            ],
+            "active_columns": [
+              181,
+              222.0,
+              231.0
+            ],
+            "active_rows": [
+              309,
+              314.0
+            ],
+            "carried_atoms": [
+              59,
+              87,
+              147
+            ]
+          },
+          "original_cpp_first_touched_event": {
+            "global_action": 757,
+            "batch_event": 5,
+            "kind": "move",
+            "spectators": [
+              {
+                "atom": 175,
+                "position": [
+                  231,
+                  309
+                ]
+              }
+            ],
+            "active_columns": [
+              181,
+              222,
+              231
+            ],
+            "active_rows": [
+              309,
+              314
+            ],
+            "carried_atoms": [
+              59,
+              87,
+              147
+            ]
+          },
+          "source_action_grid_matches_local_template": true,
+          "original_cpp_action": {
+            "kind": "move",
+            "atoms": [
+              147
+            ],
+            "targets": [
+              [
+                181,
+                309
+              ]
+            ],
+            "parameters": [],
+            "zones": []
+          }
+        }
+      ],
+      "affected_movers": [
+        {
+          "atom": 59,
+          "source": [
+            236,
+            288
+          ],
+          "target": [
+            219,
+            319
+          ]
+        },
+        {
+          "atom": 87,
+          "source": [
+            240,
+            288
+          ],
+          "target": [
+            205,
+            319
+          ]
+        },
+        {
+          "atom": 147,
+          "source": [
+            184,
+            284
+          ],
+          "target": [
+            181,
+            309
+          ]
+        }
+      ],
+      "interpretation": "Original relaxed batch membership is reproduced without admission. The full AOD grid reaches a stationary spectator at an original MOVE endpoint; existing occupancy admission rejects that merge."
+    }
+  ],
+  "code_references": {
+    "original_move_emission": [
+      {
+        "file": "src/na/zoned/code_generator/CodeGenerator.cpp",
+        "method": "RearrangementGenerator::addSourceMove",
+        "line": 231,
+        "emit_line": 252
+      },
+      {
+        "file": "src/na/zoned/code_generator/CodeGenerator.cpp",
+        "method": "RearrangementGenerator::addTargetMove",
+        "line": 255,
+        "emit_line": 276
+      }
+    ],
+    "local_occupancy_admission": [
+      {
+        "file": "src/nadit_physical_compiler/transport/relaxed_policy.py",
+        "method": "RelaxedAdmission.accepts",
+        "line": 45,
+        "reject_line": 54
+      },
+      {
+        "file": "src/nadit_physical_compiler/transport/staged_plan.py",
+        "method": "StagingPlans.blockers",
+        "line": 56
+      },
+      {
+        "file": "src/nadit_physical_compiler/transport/occupancy.py",
+        "method": "Occupancy.at_grid",
+        "line": 39
+      }
+    ]
+  }
+}

@@ -1,0 +1,522 @@
+{
+  "source_commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "source_sha256": {
+    "Architecture.hpp": "aaad72585f543a4620d696d95ef4a27efddb141453d54c85784a819dd12df2cf",
+    "Architecture.cpp": "2f1861cfb807d72e5a96927c36e746845f2453c6069581034b30a7d808d78725",
+    "HeuristicPlacer.hpp": "e5c528ebb5009fbc08621a9bd5e2e021baff007c9e1d46e81065beff4c6c13ec",
+    "HeuristicPlacer.cpp": "0864e0905f39b1604dac544447166f6cccc5eace85f2cd93ebeb665912be8e5c"
+  },
+  "instrumented_translation_unit_sha256": "29eabaac3b74cac8c32c2000347aa19ed8ac387d98fab6152ffe9c1f1828e6c1",
+  "compiler": {
+    "frontend": "zig c++",
+    "flags": [
+      "-target",
+      "x86_64-windows-gnu",
+      "-std=c++20",
+      "-O3"
+    ],
+    "raw_build_metadata": {
+      "path": "placement-trace-build.json",
+      "sha256": "10c3de7983af57868a01a2f4dcea6256ebb23068bbc56617376e367448a6598c"
+    },
+    "version": "zig 0.13.0"
+  },
+  "path_base": "nadit-qmap-cd8ec913 external evidence cache; paths preserved inside the ignored diagnostic archive",
+  "observation_semantics": "Queue push events record calls including rejected bounded-queue insertions; pop/select/goal events are actual decisions. Algorithm expressions are unchanged.",
+  "decisions": [
+    {
+      "case": "graphstate_60_astar_gate0",
+      "candidate_snapshot": "before_float32",
+      "source_final_matches_uninstrumented_full_stage": true,
+      "full_placement_index": 1,
+      "isolated_input": {
+        "path": "placement-diagnosis/graphstate_60_astar_gate0.json",
+        "sha256": "1e36920968578a0e569eb9fcaecb2bb043546b31fce89aaee260a57427ef8104"
+      },
+      "native_input": {
+        "path": "paper-study-ranges/inputs/graphstate_60.json",
+        "sha256": "e44803ef08cbfde7a5b22272fd05fcaf6dfc312fcc1b769096cdbbd6b44a7384"
+      },
+      "uninstrumented_source_run": {
+        "path": "paper-study-ranges/runs/graphstate_60_source_astar_strict.json",
+        "sha256": "b1d49c15fef1965430e4cf7db196c1697bd7d98de22462de988854be14f68677"
+      },
+      "source_observations": {
+        "path": "placement-diagnosis/graphstate_60_astar_gate0_source.json",
+        "sha256": "b2551c947427ccc89145aa7310255115d03ca0816654a65724bcd6985f2bdbeb"
+      },
+      "candidate_observations": {
+        "path": "placement-diagnosis/graphstate_60_astar_gate0_local.json",
+        "sha256": "0f75f63288f2d2b27b1403a3c13860ff35d20a6740a59dc4e703c09a35c925c6"
+      },
+      "first_different_selection_index": 1,
+      "source_selected": {
+        "kind": "pop",
+        "path": [
+          37
+        ],
+        "priority": 171.20854377746582
+      },
+      "candidate_selected": {
+        "kind": "select",
+        "path": [
+          13
+        ],
+        "priority": 171.2085551854771,
+        "goal": false
+      },
+      "alternatives": [
+        {
+          "path": [
+            37
+          ],
+          "source": {
+            "path": [
+              37
+            ],
+            "cost": 8.95890998840332,
+            "heuristic": 162.2496337890625,
+            "scale": [
+              1,
+              1
+            ],
+            "deviation": 4,
+            "lookahead": 0,
+            "max_distances": [
+              80.26206970214844
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    0,
+                    2
+                  ]
+                ],
+                [
+                  [
+                    18,
+                    22
+                  ],
+                  [
+                    27,
+                    23
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              37
+            ],
+            "cost": 8.958910073337517,
+            "heuristic": 162.2496451121396,
+            "priority": 171.2085551854771
+          }
+        },
+        {
+          "path": [
+            13
+          ],
+          "source": {
+            "path": [
+              13
+            ],
+            "cost": 9.147565841674805,
+            "heuristic": 162.0609893798828,
+            "scale": [
+              1,
+              1
+            ],
+            "deviation": 4,
+            "lookahead": 0,
+            "max_distances": [
+              83.6779556274414
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    18,
+                    20
+                  ],
+                  [
+                    27,
+                    21
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              13
+            ],
+            "cost": 9.14756555742791,
+            "heuristic": 162.0609896280492,
+            "priority": 171.2085551854771
+          }
+        }
+      ],
+      "candidate_comparison": {
+        "ordered_options_equal": true,
+        "options": 1593,
+        "jobs": 14
+      },
+      "cause": "The source float32 score gives option 37 a strictly smaller priority; double arithmetic collapses alternatives into a tie and selects option 13.",
+      "after_float32": {
+        "observations": {
+          "path": "placement-diagnosis/graphstate_60_astar_gate0_local_f32.json",
+          "sha256": "b7952576474d201476950ff031e68bffd5eea055b6b9131bc00b48f5e08f8dd1"
+        },
+        "matching_score_paths": 1519,
+        "matching_selected_nodes": 15,
+        "final_layout_equal": true
+      }
+    },
+    {
+      "case": "graphstate_120_ids_storage_1",
+      "candidate_snapshot": "before_float32",
+      "source_final_matches_uninstrumented_full_stage": true,
+      "full_placement_index": 4,
+      "isolated_input": {
+        "path": "placement-diagnostics/graphstate_120_ids_storage_1.json",
+        "sha256": "b4a50d60c7ff40acfc9f5a3367da882d62cfbbf59a3d989570fca528b4ff5ae0"
+      },
+      "native_input": {
+        "path": "paper-study-ranges/inputs/graphstate_120.json",
+        "sha256": "3ac18ca47c23c8f7c3d218645d5d1eeada238606c022e4252a8be867e90cc9d5"
+      },
+      "uninstrumented_source_run": {
+        "path": "paper-study-ranges/runs/graphstate_120_source_ids_strict.json",
+        "sha256": "a9764a34cab90de63258818872509d4a1343403d5bd0f9acbc75de21fd87ca30"
+      },
+      "source_observations": {
+        "path": "placement-diagnostics/graphstate_120_ids_storage_1_cpp.json",
+        "sha256": "9a91d0e5f1d7f486a0fd2a1e3842b832415996056000b9cd4bc44d720a92555d"
+      },
+      "candidate_observations": {
+        "path": "placement-diagnostics/graphstate_120_ids_storage_1_candidate.json",
+        "sha256": "5912e4e9cae2f68181756941d2a0a0bd84e363e5c6b1e042607ae63711332c2d"
+      },
+      "first_different_selection_index": 1,
+      "source_selected": {
+        "kind": "select",
+        "path": [
+          2
+        ],
+        "priority": 150.00806140899658
+      },
+      "candidate_selected": {
+        "kind": "select",
+        "path": [
+          0
+        ],
+        "priority": 150.0080475081424,
+        "goal": false
+      },
+      "alternatives": [
+        {
+          "path": [
+            2
+          ],
+          "source": {
+            "path": [
+              2
+            ],
+            "cost": 6.449284553527832,
+            "heuristic": 143.55877685546875,
+            "scale": [
+              1,
+              1.6279069185256958
+            ],
+            "deviation": 0,
+            "lookahead": 0,
+            "max_distances": [
+              41.59326934814453
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    2,
+                    72
+                  ]
+                ],
+                [
+                  [
+                    20,
+                    32
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              2
+            ],
+            "cost": 6.4492844058968695,
+            "heuristic": 143.55876310224554,
+            "priority": 150.0080475081424
+          }
+        },
+        {
+          "path": [
+            0
+          ],
+          "source": {
+            "path": [
+              0
+            ],
+            "cost": 6.411677360534668,
+            "heuristic": 143.5963897705078,
+            "scale": [
+              1,
+              1.6279069185256958
+            ],
+            "deviation": 0,
+            "lookahead": 0,
+            "max_distances": [
+              41.1096076965332
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    2,
+                    72
+                  ]
+                ],
+                [
+                  [
+                    20,
+                    31
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              0
+            ],
+            "cost": 6.411677447948642,
+            "heuristic": 143.59637006019375,
+            "priority": 150.0080475081424
+          }
+        }
+      ],
+      "candidate_comparison": {
+        "per_option_metadata_equal": true,
+        "first_three_options_order_equal": true,
+        "all_option_order_equal": false,
+        "remaining_order_difference": "Equal-distance storage options are permuted by source std::ranges::sort versus local stable sort."
+      },
+      "cause": "The source float32 scores strictly prefer option 2 over option 0; the original local arithmetic ties them and selects option 0.",
+      "after_float32": {
+        "observations": {
+          "path": "placement-diagnostics/graphstate_120_ids_storage_1_after_arithmetic.json",
+          "sha256": "d429aa95592bf1484d5dccbae72a726743e49f49edc89ad149df14192f81bc10"
+        },
+        "matching_physical_selected_nodes": 96,
+        "final_layout_equal": true,
+        "all_node_scores_equal": false,
+        "common_physical_nodes": 12270,
+        "differing_score_last_bits": 3395,
+        "remaining_cause": "Two source job-mean lookahead values differ due to equal-distance option ordering during float32 summation. Accumulating the same local values in source option order reproduces both source means."
+      }
+    },
+    {
+      "case": "graphstate_200_ids_gate_3",
+      "candidate_snapshot": "after_float32_before_source_queue",
+      "source_final_matches_uninstrumented_full_stage": true,
+      "full_placement_index": 7,
+      "isolated_input": {
+        "path": "placement-diagnostics/graphstate_200_ids_gate_3.json",
+        "sha256": "16a0dcc25990609062d4ab697ae3027c7c32c121365554b90521bb53e23bcb39"
+      },
+      "native_input": {
+        "path": "paper-study-ranges/inputs/graphstate_200.json",
+        "sha256": "6ca09daa5e359c81542500d25d4602d6480bc8b116e1f3f76ce1dc5355221235"
+      },
+      "uninstrumented_source_run": {
+        "path": "paper-study-ranges/runs/graphstate_200_source_ids_strict.json",
+        "sha256": "319242f7211b5b185417bdc06e031034a7a3900ec5d57ce78063e15998eb9f05"
+      },
+      "source_observations": {
+        "path": "placement-diagnostics/graphstate_200_ids_gate_3_cpp.json",
+        "sha256": "2edc0759151ff824efcca4b5de16393004b678d0a19fa43edb64029d7af1d554"
+      },
+      "candidate_observations": {
+        "path": "placement-diagnostics/graphstate_200_ids_gate_3_local_trace.json",
+        "sha256": "d87e8aaa33d75ddc18a4f20ba8f9ce212bc08a62ae9d6f969930f44ce02b3c6d"
+      },
+      "first_different_selection_index": 58,
+      "source_selected": {
+        "kind": "select",
+        "path": [
+          112
+        ],
+        "priority": 45.29306983947754
+      },
+      "candidate_selected": {
+        "kind": "select",
+        "path": [
+          29
+        ],
+        "priority": 45.29306983947754,
+        "goal": false
+      },
+      "alternatives": [
+        {
+          "path": [
+            112
+          ],
+          "source": {
+            "path": [
+              112
+            ],
+            "cost": 14.727869033813477,
+            "heuristic": 30.565200805664062,
+            "scale": [
+              1,
+              1
+            ],
+            "deviation": 12.5,
+            "lookahead": 0,
+            "max_distances": [
+              216.91012573242188
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    5,
+                    7
+                  ]
+                ],
+                [
+                  [
+                    2,
+                    22
+                  ],
+                  [
+                    28,
+                    23
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              112
+            ],
+            "cost": 14.727869033813477,
+            "heuristic": 30.565200805664062,
+            "priority": 45.29306983947754
+          }
+        },
+        {
+          "path": [
+            29
+          ],
+          "source": {
+            "path": [
+              29
+            ],
+            "cost": 14.99592399597168,
+            "heuristic": 30.29714584350586,
+            "scale": [
+              1,
+              1
+            ],
+            "deviation": 12.5,
+            "lookahead": 0,
+            "max_distances": [
+              224.87774658203125
+            ],
+            "groups": [
+              [
+                [
+                  [
+                    5,
+                    3
+                  ]
+                ],
+                [
+                  [
+                    2,
+                    18
+                  ],
+                  [
+                    28,
+                    19
+                  ]
+                ]
+              ]
+            ]
+          },
+          "candidate": {
+            "path": [
+              29
+            ],
+            "cost": 14.99592399597168,
+            "heuristic": 30.29714584350586,
+            "priority": 45.29306983947754
+          }
+        }
+      ],
+      "candidate_comparison": {
+        "ordered_options_equal": true,
+        "shared_score_paths_before_queue_fix": 7768,
+        "all_shared_cost_and_heuristic_equal": true,
+        "first_three_goals_equal": true
+      },
+      "cause": "The original indexed bounded min/max heap and the local serial-ordered heap select different equal-priority restart nodes.",
+      "after_source_queue": {
+        "observations": {
+          "path": "placement-diagnostics/graphstate_200_ids_gate_3_after_queue.json",
+          "sha256": "cdef55c14950584d8e97f0d8252d56c64545e3cb881d3b828d0180cb3df6d7d6"
+        },
+        "matching_score_paths": 10306,
+        "matching_selected_nodes": 77,
+        "final_layout_equal": true
+      }
+    }
+  ],
+  "additional_source_parity": {
+    "case": "graphstate_180_ids_storage_1",
+    "isolated_input": {
+      "path": "placement-diagnostics/graphstate_180_ids_storage_1.json",
+      "sha256": "f40466061e8abb02d6602d0d613860bc12a440daaf4bd9e4298fe65c2f09aafc"
+    },
+    "source_observations": {
+      "path": "placement-diagnostics/graphstate_180_ids_storage_1_cpp.json",
+      "sha256": "c5a99354e52b62baf630c146f7ee31a2b60850a4f7578625898fc445296466a1"
+    },
+    "after_float32_observations": {
+      "path": "placement-diagnostics/graphstate_180_ids_storage_1_after_arithmetic.json",
+      "sha256": "f350a32baa89a3e65bfb46164954a6d62f6d38df09e11c524c3f2ad03ee03865"
+    },
+    "source_final_matches_uninstrumented_full_stage": true,
+    "matching_physical_selected_nodes": 224,
+    "matching_physical_score_paths": 27365,
+    "final_layout_equal": true
+  },
+  "raw_archive": {
+    "path": "artifacts/source-placement-diagnosis-2026-10-21.zip",
+    "sha256": "5000236663d78c3c8690da7f2e6f62b9c3c2f871384548f24174228828171cbd",
+    "bytes": 16467815,
+    "members": 44,
+    "crc_checked": true
+  }
+}

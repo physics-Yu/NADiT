@@ -1,0 +1,1395 @@
+{
+  "source_commit": "cd8ec9131f99d93ce1601c9a1dcad5c9e09ce31d",
+  "baseline_commit": "906d872",
+  "scope": "The seven placement differences and ten previously matching pairs; no other matrix entries rerun.",
+  "timeout_s": 120,
+  "workers": 2,
+  "pipeline_translation_unit_sha256": "88ba43ecf50d75ed256967b202137ec522c995659046f06914cd99dfa36c668c",
+  "pipeline_binary_sha256": "1f620230f53486f80416aad94e34ad9cbb71385b91bbbb9b1fcb94f2ea09ad04",
+  "summary": {
+    "runs_ok": 34,
+    "pairs": 17,
+    "placement_matched": 17,
+    "complete_matched": 15
+  },
+  "archive": {
+    "path": "artifacts/source-placement-recheck-2026-10-21.zip",
+    "sha256": "7f393d2ffea3daa86bc71970ab4bd6281a7edd8c2d8654171025ad57f0538698",
+    "bytes": 455330,
+    "members": 44,
+    "crc_checked": true
+  },
+  "pairs": [
+    {
+      "case": "graphstate_60",
+      "variant": "ids_strict",
+      "input_sha256": "e44803ef08cbfde7a5b22272fd05fcaf6dfc312fcc1b769096cdbbd6b44a7384",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.0782147999998415,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 46,
+          "store_actions": 46,
+          "loaded_atoms": 204,
+          "stored_atoms": 204,
+          "move_actions": 132,
+          "movement_us": 11504.993577420408,
+          "transfer_us": 1380.0,
+          "rearrangement_us": 12884.993577420408,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4768571,
+            "scheduling_s": 1.9e-05,
+            "reuse_s": 3.93e-05,
+            "placement_s": 0.0544725,
+            "routing_s": 0.0001393,
+            "codegen_s": 0.0003824
+          }
+        },
+        "trace_path": "runs\\graphstate_60_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 3.4875061999991885,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 46,
+          "store_actions": 46,
+          "loaded_atoms": 204,
+          "stored_atoms": 204,
+          "move_actions": 132,
+          "movement_us": 11504.993577420404,
+          "transfer_us": 1380,
+          "rearrangement_us": 12884.993577420404,
+          "total_us": 16007.153577420404,
+          "compilation_s": 2.3562137999979313
+        },
+        "trace_path": "runs\\graphstate_60_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 46,
+        "store_actions": 46,
+        "loaded_atoms": 204,
+        "stored_atoms": 204,
+        "move_actions": 132,
+        "movement_us": 11504.993577420404,
+        "transfer_us": 1380,
+        "rearrangement_us": 12884.993577420404,
+        "total_us": 16007.153577420404,
+        "compilation_s": 1.5709526000027836
+      }
+    },
+    {
+      "case": "graphstate_60",
+      "variant": "ids_relaxed",
+      "input_sha256": "e44803ef08cbfde7a5b22272fd05fcaf6dfc312fcc1b769096cdbbd6b44a7384",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.1170742000031169,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 46,
+          "store_actions": 46,
+          "loaded_atoms": 204,
+          "stored_atoms": 204,
+          "move_actions": 132,
+          "movement_us": 11414.41625645484,
+          "transfer_us": 1380.0,
+          "rearrangement_us": 12794.41625645484,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4717846,
+            "scheduling_s": 1.05e-05,
+            "reuse_s": 3.92e-05,
+            "placement_s": 0.055735,
+            "routing_s": 0.0003451,
+            "codegen_s": 0.0003862
+          }
+        },
+        "trace_path": "runs\\graphstate_60_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 3.613208000002487,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 46,
+          "store_actions": 46,
+          "loaded_atoms": 204,
+          "stored_atoms": 204,
+          "move_actions": 132,
+          "movement_us": 11414.416256454837,
+          "transfer_us": 1380,
+          "rearrangement_us": 12794.416256454837,
+          "total_us": 15916.576256454837,
+          "compilation_s": 2.516961599998467
+        },
+        "trace_path": "runs\\graphstate_60_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 46,
+        "store_actions": 46,
+        "loaded_atoms": 204,
+        "stored_atoms": 204,
+        "move_actions": 132,
+        "movement_us": 11414.416256454837,
+        "transfer_us": 1380,
+        "rearrangement_us": 12794.416256454837,
+        "total_us": 15916.576256454837,
+        "compilation_s": 1.747659199998452
+      }
+    },
+    {
+      "case": "graphstate_80",
+      "variant": "ids_strict",
+      "input_sha256": "65e2da20c6a2ef15ceccc28930f55e55b33895b16c1647c5245dcc83e48597be",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 0.8886322999969707,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 77,
+          "store_actions": 77,
+          "loaded_atoms": 292,
+          "stored_atoms": 292,
+          "move_actions": 220,
+          "movement_us": 18828.10772876833,
+          "transfer_us": 2310.0,
+          "rearrangement_us": 21138.10772876833,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.4717463,
+            "scheduling_s": 9.5e-06,
+            "reuse_s": 4.64e-05,
+            "placement_s": 0.1362232,
+            "routing_s": 0.0002535,
+            "codegen_s": 0.0005551
+          }
+        },
+        "trace_path": "runs\\graphstate_80_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 6.580414399999427,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 77,
+          "store_actions": 77,
+          "loaded_atoms": 292,
+          "stored_atoms": 292,
+          "move_actions": 220,
+          "movement_us": 18828.1077287683,
+          "transfer_us": 2310,
+          "rearrangement_us": 21138.1077287683,
+          "total_us": 25299.9077287683,
+          "compilation_s": 5.47500740000396
+        },
+        "trace_path": "runs\\graphstate_80_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 77,
+        "store_actions": 77,
+        "loaded_atoms": 292,
+        "stored_atoms": 292,
+        "move_actions": 220,
+        "movement_us": 18828.1077287683,
+        "transfer_us": 2310,
+        "rearrangement_us": 21138.1077287683,
+        "total_us": 25299.9077287683,
+        "compilation_s": 3.309921000000031
+      }
+    },
+    {
+      "case": "graphstate_80",
+      "variant": "ids_relaxed",
+      "input_sha256": "65e2da20c6a2ef15ceccc28930f55e55b33895b16c1647c5245dcc83e48597be",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 0.9296512000000803,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 75,
+          "loaded_atoms": 292,
+          "stored_atoms": 292,
+          "move_actions": 216,
+          "movement_us": 18462.298389301966,
+          "transfer_us": 2235.0,
+          "rearrangement_us": 20697.298389301966,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.4712144,
+            "scheduling_s": 9.4e-06,
+            "reuse_s": 4.64e-05,
+            "placement_s": 0.143791,
+            "routing_s": 0.0005391,
+            "codegen_s": 0.0006757
+          }
+        },
+        "trace_path": "runs\\graphstate_80_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 6.910287400001835,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 75,
+          "loaded_atoms": 292,
+          "stored_atoms": 292,
+          "move_actions": 216,
+          "movement_us": 18462.298389301945,
+          "transfer_us": 2235,
+          "rearrangement_us": 20697.298389301945,
+          "total_us": 24859.098389301944,
+          "compilation_s": 5.7812272000010125
+        },
+        "trace_path": "runs\\graphstate_80_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 74,
+        "store_actions": 75,
+        "loaded_atoms": 292,
+        "stored_atoms": 292,
+        "move_actions": 216,
+        "movement_us": 18462.298389301945,
+        "transfer_us": 2235,
+        "rearrangement_us": 20697.298389301945,
+        "total_us": 24859.098389301944,
+        "compilation_s": 3.4840791000024183
+      }
+    },
+    {
+      "case": "graphstate_100",
+      "variant": "ids_strict",
+      "input_sha256": "de21c5a0aebc7cec765568986bc00b13959d9ee2981a27f3cd9a17199cf617f1",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.020464200002607,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 74,
+          "loaded_atoms": 364,
+          "stored_atoms": 364,
+          "move_actions": 208,
+          "movement_us": 19385.95845176667,
+          "transfer_us": 2220.0,
+          "rearrangement_us": 21605.95845176667,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4919849,
+            "scheduling_s": 5.61e-05,
+            "reuse_s": 6.13e-05,
+            "placement_s": 0.1993967,
+            "routing_s": 0.0003032,
+            "codegen_s": 0.0006375
+          }
+        },
+        "trace_path": "runs\\graphstate_100_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 7.80174740000075,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 74,
+          "loaded_atoms": 364,
+          "stored_atoms": 364,
+          "move_actions": 208,
+          "movement_us": 19385.958451766637,
+          "transfer_us": 2220,
+          "rearrangement_us": 21605.958451766637,
+          "total_us": 26808.118451766637,
+          "compilation_s": 6.660656799998833
+        },
+        "trace_path": "runs\\graphstate_100_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 74,
+        "store_actions": 74,
+        "loaded_atoms": 364,
+        "stored_atoms": 364,
+        "move_actions": 208,
+        "movement_us": 19385.958451766637,
+        "transfer_us": 2220,
+        "rearrangement_us": 21605.958451766637,
+        "total_us": 26808.118451766637,
+        "compilation_s": 3.9737051999982214
+      }
+    },
+    {
+      "case": "graphstate_100",
+      "variant": "ids_relaxed",
+      "input_sha256": "de21c5a0aebc7cec765568986bc00b13959d9ee2981a27f3cd9a17199cf617f1",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.018771499999275,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 74,
+          "loaded_atoms": 364,
+          "stored_atoms": 364,
+          "move_actions": 208,
+          "movement_us": 19268.741696244848,
+          "transfer_us": 2220.0,
+          "rearrangement_us": 21488.741696244848,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.5000741,
+            "scheduling_s": 1.05e-05,
+            "reuse_s": 4.93e-05,
+            "placement_s": 0.1780171,
+            "routing_s": 0.0006991,
+            "codegen_s": 0.0006135
+          }
+        },
+        "trace_path": "runs\\graphstate_100_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 7.983910499999183,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 74,
+          "store_actions": 74,
+          "loaded_atoms": 364,
+          "stored_atoms": 364,
+          "move_actions": 208,
+          "movement_us": 19268.741696244815,
+          "transfer_us": 2220,
+          "rearrangement_us": 21488.741696244815,
+          "total_us": 26690.901696244815,
+          "compilation_s": 6.945775899999717
+        },
+        "trace_path": "runs\\graphstate_100_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 74,
+        "store_actions": 74,
+        "loaded_atoms": 364,
+        "stored_atoms": 364,
+        "move_actions": 208,
+        "movement_us": 19268.741696244815,
+        "transfer_us": 2220,
+        "rearrangement_us": 21488.741696244815,
+        "total_us": 26690.901696244815,
+        "compilation_s": 4.211354200000642
+      }
+    },
+    {
+      "case": "graphstate_120",
+      "variant": "ids_strict",
+      "input_sha256": "3ac18ca47c23c8f7c3d218645d5d1eeada238606c022e4252a8be867e90cc9d5",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[4][0][2]",
+        "expected": 26,
+        "actual": 23
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.0996409999934258,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 97,
+          "store_actions": 97,
+          "loaded_atoms": 440,
+          "stored_atoms": 440,
+          "move_actions": 271,
+          "movement_us": 24347.91804773714,
+          "transfer_us": 2910.0,
+          "rearrangement_us": 27257.91804773714,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4946074,
+            "scheduling_s": 1.64e-05,
+            "reuse_s": 7.36e-05,
+            "placement_s": 0.2769527,
+            "routing_s": 0.0004584,
+            "codegen_s": 0.0008071
+          }
+        },
+        "trace_path": "runs\\graphstate_120_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 10.800395999998727,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 97,
+          "store_actions": 97,
+          "loaded_atoms": 440,
+          "stored_atoms": 440,
+          "move_actions": 271,
+          "movement_us": 24347.91804773712,
+          "transfer_us": 2910,
+          "rearrangement_us": 27257.91804773712,
+          "total_us": 33500.078047737115,
+          "compilation_s": 9.780600300000515
+        },
+        "trace_path": "runs\\graphstate_120_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 92,
+        "store_actions": 92,
+        "loaded_atoms": 434,
+        "stored_atoms": 434,
+        "move_actions": 264,
+        "movement_us": 23672.76732768274,
+        "transfer_us": 2760,
+        "rearrangement_us": 26432.76732768274,
+        "total_us": 32674.927327682737,
+        "compilation_s": 6.204381199997442
+      }
+    },
+    {
+      "case": "graphstate_120",
+      "variant": "ids_relaxed",
+      "input_sha256": "3ac18ca47c23c8f7c3d218645d5d1eeada238606c022e4252a8be867e90cc9d5",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[4][0][2]",
+        "expected": 26,
+        "actual": 23
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "different",
+        "first_stage": "routing",
+        "path": "routings[2][7].length",
+        "expected": 6,
+        "actual": 5
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.039796999997634,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 96,
+          "store_actions": 97,
+          "loaded_atoms": 440,
+          "stored_atoms": 440,
+          "move_actions": 271,
+          "movement_us": 24213.70759358899,
+          "transfer_us": 2895.0,
+          "rearrangement_us": 27108.70759358899,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4832236,
+            "scheduling_s": 1.36e-05,
+            "reuse_s": 5.7e-05,
+            "placement_s": 0.2763823,
+            "routing_s": 0.0010376,
+            "codegen_s": 0.0007773
+          }
+        },
+        "trace_path": "runs\\graphstate_120_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 11.03909769999882,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 96,
+          "store_actions": 96,
+          "loaded_atoms": 440,
+          "stored_atoms": 440,
+          "move_actions": 268,
+          "movement_us": 23952.040176670427,
+          "transfer_us": 2880,
+          "rearrangement_us": 26832.040176670427,
+          "total_us": 33074.20017667043,
+          "compilation_s": 9.987544600000547
+        },
+        "trace_path": "runs\\graphstate_120_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 88,
+        "store_actions": 88,
+        "loaded_atoms": 434,
+        "stored_atoms": 434,
+        "move_actions": 256,
+        "movement_us": 22756.361138090706,
+        "transfer_us": 2640,
+        "rearrangement_us": 25396.361138090706,
+        "total_us": 31638.521138090706,
+        "compilation_s": 6.420472300000256
+      }
+    },
+    {
+      "case": "graphstate_140",
+      "variant": "ids_strict",
+      "input_sha256": "c24c1f133ff161a33fc1d460dc34e0eb402f32dd2a3e243ffda0c4f4fedf0aae",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.1231245000017225,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 116,
+          "store_actions": 116,
+          "loaded_atoms": 518,
+          "stored_atoms": 518,
+          "move_actions": 320,
+          "movement_us": 27820.33656721974,
+          "transfer_us": 3480.0,
+          "rearrangement_us": 31300.33656721974,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4740317,
+            "scheduling_s": 1.62e-05,
+            "reuse_s": 7e-05,
+            "placement_s": 0.3369422,
+            "routing_s": 0.0006228,
+            "codegen_s": 0.0010298
+          }
+        },
+        "trace_path": "runs\\graphstate_140_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 12.603982399996312,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 116,
+          "store_actions": 116,
+          "loaded_atoms": 518,
+          "stored_atoms": 518,
+          "move_actions": 320,
+          "movement_us": 27820.336567219743,
+          "transfer_us": 3480,
+          "rearrangement_us": 31300.336567219743,
+          "total_us": 38582.49656721974,
+          "compilation_s": 11.541896700000507
+        },
+        "trace_path": "runs\\graphstate_140_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 116,
+        "store_actions": 116,
+        "loaded_atoms": 518,
+        "stored_atoms": 518,
+        "move_actions": 320,
+        "movement_us": 27820.336567219743,
+        "transfer_us": 3480,
+        "rearrangement_us": 31300.336567219743,
+        "total_us": 38582.49656721974,
+        "compilation_s": 7.2246696000001975
+      }
+    },
+    {
+      "case": "graphstate_140",
+      "variant": "ids_relaxed",
+      "input_sha256": "c24c1f133ff161a33fc1d460dc34e0eb402f32dd2a3e243ffda0c4f4fedf0aae",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.1219749999945634,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 114,
+          "store_actions": 115,
+          "loaded_atoms": 518,
+          "stored_atoms": 518,
+          "move_actions": 317,
+          "movement_us": 27588.215994974224,
+          "transfer_us": 3435.0,
+          "rearrangement_us": 31023.215994974224,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.483047,
+            "scheduling_s": 1.12e-05,
+            "reuse_s": 6.44e-05,
+            "placement_s": 0.3334857,
+            "routing_s": 0.0013876,
+            "codegen_s": 0.0009736
+          }
+        },
+        "trace_path": "runs\\graphstate_140_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 12.749421700005769,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 114,
+          "store_actions": 115,
+          "loaded_atoms": 518,
+          "stored_atoms": 518,
+          "move_actions": 317,
+          "movement_us": 27588.21599497422,
+          "transfer_us": 3435,
+          "rearrangement_us": 31023.21599497422,
+          "total_us": 38305.37599497422,
+          "compilation_s": 11.734547200001543
+        },
+        "trace_path": "runs\\graphstate_140_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 114,
+        "store_actions": 115,
+        "loaded_atoms": 518,
+        "stored_atoms": 518,
+        "move_actions": 317,
+        "movement_us": 27588.21599497422,
+        "transfer_us": 3435,
+        "rearrangement_us": 31023.21599497422,
+        "total_us": 38305.37599497422,
+        "compilation_s": 7.483494299998711
+      }
+    },
+    {
+      "case": "graphstate_160",
+      "variant": "ids_strict",
+      "input_sha256": "a0cef6dad1a777ff5ab88f137fbe94e34f5088d7d1354161d3d4341b24d7a513",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.0938556000037352,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 133,
+          "store_actions": 133,
+          "loaded_atoms": 574,
+          "stored_atoms": 574,
+          "move_actions": 360,
+          "movement_us": 32264.429418169268,
+          "transfer_us": 3990.0,
+          "rearrangement_us": 36254.42941816927,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.4753466,
+            "scheduling_s": 2.04e-05,
+            "reuse_s": 8.28e-05,
+            "placement_s": 0.3300695,
+            "routing_s": 0.0007869,
+            "codegen_s": 0.0011121
+          }
+        },
+        "trace_path": "runs\\graphstate_160_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 12.970509600003425,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 133,
+          "store_actions": 133,
+          "loaded_atoms": 574,
+          "stored_atoms": 574,
+          "move_actions": 360,
+          "movement_us": 32264.429418169275,
+          "transfer_us": 3990,
+          "rearrangement_us": 36254.429418169275,
+          "total_us": 44576.58941816927,
+          "compilation_s": 11.990573600000062
+        },
+        "trace_path": "runs\\graphstate_160_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 133,
+        "store_actions": 133,
+        "loaded_atoms": 574,
+        "stored_atoms": 574,
+        "move_actions": 360,
+        "movement_us": 32264.429418169275,
+        "transfer_us": 3990,
+        "rearrangement_us": 36254.429418169275,
+        "total_us": 44576.58941816927,
+        "compilation_s": 7.68527019999965
+      }
+    },
+    {
+      "case": "graphstate_160",
+      "variant": "ids_relaxed",
+      "input_sha256": "a0cef6dad1a777ff5ab88f137fbe94e34f5088d7d1354161d3d4341b24d7a513",
+      "previous_comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.0931713999962085,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 133,
+          "store_actions": 133,
+          "loaded_atoms": 574,
+          "stored_atoms": 574,
+          "move_actions": 362,
+          "movement_us": 32191.91762318437,
+          "transfer_us": 3990.0,
+          "rearrangement_us": 36181.917623184374,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.472435,
+            "scheduling_s": 1.35e-05,
+            "reuse_s": 8.33e-05,
+            "placement_s": 0.3304592,
+            "routing_s": 0.0015825,
+            "codegen_s": 0.0010178
+          }
+        },
+        "trace_path": "runs\\graphstate_160_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 13.200073299994983,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 133,
+          "store_actions": 133,
+          "loaded_atoms": 574,
+          "stored_atoms": 574,
+          "move_actions": 362,
+          "movement_us": 32191.91762318437,
+          "transfer_us": 3990,
+          "rearrangement_us": 36181.917623184374,
+          "total_us": 44504.07762318437,
+          "compilation_s": 12.224837900001148
+        },
+        "trace_path": "runs\\graphstate_160_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 133,
+        "store_actions": 133,
+        "loaded_atoms": 574,
+        "stored_atoms": 574,
+        "move_actions": 362,
+        "movement_us": 32191.91762318437,
+        "transfer_us": 3990,
+        "rearrangement_us": 36181.917623184374,
+        "total_us": 44504.07762318437,
+        "compilation_s": 7.891100000000733
+      }
+    },
+    {
+      "case": "graphstate_180",
+      "variant": "ids_strict",
+      "input_sha256": "dc32c9a7870a1721f0aa9cfb7b9606e23b81581e2079005cff21793ee979216f",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[4][0][2]",
+        "expected": 25,
+        "actual": 26
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.403446599993913,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 171,
+          "store_actions": 171,
+          "loaded_atoms": 662,
+          "stored_atoms": 662,
+          "move_actions": 464,
+          "movement_us": 40457.94348249738,
+          "transfer_us": 5130.0,
+          "rearrangement_us": 45587.94348249738,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.4776655,
+            "scheduling_s": 1.16e-05,
+            "reuse_s": 9.42e-05,
+            "placement_s": 0.6406761,
+            "routing_s": 0.0008765,
+            "codegen_s": 0.0012449
+          }
+        },
+        "trace_path": "runs\\graphstate_180_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 21.57541779999883,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 171,
+          "store_actions": 171,
+          "loaded_atoms": 662,
+          "stored_atoms": 662,
+          "move_actions": 464,
+          "movement_us": 40457.94348249749,
+          "transfer_us": 5130,
+          "rearrangement_us": 45587.94348249749,
+          "total_us": 54949.74348249749,
+          "compilation_s": 20.607029999999213
+        },
+        "trace_path": "runs\\graphstate_180_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 177,
+        "store_actions": 177,
+        "loaded_atoms": 660,
+        "stored_atoms": 660,
+        "move_actions": 476,
+        "movement_us": 41213.254976625,
+        "transfer_us": 5310,
+        "rearrangement_us": 46523.254976625,
+        "total_us": 55885.054976625,
+        "compilation_s": 12.504135600000154
+      }
+    },
+    {
+      "case": "graphstate_180",
+      "variant": "ids_relaxed",
+      "input_sha256": "dc32c9a7870a1721f0aa9cfb7b9606e23b81581e2079005cff21793ee979216f",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[4][0][2]",
+        "expected": 25,
+        "actual": 26
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "different",
+        "first_stage": "routing",
+        "path": "routings[4].length",
+        "expected": 16,
+        "actual": 17
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.3942096999962814,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 163,
+          "store_actions": 167,
+          "loaded_atoms": 662,
+          "stored_atoms": 662,
+          "move_actions": 457,
+          "movement_us": 39830.71300726168,
+          "transfer_us": 4950.0,
+          "rearrangement_us": 44780.71300726168,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.4697318,
+            "scheduling_s": 1.19e-05,
+            "reuse_s": 9.55e-05,
+            "placement_s": 0.6397268,
+            "routing_s": 0.0021661,
+            "codegen_s": 0.001279
+          }
+        },
+        "trace_path": "runs\\graphstate_180_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 21.847107599998708,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 165,
+          "store_actions": 168,
+          "loaded_atoms": 662,
+          "stored_atoms": 662,
+          "move_actions": 458,
+          "movement_us": 39854.142876481674,
+          "transfer_us": 4995,
+          "rearrangement_us": 44849.142876481674,
+          "total_us": 54210.94287648168,
+          "compilation_s": 20.871850700001232
+        },
+        "trace_path": "runs\\graphstate_180_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 171,
+        "store_actions": 173,
+        "loaded_atoms": 660,
+        "stored_atoms": 660,
+        "move_actions": 466,
+        "movement_us": 40101.37839723692,
+        "transfer_us": 5160,
+        "rearrangement_us": 45261.37839723692,
+        "total_us": 54623.178397236916,
+        "compilation_s": 12.73433870000008
+      }
+    },
+    {
+      "case": "graphstate_200",
+      "variant": "ids_strict",
+      "input_sha256": "6ca09daa5e359c81542500d25d4602d6480bc8b116e1f3f76ce1dc5355221235",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[7][62][1]",
+        "expected": 4,
+        "actual": 3
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.5000878999999259,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 199,
+          "store_actions": 199,
+          "loaded_atoms": 756,
+          "stored_atoms": 756,
+          "move_actions": 537,
+          "movement_us": 45246.137150178394,
+          "transfer_us": 5970.0,
+          "rearrangement_us": 51216.137150178394,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.471798,
+            "scheduling_s": 1.19e-05,
+            "reuse_s": 0.0001147,
+            "placement_s": 0.7295766,
+            "routing_s": 0.0010033,
+            "codegen_s": 0.001835
+          }
+        },
+        "trace_path": "runs\\graphstate_200_source_ids_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 25.81744659999822,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 199,
+          "store_actions": 199,
+          "loaded_atoms": 756,
+          "stored_atoms": 756,
+          "move_actions": 537,
+          "movement_us": 45246.13715017856,
+          "transfer_us": 5970,
+          "rearrangement_us": 51216.13715017856,
+          "total_us": 61617.937150178564,
+          "compilation_s": 24.822025599998597
+        },
+        "trace_path": "runs\\graphstate_200_local_ids_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 192,
+        "store_actions": 192,
+        "loaded_atoms": 758,
+        "stored_atoms": 758,
+        "move_actions": 523,
+        "movement_us": 44219.11087221349,
+        "transfer_us": 5760,
+        "rearrangement_us": 49979.11087221349,
+        "total_us": 60380.910872213484,
+        "compilation_s": 15.909271600001375
+      }
+    },
+    {
+      "case": "graphstate_200",
+      "variant": "ids_relaxed",
+      "input_sha256": "6ca09daa5e359c81542500d25d4602d6480bc8b116e1f3f76ce1dc5355221235",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[7][62][1]",
+        "expected": 4,
+        "actual": 3
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 1.4914535999996588,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 197,
+          "store_actions": 197,
+          "loaded_atoms": 756,
+          "stored_atoms": 756,
+          "move_actions": 534,
+          "movement_us": 44723.19813332402,
+          "transfer_us": 5910.0,
+          "rearrangement_us": 50633.19813332402,
+          "two_qubit_layers": 5,
+          "stage_times_s": {
+            "architecture_s": 0.4692749,
+            "scheduling_s": 1.68e-05,
+            "reuse_s": 0.0001142,
+            "placement_s": 0.7194742,
+            "routing_s": 0.0024778,
+            "codegen_s": 0.0017123
+          }
+        },
+        "trace_path": "runs\\graphstate_200_source_ids_relaxed.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 26.217123299997183,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 197,
+          "store_actions": 197,
+          "loaded_atoms": 756,
+          "stored_atoms": 756,
+          "move_actions": 534,
+          "movement_us": 44723.1981333242,
+          "transfer_us": 5910,
+          "rearrangement_us": 50633.1981333242,
+          "total_us": 61034.998133324196,
+          "compilation_s": 25.19551710000087
+        },
+        "trace_path": "runs\\graphstate_200_local_ids_relaxed.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 192,
+        "store_actions": 192,
+        "loaded_atoms": 758,
+        "stored_atoms": 758,
+        "move_actions": 523,
+        "movement_us": 43967.352425325174,
+        "transfer_us": 5760,
+        "rearrangement_us": 49727.352425325174,
+        "total_us": 60129.15242532518,
+        "compilation_s": 15.923723200001405
+      }
+    },
+    {
+      "case": "graphstate_60",
+      "variant": "astar_strict",
+      "input_sha256": "e44803ef08cbfde7a5b22272fd05fcaf6dfc312fcc1b769096cdbbd6b44a7384",
+      "previous_comparison": {
+        "status": "different",
+        "first_stage": "placement",
+        "path": "placements[1][0][1]",
+        "expected": 0,
+        "actual": 1
+      },
+      "placement": "matched",
+      "comparison": {
+        "status": "matched",
+        "first_stage": null
+      },
+      "source": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 0.825696699997934,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 58,
+          "store_actions": 58,
+          "loaded_atoms": 226,
+          "stored_atoms": 226,
+          "move_actions": 169,
+          "movement_us": 14841.92418018342,
+          "transfer_us": 1740.0,
+          "rearrangement_us": 16581.92418018342,
+          "two_qubit_layers": 6,
+          "stage_times_s": {
+            "architecture_s": 0.464688,
+            "scheduling_s": 1.05e-05,
+            "reuse_s": 3.8e-05,
+            "placement_s": 0.0888647,
+            "routing_s": 0.0001372,
+            "codegen_s": 0.0003995
+          }
+        },
+        "trace_path": "runs\\graphstate_60_source_astar_strict.json"
+      },
+      "local": {
+        "status": "ok",
+        "returncode": 0,
+        "wall_s": 4.128109100005531,
+        "stdout": "",
+        "stderr": "",
+        "timeout_s": 120.0,
+        "metrics": {
+          "load_actions": 58,
+          "store_actions": 58,
+          "loaded_atoms": 226,
+          "stored_atoms": 226,
+          "move_actions": 169,
+          "movement_us": 14841.924180183394,
+          "transfer_us": 1740,
+          "rearrangement_us": 16581.924180183392,
+          "total_us": 19704.084180183396,
+          "compilation_s": 3.007973599997058
+        },
+        "trace_path": "runs\\graphstate_60_local_astar_strict.json"
+      },
+      "previous_local_metrics": {
+        "load_actions": 59,
+        "store_actions": 59,
+        "loaded_atoms": 226,
+        "stored_atoms": 226,
+        "move_actions": 166,
+        "movement_us": 14190.838084980287,
+        "transfer_us": 1770,
+        "rearrangement_us": 15960.838084980287,
+        "total_us": 19082.99808498029,
+        "compilation_s": 1.553308400001697
+      }
+    }
+  ],
+  "remaining_routing_diagnosis": {
+    "path_in_archive": "relaxed-first-divergences.json",
+    "sha256": "576d1d576d0f8b05c93c48b1fd3254346a9463df8069ea487c94ab12dcd0d325",
+    "scope": "first affected transition only; no routing changes",
+    "cases": [
+      {
+        "name": "graphstate_120",
+        "transition": 2,
+        "first_batch": 7,
+        "source_batch": [
+          32,
+          38,
+          44,
+          58,
+          104,
+          108
+        ],
+        "local_batch": [
+          32,
+          38,
+          58,
+          104,
+          108
+        ],
+        "source_only": [
+          44
+        ],
+        "local_only": [],
+        "all_placements_equal": true,
+        "source_strict_matches_unfiltered_local_strict": true,
+        "source_relaxed_matches_unfiltered_local": true,
+        "production_matches_unfiltered_local": false
+      },
+      {
+        "name": "graphstate_180",
+        "transition": 4,
+        "first_batch": 13,
+        "source_batch": [
+          45,
+          104,
+          121,
+          141,
+          148,
+          167
+        ],
+        "local_batch": [
+          87,
+          95
+        ],
+        "source_only": [
+          45,
+          104,
+          121,
+          141,
+          148,
+          167
+        ],
+        "local_only": [
+          87,
+          95
+        ],
+        "all_placements_equal": true,
+        "source_strict_matches_unfiltered_local_strict": true,
+        "source_relaxed_matches_unfiltered_local": true,
+        "production_matches_unfiltered_local": false
+      }
+    ],
+    "details": "reference/relaxed_pipeline_divergence.json"
+  }
+}

@@ -10,17 +10,16 @@ HeuristicPlacer.cpp (MIT); see the repository third-party notice.
 
 from collections.abc import Mapping
 from math import hypot, inf, sqrt
-from struct import Struct
 
 from ..device import Position, SLMSite
 from ..state import AtomState, SLMHolder
 from ..transport.rules import MoveRequest
+from .arithmetic import f32 as _float
 from .geometry import PlacementGeometry, SLMArray
 from .scoring import PlacementConfig, PlacementJob, PlacementOption
 from .windows import candidate_indices
 
 _DEFAULT_CONFIG = PlacementConfig()
-_FLOAT = Struct("f")
 
 
 def gate_jobs(
@@ -450,8 +449,3 @@ def _source_storage_job(
 
 def _lookahead(first: Position, second: Position, factor: float) -> float:
     return _float(_float(factor) * _float(sqrt(_float(_distance(first, second)))))
-
-
-def _float(value: float) -> float:
-    """Store source option metadata at C++ float precision."""
-    return float(_FLOAT.unpack(_FLOAT.pack(value))[0])

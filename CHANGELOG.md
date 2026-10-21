@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Match source placement float accumulation boundaries and operation order,
+  including candidate means, lookahead, group cost, and displacement deviation.
+- Match the source IDS indexed min/max heaps when equal-priority alternatives
+  are removed, replaced, and selected for another trial.
 - Correct upstream initial-array row reset/end access, exhausted-window
   termination, nearest-column distance assignment, and straddled-y nearest-SLM
   arithmetic; record executable source differences separately from equal cases.

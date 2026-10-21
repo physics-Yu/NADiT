@@ -132,11 +132,12 @@ retains the original 900-second default. Its results cannot establish the
 paper's timeout or release-build speedup claims. Original C++ bodies run in an
 O3 standalone executable; local timings include Python Device/DAG construction.
 
-Equal-priority heap order and numeric score accumulation retain their documented
-local differences. Seven completed source/local pairs first differ in placement:
+At the initial study, heap order and numeric score accumulation retained local
+differences. Seven completed source/local pairs first differed in placement:
 A* on `graphstate_60`, and IDS strict/relaxed on `graphstate_120`, `180`, and `200`.
-The first differing queue pop or score has not been isolated. The known numeric
-and tie-order differences are not established causes of these observations.
+That study had not isolated the first differing search decision.
+[ADR 0020](0020-placement-decision-parity.md) records the subsequent node-level
+diagnosis and corrections; the bounded study below remains historical evidence.
 
 ## Bounded study results
 
