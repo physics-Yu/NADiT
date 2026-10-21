@@ -45,6 +45,9 @@
 
 ### Added
 
+- Declarative `nadit.job/1` loading and a per-stage strategy registry, with
+  resolved paths/defaults, explicit or automatic entry layouts, and stable
+  source-measurement overrides.
 - Optional result validation with the first transport constraint, source-operation
   coverage, or replay mismatch, separate from normal compilation.
 - Shared compilation metrics used by saved results, examples, and the candidate

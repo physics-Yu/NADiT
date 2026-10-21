@@ -5,6 +5,7 @@ import json
 import platform
 import subprocess
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import asdict, fields, is_dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -307,23 +308,27 @@ def encode_result(
 
     Returns:
         A JSON result document containing lossless program and result records.
+        Nested job and metadata values are copied into an independent snapshot.
     """
+    job_snapshot = deepcopy(dict(job))
     document = {
         "schema": RESULT_SCHEMA,
-        "job": dict(job),
-        "provenance": dict(provenance)
+        "job": job_snapshot,
+        "provenance": deepcopy(dict(provenance))
         if provenance is not None
-        else collect_provenance(job),
+        else collect_provenance(job_snapshot),
         "program": encode_program(result.program),
         "entry_state": encode_layout(entry_state),
         "exit_state": encode_layout(result.exit_state),
         "operations": [asdict(item) for item in result.operations],
         "measurements": [asdict(item) for item in result.measurements],
         "layers": [_arrays(asdict(item)) for item in result.layers],
-        "metrics": dict(metrics) if metrics is not None else collect_metrics(result),
+        "metrics": deepcopy(dict(metrics))
+        if metrics is not None
+        else collect_metrics(result),
     }
     if validation is not None:
-        document["validation"] = dict(validation)
+        document["validation"] = deepcopy(dict(validation))
     return document
 
 

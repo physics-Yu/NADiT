@@ -17,6 +17,12 @@ against their common step-entry layout and is called only when requested.
 See [ADR 0021](../../docs/decisions/0021-job-spec-and-result-document.md)
 for the job, metrics, validation, and CLI interfaces.
 
+`job.load_job(path)` resolves a `nadit.job/1` document relative to its own
+directory, constructs its configured modules through `registry.py`, and
+returns a `CompilationJob`. `job.compile_job(job)` runs the existing compiler.
+The job retains the resolved configuration, Device, DAG, entry layout, and
+strategy. Measurement overrides refer to source measurement IDs.
+
 ## Current status
 
 Implemented: the OpenQASM 2.0 / 3.0 frontend, Physical DAG with measurement

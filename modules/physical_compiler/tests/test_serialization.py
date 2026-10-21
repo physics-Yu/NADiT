@@ -219,3 +219,42 @@ def test_provenance_has_stable_job_hash() -> None:
     assert first["python_version"]
     assert first["package_version"]
     assert first["qiskit_version"]
+
+
+def test_result_snapshots_nested_job_before_collecting_provenance() -> None:
+    entry = AtomLayout(())
+    result = CompilationResult(AtomProgram(), entry, (), (), ())
+    job: dict[str, Any] = {"schema": "nadit.job/1", "case": {"seed": 17}}
+    document = encode_result(result, entry_state=entry, job=job)
+
+    job["case"]["seed"] = 18
+
+    assert document["job"]["case"] == {"seed": 17}
+    assert (
+        document["provenance"]["job_hash"]
+        == collect_provenance(document["job"])["job_hash"]
+    )
+
+
+def test_result_snapshots_explicit_nested_metadata() -> None:
+    entry = AtomLayout(())
+    result = CompilationResult(AtomProgram(), entry, (), (), ())
+    provenance = {"versions": {"compiler": "fixture"}}
+    metrics = {"load_batch_sizes": [2, 3]}
+    validation: dict[str, Any] = {"ok": False, "failure": {"rule": "fixture"}}
+    document = encode_result(
+        result,
+        entry_state=entry,
+        job={},
+        provenance=provenance,
+        metrics=metrics,
+        validation=validation,
+    )
+
+    provenance["versions"]["compiler"] = "changed"
+    metrics["load_batch_sizes"].append(4)
+    validation["failure"]["rule"] = "changed"
+
+    assert document["provenance"] == {"versions": {"compiler": "fixture"}}
+    assert document["metrics"] == {"load_batch_sizes": [2, 3]}
+    assert document["validation"] == {"ok": False, "failure": {"rule": "fixture"}}

@@ -54,7 +54,7 @@ A job is a JSON document with schema `nadit.job/1`:
     "reuse": {"kind": "matching"}
   },
   "entry": {"kind": "initial_storage", "atom_ids": null},
-  "case": {"seed": 17, "overrides": {"9": 1}}
+  "case": {"seed": 17, "overrides": {"12": 1}}
 }
 ```
 
@@ -67,10 +67,18 @@ A job is a JSON document with schema `nadit.job/1`:
   implicit values are introduced.
 - `entry.kind` is `initial_storage` (`make_initial_layout`) or `explicit`
   (atom ID, SLM site ID, physical qubit triples).
+  Explicit entries use `"atoms": [[7, "storage_r0_c0", 0], ...]`;
+  the last element is the physical qubit index, not the atom ID.
 - `case.overrides` keys are stable source measurement IDs, matching
   `ResultRef.measurement_id`. Values are 0 or 1.
 - Branch sweeps and benchmark matrices are outside this schema; a caller
   generates several jobs.
+
+An empty `gate_zones` list is accepted when the selected stages do not use a
+catalogue. Geometry inference runs only when a selected module or automatic
+entry layout needs it. Explicit geometry retains the existing constructor
+semantics. Result documents snapshot the resolved job and supplied metadata
+so later edits to a caller's configuration cannot change a saved result hash.
 
 ### Strategy registry
 
