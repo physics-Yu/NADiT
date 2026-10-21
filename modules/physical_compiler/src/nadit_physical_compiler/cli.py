@@ -11,7 +11,13 @@ from typing import Any, NoReturn
 from .compiler import CompilationResult
 from .device import load_device, loads_device
 from .job import compile_job, load_job
-from .serialization import decode_layout, decode_result, encode_result
+from .serialization import (
+    RESULT_SCHEMA_V2,
+    decode_dag,
+    decode_layout,
+    decode_result,
+    encode_result,
+)
 from .validation import ValidationReport, validate_result
 
 
@@ -34,6 +40,9 @@ def _parser() -> argparse.ArgumentParser:
     compile_command.add_argument("--text", type=Path)
     validate_command = commands.add_parser("validate", help="Validate a saved result.")
     validate_command.add_argument("result", type=Path)
+    validate_command.add_argument(
+        "--device", type=Path, help="Explicit Device override; recorded in the report."
+    )
     compare_command = commands.add_parser("compare", help="Compare two saved results.")
     compare_command.add_argument("left", type=Path)
     compare_command.add_argument("right", type=Path)
@@ -63,12 +72,20 @@ def _compile(args: argparse.Namespace) -> tuple[dict[str, Any], int]:
     except Exception as error:
         raise _CompilationError(f"{type(error).__name__}: {error}") from error
     validation = (
-        validate_result(result, entry_state=job.entry_state, device=job.device)
+        validate_result(
+            result, entry_state=job.entry_state, device=job.device, dag=job.dag
+        )
         if args.validate
         else None
     )
     document = encode_result(
-        result, entry_state=job.entry_state, job=job.document, validation=validation
+        result,
+        entry_state=job.entry_state,
+        job=job.document,
+        validation=validation,
+        dag=job.dag,
+        device=job.device,
+        inputs=job.inputs,
     )
     if args.output is not None:
         args.output.write_text(_json(document), encoding="utf-8", newline="\n")
@@ -92,9 +109,18 @@ def _read_result(path: Path) -> tuple[dict[str, Any], CompilationResult]:
         raise ValueError(f"result {path}: {error}") from error
 
 
-def _validate(path: Path) -> tuple[ValidationReport, int]:
+def _validate(
+    path: Path, device_override: Path | None = None
+) -> tuple[dict[str, Any], int]:
     document, result = _read_result(path)
-    device_document = document["job"]["device"]
+    version_two = document["schema"] == RESULT_SCHEMA_V2
+    device_document = (
+        str(device_override.resolve())
+        if device_override is not None
+        else document["device"]
+        if version_two
+        else document["job"]["device"]
+    )
     if isinstance(device_document, str):
         device = load_device(path.parent / device_document)
     elif isinstance(device_document, dict):
@@ -102,9 +128,16 @@ def _validate(path: Path) -> tuple[ValidationReport, int]:
     else:
         raise ValueError("job.device: expected a path or Device JSON object")
     report = validate_result(
-        result, entry_state=decode_layout(document["entry_state"]), device=device
+        result,
+        entry_state=decode_layout(document["entry_state"]),
+        device=device,
+        dag=decode_dag(document["dag"]) if version_two else None,
+        detailed=True,
     )
-    return report, _validation_status(report)
+    report_document: dict[str, Any] = dict(report)
+    if device_override is not None:
+        report_document["device_override"] = str(device_override.resolve())
+    return report_document, _validation_status(report)
 
 
 def _difference(left: Any, right: Any, path: str) -> dict[str, Any] | None:
@@ -144,8 +177,11 @@ def _first_difference(
         "measurements",
         "entry_state",
         "exit_state",
+        "dag",
+        "device",
+        "inputs",
     ):
-        found = _difference(left[field], right[field], field)
+        found = _difference(left.get(field), right.get(field), field)
         if found is None:
             continue
         found["kind"] = "layer" if field == "layers" else field
@@ -196,8 +232,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "compile":
             document, status = _compile(args)
         elif args.command == "validate":
-            report, status = _validate(args.result)
-            document = dict(report)
+            document, status = _validate(args.result, args.device)
         else:
             document, status = _compare(args.left, args.right), 0
         print(_json(document), end="")

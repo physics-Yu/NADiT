@@ -59,8 +59,15 @@ def test_compile_writes_json_text_and_validation(
     assert run.stderr == ""
     document = json.loads(run.stdout)
     assert document == json.loads(output.read_text(encoding="utf-8"))
-    assert document["schema"] == "nadit.result/1"
-    assert document["validation"] == {"ok": True, "failure": None}
+    assert document["schema"] == "nadit.result/2"
+    assert document["validation"] == {
+        "ok": True,
+        "failure": None,
+        "failures": [],
+        "failure_count": 0,
+        "checks": ["motion", "coverage", "replay", "pulse", "addressing", "timing"],
+        "semantic": "checked",
+    }
     assert document["metrics"]["atom_steps"] > 0
     assert "CZ_PULSE(" in text.read_text(encoding="utf-8")
 
@@ -72,7 +79,14 @@ def test_validate_does_not_read_circuit(
     path = _write(tmp_path / "result.json", result_document)
     run = _run("validate", str(path))
     assert run.returncode == 0, run.stderr
-    assert json.loads(run.stdout) == {"ok": True, "failure": None}
+    assert json.loads(run.stdout) == {
+        "ok": True,
+        "failure": None,
+        "failures": [],
+        "failure_count": 0,
+        "checks": ["motion", "coverage", "replay"],
+        "semantic": "unavailable",
+    }
 
 
 def test_validate_reports_real_exit_state_failure(

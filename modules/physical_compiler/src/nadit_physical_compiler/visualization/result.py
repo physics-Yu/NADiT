@@ -12,7 +12,7 @@ from .trace import build_trace
 
 def build_result_trace(
     document: Mapping[str, Any],
-    device_document: Mapping[str, Any],
+    device_document: Mapping[str, Any] | None = None,
     *,
     title: str = "Saved compilation",
     description: str = "",
@@ -20,8 +20,9 @@ def build_result_trace(
     """Build playback from saved JSON using the public codecs and replay API.
 
     Args:
-        document: A nadit.result/1 compilation result.
-        device_document: The Device JSON used for this result.
+        document: A nadit.result/1 or nadit.result/2 compilation result.
+        device_document: An explicit Device override; omitted to use the
+            embedded version-two snapshot. Version-one results require it.
         title: Viewer label for the saved case.
         description: Optional description shown beside the label.
 
@@ -35,6 +36,10 @@ def build_result_trace(
         TypeError: Encoded fields do not match their public constructors.
     """
     result = decode_result(document)
+    if device_document is None:
+        device_document = document.get("device")
+    if device_document is None:
+        raise ValueError("Version-one results require an explicit Device document.")
     device = loads_device(json.dumps(dict(device_document)))
     trace = build_trace(
         result.program,
@@ -48,7 +53,7 @@ def build_result_trace(
     trace["compilation"] = deepcopy(
         {
             key: document[key]
-            for key in ("job", "provenance", "metrics", "validation")
+            for key in ("job", "provenance", "metrics", "validation", "inputs")
             if key in document
         }
     )

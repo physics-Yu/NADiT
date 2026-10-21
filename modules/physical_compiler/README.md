@@ -2,40 +2,52 @@
 
 ## Saved compilation results
 
-`serialization.py` encodes Atom IR, layouts, and compilation records as
-`nadit.result/1` JSON. `encode_result(result, entry_state=entry, job=job)`
-preserves the program and measurement identities; `decode_result(document)`
-and `decode_layout(document["entry_state"])` reconstruct replay inputs.
+The CLI writes self-contained `nadit.result/2` JSON: Atom IR, layouts,
+compilation records, the native DAG, an expanded Device snapshot, and input
+content hashes. `decode_result(document)`, `decode_dag(document["dag"])`,
+and `decode_layout(document["entry_state"])` restore the saved records.
+In Python, pass `dag`, `device`, and `inputs` to `encode_result` for version 2;
+omitting all three retains version-1 serialization.
 `metrics.collect_metrics(result)` computes the shared counts and durations;
 `encode_result` includes them automatically. Transport duration is the sum of
 Load/Move/Store action durations; program duration follows parallel steps,
 and result duration also includes pending measurement feedback latency.
-`validation.validate_result(result, entry_state=entry, device=device)` reports
-the first transport, source-coverage, or replay mismatch. It checks all actions
-against their common step-entry layout and is called only when requested.
+`validation.validate_result(result, entry_state=entry, device=device, dag=dag)`
+checks transport, source coverage, replay, pulse interactions, addressing,
+dependencies, and measurement feedback. The report gives the first failure,
+up to 20 failure details, the total count, and the check groups that ran.
+Actions use their common step-entry layout. Validation runs only when requested;
+the existing call without a DAG retains its compact structural report.
 `AtomProgram.to_text()` remains the human-readable display.
 See [ADR 0021](../../docs/decisions/0021-job-spec-and-result-document.md)
-for the job, metrics, validation, and CLI interfaces.
+for the job, metrics, and CLI interfaces, and
+[ADR 0023](../../docs/decisions/0023-semantic-validation-and-self-contained-results.md)
+for self-contained results and semantic checks.
 
 `job.load_job(path)` resolves a `nadit.job/1` document relative to its own
 directory, constructs its configured modules through `registry.py`, and
 returns a `CompilationJob`. `job.compile_job(job)` runs the existing compiler.
-The job retains the resolved configuration, Device, DAG, entry layout, and
-strategy. Measurement overrides refer to source measurement IDs.
+The job retains the resolved configuration, Device, DAG, entry layout,
+strategy, and input hashes. Measurement overrides refer to source measurement
+IDs. Job identity uses input content hashes in place of file paths; provenance
+also records whether tracked files differ from the recorded git revision.
 
 Run saved jobs and inspect their results from the module directory:
 
 ```text
 uv run --locked nadit compile examples/jobs/multipair.json -o RESULT.json --validate --text PROGRAM.txt
 uv run --locked nadit validate RESULT.json
+uv run --locked nadit validate RESULT.json --device configs/multipair_flexible.json
 uv run --locked nadit compare A.json B.json
 ```
 
 Commands write JSON to stdout and diagnostics to stderr. `compile -o` also
 saves the same result document; `--text` writes the display-only Atom IR.
 Exit codes are 0 for success, 1 for invalid input, 2 for compilation failure,
-and 3 for a failed validation report. Validation reads the saved program and
-its Device; it does not load the circuit again.
+and 3 for a failed validation report. Version-2 validation reads the embedded
+DAG and Device without accessing either input file. `--device` explicitly
+replaces the Device and records its path in the report. Version-1 results
+retain structural validation and report `semantic: "unavailable"` in the CLI.
 See [Jobs and saved results](docs/jobs-and-results.md) for all stage options,
 entry bindings, result fields, metrics, and the saved-result viewer.
 
@@ -136,6 +148,10 @@ View a saved result without recompilation:
 uv run --locked python -m examples.visualize_compilation --result RESULT.json --output artifacts/result-viewer/index.html
 ```
 
+Version-2 results supply their embedded Device, so the input files may be
+moved or removed. Version-1 results use `job.device`; `--device DEVICE.json`
+provides an explicit replacement for either version.
+
 Generate an offline viewer from three real compilations:
 
 ```text
@@ -178,6 +194,11 @@ physical_compiler/
 │   ├── emission/      # Bind gates to existing Atom IR actions
 │   ├── strategies/    # Compose stage implementations
 │   ├── replay.py      # Apply atom actions to positions and holders
+│   ├── serialization.py # Versioned Atom IR, DAG, Device, and result snapshots
+│   ├── provenance.py  # Content identities and software/git provenance
+│   ├── validation.py  # Optional structural and semantic result checks
+│   ├── semantic_actions.py # Pulse, addressing, and readout checks
+│   ├── validation_timing.py # Dependency, branch, and feedback checks
 │   ├── physical_ir.py  # Circuit operations, dependencies, result references
 │   ├── atom_ir.py      # Atom actions, parallel steps, timing, text output
 │   ├── execution.py    # Physical DAG feedback reference tester

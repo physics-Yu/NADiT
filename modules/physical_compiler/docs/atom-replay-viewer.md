@@ -13,9 +13,11 @@ uv run --locked python -m examples.visualize_compilation
 uv run --locked python -m examples.visualize_compilation --output artifacts/my-run.html
 ```
 
-`--result` reads `nadit.result/1` and its recorded Device. Repeat it for
-multiple saved cases. Use `--device DEVICE.json` to supply a moved Device
-file. This mode does not read QASM, compile, or sample measurements. See
+`--result` reads `nadit.result/2` with its embedded Device snapshot, so the
+original QASM and Device files may be moved or removed. Repeat it for multiple
+saved cases. Version-1 results remain supported through their `job.device`
+reference. `--device DEVICE.json` explicitly replaces the Device for either
+version. This mode does not read QASM, compile, or sample measurements. See
 [Jobs and saved results](jobs-and-results.md) for producing result files.
 
 The default output is `artifacts/atom-replay/index.html`, with `traces.json`
@@ -37,6 +39,25 @@ observations inspect endpoints; the displayed intermediate line segments are
 interpolation between compiled endpoints, not a dynamics or trajectory solver.
 
 ## Export another compilation
+
+For a saved version-2 result:
+
+```python
+import json
+from pathlib import Path
+
+from nadit_physical_compiler.visualization import build_result_trace, write_html
+
+document = json.loads(Path("result.json").read_text(encoding="utf-8"))
+trace = build_result_trace(document, title="Saved compilation")
+write_html([trace], "artifacts/saved-compilation.html")
+```
+
+An explicit second argument, `device_document`, overrides the embedded
+Device; the Python adapter requires it for a version-1 result. The example
+CLI resolves that legacy Device reference before calling the adapter.
+
+Direct compilation records remain supported:
 
 ```python
 from nadit_physical_compiler.visualization import build_trace, write_html
@@ -95,6 +116,12 @@ The browser keeps sparse checkpoints and replays intervening patches for seeks.
 
 ## Validation
 
+Run `nadit validate RESULT.json` for the independent transport, pulse,
+addressing, dependency, and feedback checks before interpreting a version-2
+trace. The viewer exports recorded validation metadata when present; viewing
+a trace does not run validation. Its boundary observations remain the focused
+SLM/AOD intersection checks described above.
+
 Python tests reconstruct every transport boundary from sparse patches and check
 parallel durations, holder changes, coverage, recorded results, and observations.
 The DOM-independent browser model is checked separately:
@@ -119,6 +146,9 @@ See [ADR 0022](../../../docs/decisions/0022-atom-replay-viewer.md).
 
 `visualization.trace.build_trace(program, entry_state, device, *, title,
 description="", measurements=(), operations=())` creates the trace.
+`visualization.build_result_trace(document, device_document=None, *,
+title="Saved compilation", description="")` adapts saved result JSON and uses
+its embedded Device when the second argument is omitted.
 `visualization.export.write_html(traces, path, *, title="NADiT Atom Replay")`
 writes one self-contained document. Browser assets live in `visualization/web`.
 The viewer model is independent of DOM rendering and can be tested with Node.

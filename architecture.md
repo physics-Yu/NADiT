@@ -1,6 +1,6 @@
 # NADiT Architecture
 
-Date: 2026-10-20.
+Date: 2026-10-21.
 
 ## Goal
 
@@ -27,7 +27,9 @@ program for one measurement case under a selected Device and compiler strategy.
 | Shared transport rules and direct strict parallel batches | Implemented |
 | Next-CZ preview and matching-based atom reuse | Implemented |
 | Routing-aware IDS placement and optional reuse | Implemented |
-| Staged/relaxed routing | Next |
+| Staged/relaxed routing | Implemented |
+| Declarative jobs, CLI, and saved result replay | Implemented |
+| Self-contained result v2 and independent semantic validation | Implemented |
 | Reusable components and logical QEC compilation | Follow the physical compiler |
 
 The module [README](modules/physical_compiler/README.md) defines the implemented API.
@@ -78,6 +80,19 @@ atom actions. Strategies construct legal groups from Device rules.
 Reference validators serve tests and explicit debugging, outside the default
 construction path. [ADR 0007](docs/decisions/0007-explicit-physical-and-atom-ir.md)
 records these contracts.
+
+`nadit.result/2` preserves the native DAG, expanded Device, input content
+hashes, Atom IR, and result records. The job hash uses content identities in
+place of input paths. Provenance includes tracked-file git dirtiness.
+Validation and viewing can read the snapshot after the original files move.
+
+The independent validator checks transport, exact CZ illumination and
+interaction pairs, zone/holder/addressing/readout rules, native-operation
+execution counts, DAG dependencies, and measurement feedback. Intervals come
+from the actual Atom IR timeline, then are compared with recorded intervals.
+Reports retain the first 20 failures and count all failures. Version-1 results
+receive structural checks and are marked semantically unavailable. See
+[ADR 0023](docs/decisions/0023-semantic-validation-and-self-contained-results.md).
 
 ## Device requirements
 

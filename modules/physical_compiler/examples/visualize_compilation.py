@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from examples.viewer_cases import CompiledExample, compile_examples
+from nadit_physical_compiler.serialization import RESULT_SCHEMA_V2
 from nadit_physical_compiler.visualization import build_result_trace
 from nadit_physical_compiler.visualization.export import write_html
 from nadit_physical_compiler.visualization.trace import build_trace
@@ -38,14 +39,14 @@ def main(argv: Sequence[str] | None = None) -> None:
         "--result",
         type=Path,
         action="append",
-        help="Saved nadit.result/1 file; repeat to compare several cases.",
+        help="Saved nadit.result/1 or /2 file; repeat to compare several cases.",
     )
     parser.add_argument(
         "--device",
         type=Path,
         help=(
             "Device JSON override for saved results; "
-            "defaults to each result's job.device."
+            "defaults to the embedded snapshot, or version-one job.device."
         ),
     )
     parser.add_argument(
@@ -101,11 +102,13 @@ def main(argv: Sequence[str] | None = None) -> None:
 
 def _saved_trace(path: Path, device_override: Path | None) -> dict[str, Any]:
     document = json.loads(path.read_text(encoding="utf-8-sig"))
-    device = document["job"]["device"]
+    device = None
     if device_override is not None:
         device = json.loads(device_override.read_text(encoding="utf-8-sig"))
-    elif isinstance(device, str):
-        device = json.loads((path.parent / device).read_text(encoding="utf-8-sig"))
+    elif document.get("schema") != RESULT_SCHEMA_V2:
+        device = document["job"]["device"]
+        if isinstance(device, str):
+            device = json.loads((path.parent / device).read_text(encoding="utf-8-sig"))
     return build_result_trace(document, device, title=path.stem)
 
 

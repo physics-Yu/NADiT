@@ -4,6 +4,9 @@
 
 ### Fixed
 
+- Place GlobalRY participants inside its configured coverage before pulsing,
+  including atoms retained in a gate zone; move illuminated spectators out.
+  Preserve the pinned original trace and record the resulting placement change.
 - Match source placement float accumulation boundaries and operation order,
   including candidate means, lookahead, group cost, and displacement deviation.
 - Match the source IDS indexed min/max heaps when equal-priority alternatives
@@ -45,6 +48,11 @@
 
 ### Added
 
+- Self-contained `nadit.result/2` documents with native DAG and Device snapshots,
+  captured input hashes, location-independent job identity, and `git_dirty`.
+- Independent CZ, addressing, readout, dependency, branch, and feedback checks;
+  bounded failure details with complete counts, explicit Device overrides,
+  and version-1 structural-validation compatibility.
 - Saved example jobs and a result-document input for the offline viewer;
   existing example command options and output remain unchanged.
 - `nadit compile`, `nadit validate`, and `nadit compare` commands with JSON

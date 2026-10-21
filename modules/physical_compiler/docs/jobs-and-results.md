@@ -5,15 +5,17 @@ Run these commands from `modules/physical_compiler`:
 ```text
 uv run --locked nadit compile examples/jobs/multipair.json -o result.json --validate --text program.txt
 uv run --locked nadit validate result.json
+uv run --locked nadit validate result.json --device configs/multipair_flexible.json
 uv run --locked nadit compare result.json another-result.json
 uv run --locked python -m examples.visualize_compilation --result result.json --output artifacts/result-viewer/index.html
 ```
 
 `compile` prints the result JSON and optionally saves the same document with
-`-o`. `--text` exports the Stim-style display. `validate` and the saved-result
-viewer read the saved actions and Device without loading QASM or compiling.
-The viewer accepts repeated `--result` arguments and an optional `--device`
-JSON path when a Device file has moved.
+`-o`. `--text` exports the Stim-style display. Version-2 results embed the
+Device and native DAG: validation and playback need neither input file.
+`validate --device` explicitly replaces the Device snapshot and records the
+absolute path in `device_override`. The viewer accepts repeated `--result`
+arguments and its own optional `--device` JSON override.
 
 ## Job inputs
 
@@ -88,38 +90,70 @@ plain rectangle with the same four coordinate fields.
 
 ## Result documents
 
-`nadit.result/1` stores the resolved job, provenance, complete structured Atom
-IR, entry and exit layouts, operation records, measurement records, layers,
-metrics, and optional validation. Paths are absolute and strategy defaults
-are explicit. Nested job and metadata values are independent snapshots.
-Provenance includes a canonical job hash, package/Python/Qiskit versions, and
-the available git revision. Keep referenced QASM and Device files with a job
-when moving it between machines; a saved result needs only its Device to replay.
+The CLI writes `nadit.result/2`. It retains the resolved job, provenance,
+structured Atom IR, entry and exit layouts, operation records, measurement
+records, layers, metrics, and optional validation from version 1, and adds:
+
+| Field | Content |
+| --- | --- |
+| `device` | Expanded Device snapshot, accepted by `loads_device` |
+| `dag` | Native operations, conditions, source/result identities, edges, wire counts, registers, and global phase |
+| `inputs` | `qasm_sha256` and `device_sha256` captured when the job is loaded |
+
+Paths in the resolved job remain absolute and strategy defaults are explicit.
+Nested data is copied into the result. QASM identity hashes its exact file
+bytes. Device identity hashes its expanded canonical JSON, so changing JSON
+formatting alone does not change it. Canonical JSON sorts keys, uses compact
+separators, and rejects nonfinite numbers.
+
+`provenance.job_hash` replaces the QASM and Device references with those
+content hashes before hashing the resolved job. Identical jobs in different
+directories have the same identity. Provenance also records package, Python,
+and Qiskit versions, the available git revision, and `git_dirty`. Dirtiness
+covers tracked index/worktree changes; untracked files are excluded, and
+unavailable git information is null.
+
+`decode_result` reads both versions. Version-1 results have no DAG or Device
+snapshot: CLI validation uses `job.device` (or `--device`) and reports
+`semantic: "unavailable"`. Direct `encode_result` calls that omit `dag`,
+`device`, and `inputs` continue to produce version 1; supply all three for
+version 2. A job still needs its referenced files when compiled again.
 
 The public Python modules are:
 
 ```python
-from nadit_physical_compiler.job import load_job, compile_job
+from nadit_physical_compiler.job import compile_job, load_job
 from nadit_physical_compiler.serialization import (
-    encode_result,
-    decode_result,
+    decode_dag,
     decode_layout,
+    decode_result,
+    encode_result,
 )
 from nadit_physical_compiler.validation import validate_result
 
 job = load_job("examples/jobs/multipair.json")
 result = compile_job(job)
-report = validate_result(result, entry_state=job.entry_state, device=job.device)
+report = validate_result(
+    result, entry_state=job.entry_state, device=job.device, dag=job.dag
+)
 document = encode_result(
-    result, entry_state=job.entry_state, job=job.document, validation=report
+    result,
+    entry_state=job.entry_state,
+    job=job.document,
+    dag=job.dag,
+    device=job.device,
+    inputs=job.inputs,
+    validation=report,
 )
 restored = decode_result(document)
 entry = decode_layout(document["entry_state"])
+dag = decode_dag(document["dag"])
 ```
 
-`visualization.build_result_trace(document, device_document)` consumes the two
-public JSON formats. `write_html([trace], path)` writes the offline viewer.
-The existing direct Python composition and `build_trace` interfaces remain.
+`visualization.build_result_trace(document)` uses the embedded version-2
+Device. Pass `device_document` explicitly to override it or to supply the
+Device for a version-1 document. `write_html([trace], path)` writes the offline
+viewer. Direct Python composition and `build_trace` remain available.
 
 ## Metrics and diagnosis
 
@@ -138,16 +172,38 @@ The existing direct Python composition and `build_trace` interfaces remain.
 Transport duration retains the example's action-sum definition. Concurrent
 transport actions contribute separately; program duration uses step timing.
 
-Validation checks Load/Move/Store against the common step-entry layout,
-replays the program, and checks emitted/skipped native operation coverage.
-Its first failure contains `step`, `action`, `kind`, `rule`, and `message`.
-Indices are zero-based; whole-result failures have null indices. Existing
-motion rule names are preserved. Validation runs only when requested.
+Validation runs only when requested. With a DAG it checks these groups:
+
+| Group | Checks |
+| --- | --- |
+| `motion` | Load/Move/Store against the common step-entry layout |
+| `coverage` | Emitted/skipped native operation coverage and executable actions |
+| `replay` | Replayed exit layout agrees with the recorded exit |
+| `pulse` | CZ interaction edges match source gates; no spectators, disallowed holder pairs/zones, or concurrent movement through illumination |
+| `addressing` | Source gates, parameters, atoms, channels, zones, holders, measurement bindings, and concurrent readout spacing |
+| `timing` | Dependencies, measurement completion and feedback latency, recorded intervals, and condition decisions |
+
+The detailed report contains `ok`, `failure`, `failures`, `failure_count`,
+`checks`, and `semantic`. `failure` is the first failure; `failures` retains
+at most 20 details while `failure_count` counts all findings. Each detail has
+`step`, `action`, `kind`, `rule`, and `message`. Indices are zero-based;
+whole-result failures have null indices. Checks continue after a finding.
+If replay cannot reconstruct a layout, independent timing and coverage checks
+continue, but subsequent spatial checks cannot run from that missing state.
+
+`validate_result(..., dag=dag)` returns the detailed report with
+`semantic: "checked"`. The original call without `dag` retains the compact
+`{"ok": ..., "failure": ...}` report; `detailed=True` requests the extended
+structural report with `semantic: "unavailable"`. The CLI always uses detailed
+reports. Spatial checks use `COORDINATE_TOLERANCE`; timing uses
+`TIME_TOLERANCE_US = 1e-9`. Point-addressed CZ coverage has zero geometric
+width; no beam width is inferred for its straight-segment crossing check.
 
 `compare` reports changed metrics and the first differing layer, program
-field, operation, measurement, or layout record. Numeric metric deltas are
-right minus left. It ignores job/provenance differences when deciding
-execution equality. A successful comparison returns 0 even when results differ.
+field, operation, measurement, layout, DAG, Device, or input hash. Numeric
+metric deltas are right minus left. It ignores job/provenance differences
+when deciding equality. A successful comparison returns 0 even when results
+differ.
 
 CLI exit codes are 0 (success), 1 (invalid input or output path),
 2 (compilation failure), and 3 (validation failure). Data goes to stdout as
