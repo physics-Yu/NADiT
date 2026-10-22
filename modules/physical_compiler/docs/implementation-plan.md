@@ -1,6 +1,6 @@
 # Physical Compiler Implementation Plan
 
-Date: 2026-10-21.
+Date: 2026-10-22.
 Status: Steps 1 and 3, retained-readout replay and operation capabilities from
 step 2, and the multi-pair correctness baseline in step 4 are implemented.
 Step 4's shared rules and direct strict batching are also implemented.
@@ -20,6 +20,18 @@ shared-zone and AOD-held gate planning remain separate work.
 ADR 0025 adds Device-owned pair arrays and roles, zoned/v1 parameters,
 strategy admission, discovery, and the job JSON Schema. All five current
 configs have exact reproduction parameter files under examples/architectures/.
+
+## Current research direction
+
+The two-patch d=5, five-round experiment and the symmetry/search-space
+interpretation are recorded in
+[the experiment note](experiments/2026-10-22-surface-code-symmetry.md).
+The next direction is an ENOLA-style non-zoned embedding, starting with a
+source/interface study and a representation that preserves repeated circuit
+structure. Retain the current zoned results as a baseline and the existing
+Physical DAG -> Device/strategy -> Atom IR contract. This direction is agreed;
+its implementation has not started. Rigid partial-release optimization remains
+paused under ADR 0028.
 
 ## Compilation contract
 
