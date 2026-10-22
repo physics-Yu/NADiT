@@ -192,7 +192,11 @@ def _check_cz(
             )
         )
     expected_atoms = {atom for pair in expected for atom in pair}
-    for atom in sorted(illuminated_set - expected_atoms):
+    for atom in (
+        sorted(illuminated_set - expected_atoms)
+        if not capability.allow_spectators
+        else ()
+    ):
         failures.append(
             ConstraintResult(
                 "illuminated_spectator", f"CZ pulse illuminates spectator atom {atom}."

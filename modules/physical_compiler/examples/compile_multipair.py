@@ -62,6 +62,9 @@ def main() -> None:
     document["strategy"]["reuse"] = {"kind": "matching" if args.reuse else "none"}
     job = loads_job(json.dumps(document), base_dir=path.parent)
     dag, device, entry = job.dag, job.device, job.entry_state
+    from nadit_physical_compiler.strategies import SearchSmarterStrategy
+
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     catalog, placer = job.catalog, job.strategy.placer
     assert catalog is not None
     overrides = {

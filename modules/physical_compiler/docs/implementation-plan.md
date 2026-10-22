@@ -30,8 +30,12 @@ The next direction is an ENOLA-style non-zoned embedding, starting with a
 source/interface study and a representation that preserves repeated circuit
 structure. Retain the current zoned results as a baseline and the existing
 Physical DAG -> Device/strategy -> Atom IR contract. This direction is agreed;
-its implementation has not started. Rigid partial-release optimization remains
-paused under ADR 0028.
+ADR 0030 implements the explicit-layout non-zoned baseline: shared double-trap
+cells, ENOLA-inspired dual candidates, strict transport batches, one pulse per
+parallel CZ layer, and exact return to the reference layout. Dynamic SA remains
+deferred. Rigid partial-release optimization remains paused under ADR 0028.
+Per-circuit job/Python selection, saved-result semantic validation, and replay
+are verified; the full suite passes 1,650 tests.
 
 ## Compilation contract
 

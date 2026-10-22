@@ -6,7 +6,7 @@ from typing import Any
 from .architectures import describe_families
 from .job import JOB_SCHEMA
 from .registry import REGISTRY
-from .schemas.job import stage_schema
+from .schemas.job import nonzoned_schema, stage_schema
 from .serialization import RESULT_SCHEMA, RESULT_SCHEMA_V2
 
 
@@ -16,6 +16,19 @@ def describe() -> dict[str, Any]:
     from .cost.hsim import HSIM_COMMIT
 
     return {
+        "compiler_strategies": {
+            "search_smarter": {
+                "selection": "scheduler/placement/transport/emitter/reuse stages"
+            },
+            "nonzoned": {
+                "options": nonzoned_schema(),
+                "supports": (
+                    "explicit SLM reference, isolated double-trap cells, flexible AOD, "
+                    "global SLM-SLM CZ with isolated spectators; retained AOD readout"
+                ),
+                "return_boundary": "parallel CZ layer",
+            },
+        },
         "cost_models": {
             "additive/v1": {
                 "defaults": deepcopy(DEFAULTS),

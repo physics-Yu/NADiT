@@ -75,6 +75,7 @@ CZ = obj(
         "radius_um": POSITIVE,
         "duration_us": NONNEGATIVE,
         "holder_pairs": array(fixed([HOLDER, HOLDER])),
+        "allow_spectators": BOOLEAN,
     },
     ("channel", "radius_um", "duration_us"),
 )

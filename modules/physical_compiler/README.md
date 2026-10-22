@@ -1,5 +1,40 @@
 # Physical Compiler
 
+## Fixed-layout non-zoned compiler
+
+Each job can select `"strategy": {"kind": "nonzoned"}` instead of the existing
+Search Smarter stage configuration. Supply `entry.kind="explicit"` with
+`[atom_id, SLM_site_id, physical_qubit]` records. Device `pair_arrays` describe
+isolated double-trap cells in the shared storage/interaction area. Homes may
+use either side. Set `cz.allow_spectators=true` for a global shared-array pulse;
+extra interacting pairs remain illegal. Existing devices default to false.
+
+The planner generates both moving-end choices for each CZ, chooses compatible
+strict batches in longest-first order, executes one pulse after the entire
+layer arrives, then reverses the batches to restore every original SLM holder.
+`max_cz_gates` optionally caps a layer. No SA or speculative measurement sampling
+is used. Measurements use retained AOD readout and return to their entry sites.
+This baseline requires flexible motion and SLM-SLM CZ; it uses NADiT strict
+transfers rather than ENOLA's staged CodeGen. See
+[ADR 0030](../../docs/decisions/0030-nonzoned-fixed-layout.md).
+
+```text
+uv run --locked nadit compile examples/jobs/nonzoned.json --validate -o result.json --text atom_ir.txt
+uv run --locked nadit validate result.json
+uv run --locked nadit describe
+```
+
+For Python callers, `strategy_selection.select_strategy(spec, dag=dag,
+device=device, aod_id=aod_id, catalog=catalog)` returns the strategy and its
+resolved options. Pass it to the unchanged `compile_physical` entry point with
+the chosen reference layout. Alternatively construct
+`strategies.NonZonedStrategy(aod_id, catalog)` directly. The same strategy can
+be reused for another circuit/layout without retaining results or DAG progress.
+
+Reference layout changes, AOD-held CZ, staged pickup, and dynamic SA are separate
+extensions. The example geometry/timings are configurable model inputs, not
+hardware calibration.
+
 ## Flexible AOD batch readout
 
 Set Device `readout.max_atoms` (or `measurement.readout.max_atoms` in zoned/v1)

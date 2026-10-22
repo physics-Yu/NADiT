@@ -12,6 +12,7 @@ from nadit_physical_compiler.cli import main
 from nadit_physical_compiler.job import loads_job
 from nadit_physical_compiler.registry import REGISTRY, build_strategy
 from nadit_physical_compiler.serialization import encode_device
+from nadit_physical_compiler.strategies import SearchSmarterStrategy
 from nadit_physical_compiler.support import UnsupportedJob
 from nadit_physical_compiler.transport.staging_geometry import StagingGeometry
 
@@ -88,10 +89,9 @@ def test_explicit_staging_geometry_admits_otherwise_unrecognized_lattice() -> No
         "atoms": [[q, f"storage_r1_c{q}", q] for q in range(4)],
     }
     document["strategy"]["transport"] = {"kind": "staged", "geometry": explicit}
-    assert (
-        loads_job(json.dumps(document), base_dir=MODULE).strategy.transporter
-        is not None
-    )
+    strategy = loads_job(json.dumps(document), base_dir=MODULE).strategy
+    assert isinstance(strategy, SearchSmarterStrategy)
+    assert strategy.transporter is not None
 
 
 def test_missing_catalogue_checks_all_affected_stages() -> None:

@@ -1,0 +1,14 @@
+{
+  "schema": "nadit.job/1",
+  "circuit": {"qasm": "../circuits/nonzoned.qasm3"},
+  "device": "../devices/nonzoned.json",
+  "aod": "transport",
+  "strategy": {"kind": "nonzoned"},
+  "entry": {"kind": "explicit", "atoms": [
+    [0, "home_r0_c0", 0], [1, "home_r0_c1", 1],
+    [2, "home_r0_c2", 2], [3, "home_r0_c3", 3],
+    [4, "home_r1_c0", 4], [5, "home_r1_c1", 5],
+    [6, "home_r1_c2", 6], [7, "home_r1_c3", 7]
+  ]},
+  "case": {"seed": 17}
+}

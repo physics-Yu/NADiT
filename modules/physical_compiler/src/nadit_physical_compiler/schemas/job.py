@@ -147,13 +147,20 @@ def job_schema() -> dict[str, Any]:
                     ("zone", "pairs"),
                 )
             ),
-            "strategy": obj(
-                {
-                    stage: {"oneOf": [stage_schema(stage, kind) for kind in kinds]}
-                    for stage, kinds in REGISTRY.items()
-                },
-                tuple(REGISTRY),
-            ),
+            "strategy": {
+                "oneOf": [
+                    obj(
+                        {
+                            stage: {
+                                "oneOf": [stage_schema(stage, kind) for kind in kinds]
+                            }
+                            for stage, kinds in REGISTRY.items()
+                        },
+                        tuple(REGISTRY),
+                    ),
+                    nonzoned_schema(),
+                ]
+            },
             "entry": {
                 "oneOf": [
                     obj(
@@ -190,3 +197,14 @@ def job_schema() -> dict[str, Any]:
         "title": "nadit.job/1",
         **document,
     }
+
+
+def nonzoned_schema() -> dict[str, Any]:
+    """Describe per-circuit fixed-layout shared-array compilation."""
+    return obj(
+        {
+            "kind": {"const": "nonzoned"},
+            "max_cz_gates": {"type": "integer", "minimum": 1},
+        },
+        ("kind",),
+    )

@@ -242,6 +242,7 @@ def test_explicit_transport_geometry_roundtrips() -> None:
     geometry["coordinate_quantum"] = 1
     document["strategy"]["transport"] = {"kind": "staged", "geometry": geometry}
     job = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     assert isinstance(job.strategy.transporter, StagedStrictTransport)
     assert job.strategy.transporter.geometry is not None
     assert job.strategy.transporter.geometry.coordinate_quantum == 1
@@ -288,6 +289,7 @@ def test_explicit_placement_geometry_matches_public_constructor() -> None:
         "max_nodes": 1000,
     }
     job = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     assert isinstance(job.strategy.placer, HeuristicPlacer)
     assert job.strategy.placer.geometry == geometry
     assert job.strategy.placer.config == PlacementConfig(
@@ -329,6 +331,7 @@ def test_explicit_emitter_coverage(kind: str) -> None:
         )["steps"][0]["actions"][0]["coverage"]
     document["strategy"]["emitter"] = {"kind": "whole_layer", "coverage": coverage}
     job = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     assert isinstance(job.strategy.emitter, WholeLayerEmitter)
     assert job.strategy.emitter.coverage.contains(base.catalog.pairs[0][0].position)
     assert compile_job(job).program.steps
@@ -368,6 +371,7 @@ def test_heuristic_explicit_entry_preserves_lazy_geometry(tmp_path: Path) -> Non
     document["device"] = device
     document["strategy"]["placement"] = {"kind": "ids"}
     job = loads_job(json.dumps(document), base_dir=MODULE)
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     assert isinstance(job.strategy.placer, HeuristicPlacer)
     assert job.strategy.placer.geometry is None
     assert compile_job(job).program.steps
@@ -508,6 +512,7 @@ def test_resolved_transport_geometry_fills_existing_default_without_mutation() -
     document["strategy"] = resolved
     restored = loads_job(json.dumps(document), base_dir=MODULE)
     assert isinstance(strategy.transporter, StagedStrictTransport)
+    assert isinstance(restored.strategy, SearchSmarterStrategy)
     assert isinstance(restored.strategy.transporter, StagedStrictTransport)
     assert restored.strategy.transporter.geometry == strategy.transporter.geometry
     assert restored.document["strategy"] == resolved
@@ -560,6 +565,7 @@ def test_resolved_placement_geometry_fills_existing_array_defaults() -> None:
     document["strategy"] = resolved
     restored = loads_job(json.dumps(document), base_dir=MODULE)
     assert isinstance(strategy.placer, HeuristicPlacer)
+    assert isinstance(restored.strategy, SearchSmarterStrategy)
     assert isinstance(restored.strategy.placer, HeuristicPlacer)
     assert restored.strategy.placer.geometry == strategy.placer.geometry == geometry
     assert restored.document["strategy"] == resolved
@@ -574,6 +580,7 @@ def test_resolved_null_geometry_preserves_constructor_inference() -> None:
 
     assert job.document["strategy"]["placement"]["geometry"] is None
     assert job.document["strategy"]["transport"]["geometry"] is None
+    assert isinstance(job.strategy, SearchSmarterStrategy)
     assert isinstance(job.strategy.placer, HeuristicPlacer)
     assert isinstance(job.strategy.transporter, StagedStrictTransport)
     assert job.strategy.placer.geometry is None

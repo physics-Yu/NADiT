@@ -12,13 +12,14 @@ from .device import Device, load_device, loads_device
 from .execution import FakeBackend
 from .frontend import DEFAULT_GATE_SET, GateSet, loads_qasm
 from .job_fields import array_at, integer_at, keys_at, object_at, required, string_at
+from .nonzoned.support import require_capabilities
 from .physical_ir import PhysicalDAG, ResultRef
 from .placement import GatePairCatalog, make_initial_layout
 from .provenance import canonical_hash
-from .registry import StrategyContext, build_strategy
+from .registry import StrategyContext
 from .serialization import encode_device
 from .state import AtomLayout, AtomState, SLMHolder, validate_layout
-from .strategies import SearchSmarterStrategy
+from .strategy_selection import SelectedStrategy, select_strategy
 from .support import UnsupportedJob
 
 JOB_SCHEMA = "nadit.job/1"
@@ -37,7 +38,7 @@ class CompilationJob:
     device: Device
     catalog: GatePairCatalog | None
     entry_state: AtomLayout
-    strategy: SearchSmarterStrategy
+    strategy: SelectedStrategy
     measurement_backend: FakeBackend
     inputs: dict[str, str] = field(default_factory=dict)
 
@@ -101,6 +102,11 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         device.aod(aod)
     except KeyError as error:
         raise ValueError(f"aod: unknown AOD {aod!r}.") from error
+    raw_strategy = object_at(required(data, "strategy", "job"), "strategy")
+    if raw_strategy.get("kind") == "nonzoned":
+        require_capabilities(
+            device, aod, readout=any(n.name == "measure" for n in dag.nodes)
+        )
     catalog, zones = _catalog(
         data.get(
             "gate_zones",
@@ -111,14 +117,28 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         ),
         device,
     )
-    strategy, strategy_document = build_strategy(
+    strategy, strategy_document = select_strategy(
         required(data, "strategy", "job"),
         dag=dag,
         device=device,
         aod_id=aod,
         catalog=catalog,
     )
-    context = StrategyContext(dag, device, aod, catalog, strategy_document["placement"])
+    context = StrategyContext(
+        dag, device, aod, catalog, strategy_document.get("placement", {})
+    )
+    if strategy_document.get("kind") == "nonzoned":
+        raw_entry = object_at(required(data, "entry", "job"), "entry")
+        if raw_entry.get("kind") != "explicit":
+            raise UnsupportedJob(
+                [
+                    {
+                        "stage": "entry",
+                        "kind": "nonzoned",
+                        "reason": "requires an explicit reference layout",
+                    }
+                ]
+            )
     entry, entry_document = _entry(required(data, "entry", "job"), context)
     backend, case = _case(data.get("case", {}), dag)
     document = {

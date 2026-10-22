@@ -1,0 +1,2 @@
+/modules/physical_compiler/tests/fixtures/enola/* -text
+/modules/physical_compiler/tests/fixtures/enola/router_mis.py.txt -whitespace

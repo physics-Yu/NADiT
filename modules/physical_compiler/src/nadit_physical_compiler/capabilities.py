@@ -12,6 +12,8 @@ class CZCapability:
         radius_um: Interaction-distance threshold in micrometers.
         duration_us: Pulse duration in microseconds.
         holder_pairs: Allowed unordered holder-type pairs, using slm and aod.
+        allow_spectators: Permit isolated atoms inside pulse coverage. Extra
+            interactions remain forbidden. Defaults to the zoned strict policy.
     """
 
     channel: str
@@ -22,6 +24,11 @@ class CZCapability:
         ("slm", "aod"),
         ("aod", "aod"),
     )
+    allow_spectators: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.allow_spectators) is not bool:
+            raise ValueError("cz.allow_spectators must be a boolean.")
 
 
 @dataclass(frozen=True, slots=True)

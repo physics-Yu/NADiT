@@ -1,5 +1,18 @@
 # Third-Party Notices
 
+## ENOLA
+
+The non-zoned fixed-home planner follows the dual-candidate, longest-first
+independent-set batching in ENOLA commit
+`2944dbf4e163e8d2eeeec607add0d9139edce689`, `enola/router/router_mis.py`.
+It uses NADiT Device rules and strict transfer admission, not upstream CodeGen.
+The exact upstream router source is retained as a test-only text fixture in
+`modules/physical_compiler/tests/fixtures/enola/router_mis.py.txt`, SHA-256
+`a75e92353a74b6f3597a33b214d358b0782de2fa60400362c5e1967646cecb82`.
+Tests execute only the original compatibility and sorted-greedy functions.
+Copyright (c) 2024, UCLA VAST Lab. The complete BSD-3-Clause license is retained
+alongside that fixture as `LICENSE`.
+
 ## MQT QMAP
 
 The candidate-generation, scoring, IDS, and A* algorithms in

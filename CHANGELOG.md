@@ -4,6 +4,14 @@
 
 ### Added
 
+- Per-circuit `nonzoned` strategy with explicit SLM homes, ENOLA-inspired dual
+  candidates and strict batching, one pulse per CZ layer, and exact return.
+  Reuse retained batch readout and measurement feedback. Expose job/Python
+  selection, discovery, and JSON Schema with an eight-qubit example.
+- Device `cz.allow_spectators` permits isolated atoms under global shared-array
+  illumination; unexpected couplings remain invalid. Default false preserves
+  the existing zoned semantic policy.
+
 - Flexible AOD batch readout with Device `readout.max_atoms`, closed pickups,
   monotone readout layouts, multi-result Measure, and return to entry sites.
   Preserve singleton defaults, physical measurement identities, and feedback
