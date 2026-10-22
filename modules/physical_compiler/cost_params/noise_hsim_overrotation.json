@@ -1,0 +1,9 @@
+{
+  "single": {
+    "backend": "coherent_overrotation",
+    "parameters": {"fractional_angle_error": 0.01}
+  },
+  "cz": {"backend": "ideal"},
+  "transport": {"move_loss": 0.00002, "load_loss": 0.0001, "store_loss": 0.0001},
+  "exposure": {"slm_t2_us": 1500000, "aod_t2_us": 1500000}
+}

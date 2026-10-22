@@ -42,6 +42,10 @@ def model_for(name: str) -> CostModel:
     """Resolve a built-in or optional model without importing optional code eagerly."""
     if name in ("additive", "additive/v1"):
         return AdditiveModel()
+    if name in ("noise", "noise/v1"):
+        from .noise import NoiseModel
+
+        return NoiseModel()
     if name == "hsim-aqc":
         from .hsim import HsimModel
 

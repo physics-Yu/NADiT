@@ -1,0 +1,21 @@
+{
+  "single": {"backend": "pauli", "probabilities": [0.0001, 0.0001, 0.0001]},
+  "single_overrides": {"Z": {"backend": "pauli", "probabilities": [0, 0, 0]}},
+  "cz": {"backend": "pauli", "probabilities": [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]},
+  "transport": {
+    "backend": "rates/v1",
+    "load_loss": 0.0001,
+    "store_loss": 0.0001,
+    "move_loss": 0.00002,
+    "loss_per_um": 0.000001,
+    "loss_per_us": 0,
+    "aod_loss_per_us": 0.00000001,
+    "slm_loss_per_us": 0,
+    "move_pauli": [0.00001, 0.00001, 0.00001]
+  },
+  "exposure": {"slm_t2_us": 1500000, "aod_t2_us": 1500000, "include_transport": true},
+  "readout_flip": 0.001,
+  "reset_flip": 0.001,
+  "cz_atom_loss": 0,
+  "spectator_pauli": [0, 0, 0]
+}

@@ -15,6 +15,8 @@ def describe() -> dict[str, Any]:
     """Return versioned families and every registered stage's configuration."""
     from .cost.additive import DEFAULTS
     from .cost.hsim import HSIM_COMMIT
+    from .cost.noise.config import CZ_BACKENDS, SINGLE_BACKENDS
+    from .cost.noise.config import DEFAULTS as NOISE_DEFAULTS
 
     return {
         "entry_providers": {
@@ -34,6 +36,15 @@ def describe() -> dict[str, Any]:
         "compilers": describe_compilers(),
         "compiler_strategies": describe_compilers(),
         "cost_models": {
+            "noise/v1": {
+                "defaults": deepcopy(NOISE_DEFAULTS),
+                "units": "us, um; upstream gate calibration uses s, Hz or MHz",
+                "single_backends": SINGLE_BACKENDS,
+                "cz_backends": CZ_BACKENDS,
+                "transport_backends": ["rates/v1"],
+                "export_schema": "nadit.noise/1",
+                "scope": "physical channel configuration and independent loss estimate",
+            },
             "additive/v1": {
                 "defaults": deepcopy(DEFAULTS),
                 "units": "us, um",

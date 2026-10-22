@@ -4,6 +4,12 @@
 
 ### Added
 
+- Modular `noise/v1` post-processing: Stim-style per-event channels, pinned hsim
+  magnetic/Raman/CZ channel adapters, configurable AOD transport/holder loss,
+  exposure dephasing, and independent physical fidelity/loss estimates.
+  Measurement identities and action/DAG references survive export; detailed
+  transport dynamics remain an extension interface.
+
 - Unified compiler registrations, canonical strategy kinds, per-compiler entry
   defaults, neutral experiment budgets, direct strategy overrides, compiler
   identity in provenance/run records/summaries, and registry-derived discovery.

@@ -49,6 +49,10 @@ class ActivityEvent:
     parameters: dict[str, Any] = field(default_factory=dict)
     coverage: dict[str, Any] | None = None
     area_um2: float | None = None
+    step_index: int = -1
+    action_index: int = -1
+    source_ids: tuple[int, ...] = ()
+    measurement_ids: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,11 +138,11 @@ def derive_activity(document: Mapping[str, Any]) -> AtomActivity:
     by_atom: dict[int, list[tuple[ActivityEvent, int]]] = {
         atom.id: [] for atom in layout.atoms
     }
-    for start, step in program.timeline():
+    for step_index, (start, step) in enumerate(program.timeline()):
         after = apply_step(layout, step, device)
         before_atoms = {atom.id: atom for atom in layout.atoms}
         after_atoms = {atom.id: atom for atom in after.atoms}
-        for action in step.actions:
+        for action_index, action in enumerate(step.actions):
             parameters: dict[str, Any] = {}
             coverage: dict[str, Any] | None = None
             area = None
@@ -206,6 +210,12 @@ def derive_activity(document: Mapping[str, Any]) -> AtomActivity:
                 parameters,
                 coverage,
                 area,
+                step_index,
+                action_index,
+                action.source_ids,
+                tuple(ref.measurement_id for _, ref in action.results)
+                if isinstance(action, Measure)
+                else (),
             )
             events.append(event)
             for index, atom_id in enumerate(ids):

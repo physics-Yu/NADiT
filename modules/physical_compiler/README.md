@@ -154,6 +154,81 @@ is the batch exposure end plus Device latency. See
 
 ## Cost and experiment workflows
 
+`noise/v1` exports per-event Stim-style noise channels and simple physical-loss
+estimates. Gate channels, exposure, transport and report assembly are separate
+modules. All rates default to zero. The supplied numerical examples are
+illustrative, not device calibrations.
+
+```text
+uv run --locked nadit cost RESULT.json --model noise/v1 --params cost_params/noise_illustrative.json --into RESULT.json
+uv run --locked --extra cost-hsim nadit cost RESULT.json --model noise/v1 --params cost_params/noise_hsim_overrotation.json
+uv run --locked nadit experiment cost RUN_DIRECTORY --model noise/v1 --params cost_params/noise_illustrative.json
+```
+
+The command prints a JSON cost report. Its `params` is the resolved reusable
+configuration; `noise` is a `nadit.noise/1` event export. `--into` appends the
+report without altering compilation. `nadit describe` lists defaults/backends.
+
+| Configuration | Meaning |
+| --- | --- |
+| `single`, `cz` | `backend=pauli` takes 3 or 15 nonidentity probabilities; hsim backends use upstream parameters. |
+| `single_overrides` | Optional `X`, `Y`, `Z`, `U` backend overrides; e.g. explicit virtual Z beside physical Raman. |
+| `transport.load_loss`, `store_loss`, `move_loss` | Conditional loss per atom per action, in [0,1]. |
+| `transport.loss_per_um`, `loss_per_us` | Additional exponential hazard during MOVE. |
+| `transport.aod_loss_per_us`, `slm_loss_per_us` | Holder lifetime hazard over busy and idle intervals; independent of move hazard. |
+| `transport.move_pauli` | X/Y/Z probabilities per atom per MOVE, conditional on survival. |
+| `exposure.slm_t2_us`, `aod_t2_us` | Markovian T2; null disables. |
+| `exposure.include_transport` | Include LOAD/MOVE/STORE in T2 exposure (default true); gate/readout/reset time is excluded. |
+| `readout_flip`, `reset_flip` | Z measurement-bit flip and X after an explicit Z reset. |
+| `cz_atom_loss` | Independently calibrated physical loss per participating atom per CZ pulse. |
+| `spectator_pauli` | X/Y/Z channel for illuminated atoms outside intended CZ pairs. |
+
+MOVE survival is `(1-move_loss)*exp(-loss_per_um*d-loss_per_us*t)`. Distances
+are IR endpoint distances in um; time is us. Transfer intervals belong to their
+source holder. Loss accumulates through resets: reset is not atom replacement.
+Per-atom survival gives expected lost atoms and probability all atoms survive.
+The `TransportNoiseModel` protocol is the boundary for future detailed AOD/XY8
+dynamics; `rates/v1` is the only implemented transport backend.
+
+Single-gate hsim backends: `ideal`, `coherent_overrotation`, `magnetic_detuning`,
+`raman_calibrated`, `raman_profiled`. CZ: `ideal`, `four_level`, `open_four_level`.
+The existing `cost-hsim` pin applies. Magnetic configuration supplies `bz_t` and
+`parameters.magnetic_sensitivity_hz_per_t` (optionally `reference_bz_t`); duration
+comes from the action. Raman supplies `calibration` with
+`two_photon_rabi_hz_at_peak`, `differential_light_shift_hz_at_peak`, and
+`scattering_rate_per_s_at_peak`. Profiled Raman also requires `pulse` containing
+`times_s`, `normalized_intensities`, and `phases_rad`. Optional upstream keyword
+arguments go in `parameters`. Constant Raman supports equatorial rotations;
+unsupported targets are rejected, not silently treated as ideal. Calibrated
+nonzero durations must match compiled durations. CZ calibration is shared across
+pairs; no interaction strength is inferred from geometry. Upstream virtual-Z
+correction is reported as a calibration assumption, not an extra emitted action.
+
+`noise.channels` carries atom and qubit targets, event/step/action IDs, DAG source
+IDs and timing. Gate Pauli channels act **before** the ideal target (the upstream
+target-relative convention). T2 emits `Z_ERROR((1-exp(-t/T2))/2)`. Readout emits
+`M(p)` as a measurement argument, with its stable measurement ID. These are
+channel descriptions, not a full Stim circuit: arbitrary native rotations and
+the already-selected feedback branch remain in the result document.
+Exposure records use interval IDs and start/duration instead of action IDs;
+consumers use these anchors, not the order of records in the JSON array.
+
+`metrics.no_fault_probability` multiplies identity channel weights,
+computational survival, and physical survival. `metrics.fidelity` is a separately
+labeled physical product proxy: average gate fidelities, transfer/move/holder
+survival, readout/reset survival, and `exp(-t/T2)` coherence factors. These two
+metrics differ; neither propagates a quantum state or estimates logical failure.
+Certain loss/error produces zero probability and a null log contribution, so
+reports remain standard JSON without infinities.
+Upstream CZ average fidelity already contains computational leakage, so it is
+not multiplied by that leakage again. Joint leakage/unresolved loss remains in
+`noise.gate_diagnostics`; it does not become independent physical atom loss or
+HERALDED_ERASE. Upstream CZ survival is averaged over computational inputs;
+the coherent CZ backend uses a conditional-unitary twirl, while the open backend
+twirls the conditional computational channel. Initial preparation noise is not
+inferred from the entry layout.
+See [ADR 0034](../../docs/decisions/0034-modular-noise-estimates.md).
+
 Cost evaluation reads a semantically validated `nadit.result/2`; it never
 compiles or samples measurements. `cost.prepare` revalidates content once and
 derives `AtomActivity`. Models share per-atom busy/idle intervals, transfer
