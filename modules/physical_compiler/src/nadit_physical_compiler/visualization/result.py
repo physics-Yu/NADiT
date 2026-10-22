@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
+from ..cost.base import result_hash
 from ..device import loads_device
 from ..serialization import decode_layout, decode_result
 from .trace import build_trace
@@ -57,4 +58,12 @@ def build_result_trace(
             if key in document
         }
     )
+    reports = [
+        report for report in document.get("cost", []) if report.get("model") == "noise"
+    ]
+    if reports:
+        report = reports[-1]
+        if report.get("result_hash") != result_hash(document):
+            raise ValueError("Noise report does not match this execution.")
+        trace["noise_report"] = deepcopy(report)
     return trace

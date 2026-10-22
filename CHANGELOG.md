@@ -4,6 +4,10 @@
 
 ### Added
 
+- Offline atom replay links a resource/action schedule to playback and optional
+  noise reports: cumulative expected loss, per-atom risk coloring, final fidelity
+  proxy and current-step leakage/native-channel inspection.
+
 - Noise reports retain full upstream gate results, including native Kraus,
   unitary and superoperator channels, leakage diagnostics and model limitations.
   Deduplicated records are referenced by event; report revision v1.1 coexists

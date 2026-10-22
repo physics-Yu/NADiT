@@ -12,6 +12,11 @@
   let playing = false, previousTimestamp = null, animationId = null, selectedAtom = null;
   let currentStep = -1, currentMeasurementCount = -1, selectedIssue = null;
   let actionCards = [], drag = null;
+  let analysis, risk;
+  const dashboard = new AtomReplayDashboard.Dashboard(
+    time => { const target = replay.cursorAtTime(time); seek(target.step, target.fraction); },
+    atom => { selectedAtom = atom; render(); }
+  );
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -167,7 +172,7 @@
       const point = toScreen(atom.x, atom.y);
       if (point[0] < -30 || point[0] > camera.width + 30 || point[1] < -30 || point[1] > camera.height + 30) continue;
       if (highlights.has(atom.id)) circle(atom.x, atom.y, radius + 4, highlights.get(atom.id) + '24', highlights.get(atom.id) + 'aa');
-      const fill = atom.holder.kind === 'aod' ? colors.aod : colors.slm;
+      const fill = $('risk-toggle').checked && risk ? `hsl(${175 - 155 * (risk.atoms.get(atom.id) / analysis.maxAtomLoss)} 48% 47%)` : atom.holder.kind === 'aod' ? colors.aod : colors.slm;
       context.lineWidth = 1.2; circle(atom.x, atom.y, radius, fill, '#ffffff');
       if (atom.id === selectedAtom) { context.lineWidth = 1.6; circle(atom.x, atom.y, radius + 6, null, '#143c52'); }
       if ($('labels-toggle').checked || atom.id === selectedAtom) {
@@ -261,6 +266,7 @@
     if (!replay) return;
     frame = replay.frame(cursor.step, cursor.fraction);
     if (currentStep !== cursor.step) { currentStep = cursor.step; buildActionList(); }
+    risk = dashboard.update(frame.time_us, selectedAtom, cursor.step);
     updateControls(); updateInspector(); updateMeasurements(); draw();
   }
   function setPlaying(value) {
@@ -312,6 +318,7 @@
   }
   function loadTrace(index) {
     setPlaying(false); trace = data.traces[index]; replay = new AtomReplayModel.Replay(trace, { motion: $('path-select').value });
+    analysis = new AtomReplayAnalysis.Analysis(trace); dashboard.load(trace, analysis);
     cursor = { step: 0, fraction: 0 }; selectedAtom = null; selectedIssue = null; currentStep = -1; currentMeasurementCount = -1;
     $('trace-title').textContent = trace.title; $('trace-description').textContent = trace.description;
     $('atom-count').textContent = trace.initial.atoms.length; $('step-count').textContent = trace.steps.length;
@@ -343,7 +350,7 @@
     if (event.key === 'Enter') { event.preventDefault(); commitTime(); }
   });
   $('fit-button').addEventListener('click', fitView);
-  for (const id of ['sites-toggle', 'grid-toggle', 'labels-toggle', 'trails-toggle']) $(id).addEventListener('change', render);
+  for (const id of ['sites-toggle', 'grid-toggle', 'labels-toggle', 'trails-toggle', 'risk-toggle']) $(id).addEventListener('change', render);
   function toggleIR(open) { $('ir-panel').hidden = !open; $('ir-toggle').setAttribute('aria-expanded', String(open)); }
   $('ir-toggle').addEventListener('click', () => toggleIR($('ir-panel').hidden));
   $('ir-close').addEventListener('click', () => toggleIR(false));

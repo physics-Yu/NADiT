@@ -22,12 +22,23 @@
       <div class="time-controls"><label class="fraction-label" for="fraction-slider">Within step <output id="fraction-value">0%</output><input id="fraction-slider" type="range" min="0" max="1000" value="0" step="1"></label><label class="time-label" for="time-input">TIME · µs<input id="time-input" type="number" min="0" step="any" value="0"></label><label class="pacing-label" for="timing-select">PLAYBACK<select id="timing-select"><option value="paced">Paced · 0.8 s / step</option><option value="proportional">Proportional · 30 s / run</option></select></label></div>
     </section>
     <aside class="inspector-panel">
+      <section class="inspector-section risk-section"><div class="section-heading"><h3>Loss estimate</h3><span id="risk-status" class="count-badge"></span></div>
+        <p id="risk-empty" class="empty-state">No noise model attached. Schedule playback remains available.</p>
+        <div id="risk-content"><div class="risk-metrics"><div><strong id="risk-now">0</strong><small>EXPECTED LOST · NOW</small></div><div><strong id="survival-now">100%</strong><small>ALL SURVIVE · NOW</small></div></div>
+        <div class="risk-final"><span>Final expected lost <b id="risk-final"></b></span><span>Final fidelity proxy <b id="fidelity-final"></b></span></div>
+        <p class="section-note risk-note">Independent estimates · booked at event completion. No atom loss is sampled.</p>
+        <label class="risk-color"><input id="risk-toggle" type="checkbox"> <span id="risk-scale">Loss color</span></label>
+        <label class="risk-selection">ATOM <select id="risk-atom" aria-label="Inspect atom loss"></select></label><div class="risk-selected">Selected atom loss <strong id="atom-risk">Select an atom</strong></div>
+        <details><summary>Noise parameters</summary><pre id="noise-params" class="noise-json"></pre></details></div>
+      </section>
+      <section class="inspector-section"><div class="section-heading"><h3>Current-step noise / leakage</h3><span id="noise-count" class="count-badge"></span></div><p id="leakage-summary" class="section-note"></p><details><summary>Channels and upstream records</summary><pre id="noise-step" class="noise-json"></pre></details></section>
       <section class="inspector-section"><div class="section-heading"><h3>Atom inspector</h3><span id="selected-atom-label" class="muted">No selection</span></div><div id="atom-inspector" class="empty-state">Select an atom in the layout to inspect its identity, position and trap.</div></section>
       <section class="actions-section inspector-section"><div class="section-heading"><h3>Current step</h3><span id="action-count" class="count-badge">0 actions</span></div><div id="action-list" class="action-list"></div></section>
       <section class="inspector-section"><div class="section-heading"><h3>Measurement records</h3><span id="measurement-count" class="count-badge">0 available</span></div><div id="measurement-list" class="record-list"></div></section>
       <section class="inspector-section issues-section"><div class="section-heading"><h3>Boundary observations</h3><span id="issue-count" class="count-badge">0</span></div><p class="section-note">SLM atoms on active AOD intersections. Select an observation to inspect that boundary.</p><div id="issue-list" class="record-list"></div></section>
     </aside>
   </main>
+  <section class="schedule-panel"><div class="schedule-toolbar"><div><h3>Execution schedule</h3><span id="schedule-range" class="muted"></span></div><div><label>VIEW <select id="schedule-mode"><option value="all">Full run</option><option value="follow">Follow playback</option></select></label><label>WINDOW · µs <input id="schedule-span" type="number" value="1000" min="1"></label></div></div><div class="schedule-chart"><canvas id="schedule-canvas" aria-label="Resource action schedule. Click an action to seek." tabindex="0"></canvas></div><p id="schedule-detail" class="section-note"></p></section>
   <footer><span id="device-name"></span><span>Atom IR replay · coordinates µm · time µs</span><button id="ir-toggle" class="text-button" aria-expanded="false">View Atom IR</button></footer>
   <section id="ir-panel" hidden><div class="section-heading"><h3>Atom IR</h3><button id="ir-close" class="quiet-button">Close</button></div><pre id="ir-source"></pre></section>
   <script id="atom-replay-data" type="application/json">{{DATA}}</script>

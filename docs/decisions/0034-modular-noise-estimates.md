@@ -98,3 +98,23 @@ Native-record follow-up: baseline 1743 passed; final 1750 passed. Seven new
 optional-upstream cases cover JSON restoration of coherent/open CZ Kraus maps,
 all four nonideal single-gate backends, record deduplication/references, and
 coexistence with an older v1 report. Ruff and mypy also passed.
+
+## Viewer integration
+
+The offline viewer derives schedule lanes from existing action resource IDs,
+kinds and individual durations, following the resource-lane/follow-window pattern
+in the neutral-atom platform simulation viewer. Clicking a bar seeks playback.
+It does not reschedule actions or infer exclusive resource reservations.
+
+Attach the latest saved noise report after matching its execution hash. Show
+cumulative expected physical loss, all-atom survival, per-atom probability colors,
+and final fidelity proxy. Book each loss factor at its recorded interval end;
+use prefix log-survival to support exact backward seeking and certain loss.
+Draw a staircase through completion boundaries. This is an estimate timeline,
+not loss sampling or a continuous trajectory model. Leave atoms in the replay.
+Show current-step channels, leakage diagnostics and native records separately.
+
+Verification: 1750 baseline tests; 1752 final Python tests, 22 JavaScript tests,
+ruff and mypy passed. Browser visual inspection remains pending: the browser
+tool rejected local file URLs. A standalone two-layout d=5 demonstration is
+available in `modules/physical_compiler/artifacts/schedule-loss/index.html`.

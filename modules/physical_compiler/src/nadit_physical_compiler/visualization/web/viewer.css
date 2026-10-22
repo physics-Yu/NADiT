@@ -661,3 +661,41 @@ footer>span:nth-child(2) {
   button {
   transition:none}
 }
+
+.app-header {height:64px}
+.trace-heading {padding-top:18px;padding-bottom:18px}
+.canvas-wrap {height:clamp(280px,36vh,480px)}
+.inspector-panel {max-height:calc(clamp(280px,36vh,480px) + 226px)}
+.risk-section {background:#fffdf9}
+.risk-metrics {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.risk-metrics div {display:flex;flex-direction:column}
+.risk-metrics strong {font-size:23px;font-weight:550;font-variant-numeric:tabular-nums;color:#9d642d}
+.risk-metrics small {font-size:8px;letter-spacing:.7px;color:var(--muted)}
+.risk-final {display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--muted);margin:12px 0}
+.risk-final b {font-weight:550;color:var(--ink);float:right}
+.risk-note {margin-top:7px}
+.risk-color {font-size:10px;display:block;margin:12px 0}
+.risk-selection {display:flex;align-items:center;gap:12px;font-size:9px;color:var(--muted)}
+.risk-selection select {width:100%;padding:5px;font-size:11px}
+.risk-selected {display:flex;justify-content:space-between;margin:8px 0 12px;font-size:10px}
+.risk-selected strong {color:#9d642d;font-weight:550}
+details summary {cursor:pointer;font-size:10px;color:#537784}
+.noise-json {font:10px/1.5 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;background:#f4f7f8;padding:10px;border-radius:5px}
+#leakage-summary {white-space:pre-line}
+.schedule-panel {margin:18px 32px 0;padding:16px 18px 8px;background:white;border:1px solid var(--line);border-radius:10px}
+.schedule-toolbar {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.schedule-toolbar>div {display:flex;align-items:center;gap:14px}
+.schedule-toolbar label {font-size:9px;color:var(--muted);letter-spacing:.6px}
+.schedule-toolbar select,.schedule-toolbar input {font-size:11px;padding:5px 8px;margin-left:6px}
+.schedule-toolbar input {width:90px;border:1px solid var(--line);border-radius:5px}
+.schedule-chart {width:100%;overflow:hidden}
+#schedule-canvas {width:100%;display:block;cursor:crosshair}
+#schedule-detail {margin:3px 0 2px}
+@media(min-width:1700px) {.schedule-panel {margin-left:48px;margin-right:48px}}
+@media(max-width:760px) {
+  .app-header {height:auto}
+  .canvas-wrap {height:340px}
+  .inspector-panel {max-height:none}
+  .schedule-panel {margin:12px;padding:12px}
+  .schedule-toolbar {align-items:start;flex-direction:column}
+}

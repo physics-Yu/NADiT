@@ -154,6 +154,21 @@ is the batch exposure end plus Device latency. See
 
 ## Cost and experiment workflows
 
+Saved-result viewers now include an action/resource schedule with full-run and
+follow-playback windows. Click a bar to seek its start and select an affected
+atom. Lane widths use individual action durations, including short actions in
+parallel steps; lanes describe recorded activity, not inferred exclusive use.
+
+When the result contains a `noise/v1` cost report, the viewer attaches the latest
+one after checking its execution hash. The linked loss panel shows expected lost
+atoms, all-atom survival and selected-atom loss. Colors optionally encode per-atom
+loss probability. Loss contributions are booked at their recorded interval end;
+no loss is sampled and no atom is removed. The curve and cursor support backward
+seeking. Final fidelity is labeled as a final product proxy. Current-step channels,
+leakage and original upstream records remain separately inspectable; absent noise
+or leakage records are shown as unavailable, not zero. Noise parameters are
+visible in the panel. This extends offline HTML export without recompilation.
+
 `noise/v1` exports per-event Stim-style noise channels and simple physical-loss
 estimates. Gate channels, exposure, transport and report assembly are separate
 modules. All rates default to zero. The supplied numerical examples are

@@ -37,7 +37,7 @@ def write_html(
         "STYLE": assets.joinpath("viewer.css").read_text(encoding="utf-8"),
         "MODEL": "\n".join(
             assets.joinpath(name).read_text(encoding="utf-8")
-            for name in ("paths.js", "model.js")
+            for name in ("paths.js", "model.js", "analysis.js", "dashboard.js")
         ),
         "SCRIPT": assets.joinpath("viewer.js").read_text(encoding="utf-8"),
         "DATA": data,
