@@ -129,13 +129,15 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
     )
     if strategy_document.get("kind") == "nonzoned":
         raw_entry = object_at(required(data, "entry", "job"), "entry")
-        if raw_entry.get("kind") != "explicit":
+        if raw_entry.get("kind") not in ("explicit", "enola_initial"):
             raise UnsupportedJob(
                 [
                     {
                         "stage": "entry",
                         "kind": "nonzoned",
-                        "reason": "requires an explicit reference layout",
+                        "reason": (
+                            "requires an explicit or enola_initial reference layout"
+                        ),
                     }
                 ]
             )
@@ -264,6 +266,7 @@ def _catalog(
 def _entry(value: Any, context: StrategyContext) -> tuple[AtomLayout, dict[str, Any]]:
     data = object_at(value, "entry")
     kind = string_at(required(data, "kind", "entry"), "entry.kind")
+    document: dict[str, Any]
     try:
         if kind == "initial_storage":
             keys_at(data, {"kind", "atom_ids"}, "entry")
@@ -310,6 +313,35 @@ def _entry(value: Any, context: StrategyContext) -> tuple[AtomLayout, dict[str, 
             keys_at(data, {"kind", "atoms"}, "entry")
             layout = _explicit_entry(required(data, "atoms", "entry"), context)
             document = {"kind": kind, "atoms": data["atoms"]}
+        elif kind == "enola_initial":
+            from .placement.enola_initial import (
+                make_enola_initial_layout,
+                reference_array,
+            )
+
+            keys_at(
+                data,
+                {"kind", "array", "seed", "iterations", "moves_per_iteration"},
+                "entry",
+            )
+            array = reference_array(
+                context.device,
+                None
+                if "array" not in data
+                else string_at(data["array"], "entry.array"),
+            )
+            options = {
+                name: integer_at(data.get(name, default), f"entry.{name}")
+                for name, default in (
+                    ("seed", 0),
+                    ("iterations", 100),
+                    ("moves_per_iteration", 400),
+                )
+            }
+            layout = make_enola_initial_layout(
+                context.dag, context.device, array_id=array.id, **options
+            )
+            document = {"kind": kind, "array": array.id, **options}
         else:
             raise ValueError(f"entry.kind: unknown kind {kind!r}.")
         validate_layout(context.device, layout)

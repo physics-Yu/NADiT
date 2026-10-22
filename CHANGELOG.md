@@ -4,6 +4,11 @@
 
 ### Added
 
+- Optional `entry.kind=enola_initial` reference placement using the pinned
+  ENOLA SAPlacer with a private seed and deterministic budget. Preserve the
+  explicit-layout provider and fixed-home execution; expose both in discovery
+  and job JSON Schema. Initial scoring does not sample measurement branches.
+
 - Per-circuit `nonzoned` strategy with explicit SLM homes, ENOLA-inspired dual
   candidates and strict batching, one pulse per CZ layer, and exact return.
   Reuse retained batch readout and measurement feedback. Expose job/Python

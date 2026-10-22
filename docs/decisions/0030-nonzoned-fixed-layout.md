@@ -4,8 +4,9 @@ Status: Implemented and verified, 2026-10-22.
 
 ## Contract
 
-Each circuit/job selects its compiler strategy. `nonzoned` uses an explicitly
-given SLM entry layout as its reference. Each parallel CZ layer gathers its
+Each circuit/job selects its compiler strategy. `nonzoned` uses a fixed SLM
+entry layout as its reference, explicitly given or generated once under ADR
+0031. Each parallel CZ layer gathers its
 pairs in the shared array, executes one pulse, then returns every transported
 atom to its original SLM trap. Local operations keep the reference layout.
 Retained measurements use the existing batch-readout component and return to
@@ -15,8 +16,9 @@ execution, result identities, sampling, and feedback latency.
 Device `pair_arrays` describe isolated double-trap interaction cells throughout
 the shared region. Home atoms occupy these declared traps; a gate can bring
 either operand to the free trap beside its partner. A pair already sharing a
-cell requires no movement. The layout is supplied through existing
-`entry.kind=explicit`; no initial-placement search or dynamic SA is performed.
+cell requires no movement. The original provider is `entry.kind=explicit`;
+ADR 0031 adds optional initial ENOLA SA. No dynamic SA is performed during
+gate execution.
 The reference is an atom-to-trap mapping, not merely an unordered set of points.
 
 ## Planning and emission

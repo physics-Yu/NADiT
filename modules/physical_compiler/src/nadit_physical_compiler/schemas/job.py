@@ -177,6 +177,7 @@ def job_schema() -> dict[str, Any]:
                         },
                         ("kind", "atoms"),
                     ),
+                    enola_initial_schema(),
                 ]
             },
             "case": obj(
@@ -205,6 +206,20 @@ def nonzoned_schema() -> dict[str, Any]:
         {
             "kind": {"const": "nonzoned"},
             "max_cz_gates": {"type": "integer", "minimum": 1},
+        },
+        ("kind",),
+    )
+
+
+def enola_initial_schema() -> dict[str, Any]:
+    """Describe optional initial SA with a fixed, reproducible search budget."""
+    return obj(
+        {
+            "kind": {"const": "enola_initial"},
+            "array": STRING,
+            "seed": {**INTEGER, "default": 0},
+            "iterations": {"type": "integer", "minimum": 1, "default": 100},
+            "moves_per_iteration": {"type": "integer", "minimum": 1, "default": 400},
         },
         ("kind",),
     )

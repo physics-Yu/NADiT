@@ -1,0 +1,15 @@
+{
+  "schema": "nadit.job/1",
+  "circuit": {"qasm": "../circuits/nonzoned.qasm3"},
+  "device": "../devices/nonzoned.json",
+  "aod": "transport",
+  "strategy": {"kind": "nonzoned"},
+  "entry": {
+    "kind": "enola_initial",
+    "array": "cells",
+    "seed": 0,
+    "iterations": 100,
+    "moves_per_iteration": 400
+  },
+  "case": {"seed": 17}
+}

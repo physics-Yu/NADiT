@@ -35,7 +35,10 @@ cells, ENOLA-inspired dual candidates, strict transport batches, one pulse per
 parallel CZ layer, and exact return to the reference layout. Dynamic SA remains
 deferred. Rigid partial-release optimization remains paused under ADR 0028.
 Per-circuit job/Python selection, saved-result semantic validation, and replay
-are verified; the full suite passes 1,650 tests.
+are verified; the full suite now passes 1,666 tests including ADR 0031.
+ADR 0031 adds optional ENOLA initial SA alongside explicit reference layouts.
+Both feed the same fixed-home execution path; code-block anchor placement is
+future work and atom-level SA does not preserve internal code symmetry.
 
 ## Compilation contract
 

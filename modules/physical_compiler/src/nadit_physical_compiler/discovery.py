@@ -6,7 +6,7 @@ from typing import Any
 from .architectures import describe_families
 from .job import JOB_SCHEMA
 from .registry import REGISTRY
-from .schemas.job import nonzoned_schema, stage_schema
+from .schemas.job import enola_initial_schema, nonzoned_schema, stage_schema
 from .serialization import RESULT_SCHEMA, RESULT_SCHEMA_V2
 
 
@@ -16,6 +16,20 @@ def describe() -> dict[str, Any]:
     from .cost.hsim import HSIM_COMMIT
 
     return {
+        "entry_providers": {
+            "explicit": {
+                "description": "User-supplied atom/site/qubit mapping; no search."
+            },
+            "initial_storage": {
+                "description": "Existing Search Smarter storage placement."
+            },
+            "enola_initial": {
+                "options": enola_initial_schema(),
+                "description": (
+                    "One initial ENOLA SA run; each CZ layer returns to this reference."
+                ),
+            },
+        },
         "compiler_strategies": {
             "search_smarter": {
                 "selection": "scheduler/placement/transport/emitter/reuse stages"
@@ -23,7 +37,7 @@ def describe() -> dict[str, Any]:
             "nonzoned": {
                 "options": nonzoned_schema(),
                 "supports": (
-                    "explicit SLM reference, isolated double-trap cells, flexible AOD, "
+                    "fixed SLM reference, isolated double-trap cells, flexible AOD, "
                     "global SLM-SLM CZ with isolated spectators; retained AOD readout"
                 ),
                 "return_boundary": "parallel CZ layer",

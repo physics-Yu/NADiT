@@ -1,2 +1,3 @@
 /modules/physical_compiler/tests/fixtures/enola/* -text
 /modules/physical_compiler/tests/fixtures/enola/router_mis.py.txt -whitespace
+/modules/physical_compiler/src/nadit_physical_compiler/placement/enola_source/* -text -whitespace

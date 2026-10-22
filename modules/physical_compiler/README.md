@@ -2,18 +2,31 @@
 
 ## Fixed-layout non-zoned compiler
 
+The reference layout has two providers: user-supplied `entry.kind="explicit"`,
+or `entry.kind="enola_initial"`. The latter runs ENOLA's pinned initial SA once,
+with configurable `array`, `seed` (0), `iterations` (100), and
+`moves_per_iteration` (400). The array is optional when Device declares exactly
+one. Actual generated homes are saved in the result's entry state; subsequent
+CZ layers always return to them. `examples/jobs/nonzoned-enola-initial.json`
+shows this option. Initial scoring stops dependent chains at measurements or
+conditions while retaining independent gates; it does not choose branches.
+The objective is weighted cell distance,
+not measured transport time. Atom-level SA does not preserve code symmetry;
+QEC templates can continue to supply explicit internal layouts.
+See [ADR 0031](../../docs/decisions/0031-enola-initial-layout.md).
+
 Each job can select `"strategy": {"kind": "nonzoned"}` instead of the existing
-Search Smarter stage configuration. Supply `entry.kind="explicit"` with
+Search Smarter stage configuration. For user-given homes, supply `entry.kind="explicit"` with
 `[atom_id, SLM_site_id, physical_qubit]` records. Device `pair_arrays` describe
 isolated double-trap cells in the shared storage/interaction area. Homes may
 use either side. Set `cz.allow_spectators=true` for a global shared-array pulse;
 extra interacting pairs remain illegal. Existing devices default to false.
 
-The planner generates both moving-end choices for each CZ, chooses compatible
+The execution planner generates both moving-end choices for each CZ, chooses compatible
 strict batches in longest-first order, executes one pulse after the entire
 layer arrives, then reverses the batches to restore every original SLM holder.
-`max_cz_gates` optionally caps a layer. No SA or speculative measurement sampling
-is used. Measurements use retained AOD readout and return to their entry sites.
+`max_cz_gates` optionally caps a layer. No dynamic SA or speculative measurement
+sampling is used. Measurements use retained AOD readout and return to their entry sites.
 This baseline requires flexible motion and SLM-SLM CZ; it uses NADiT strict
 transfers rather than ENOLA's staged CodeGen. See
 [ADR 0030](../../docs/decisions/0030-nonzoned-fixed-layout.md).

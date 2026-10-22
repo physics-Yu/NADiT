@@ -13,6 +13,14 @@ Tests execute only the original compatibility and sorted-greedy functions.
 Copyright (c) 2024, UCLA VAST Lab. The complete BSD-3-Clause license is retained
 alongside that fixture as `LICENSE`.
 
+Optional initial placement loads the unmodified `SAPlacer` class from the same
+revision's `enola/placer/placer.py`, SHA-256
+`d256c84490bd72d525515f24acb081d7b21bcd5f7bbc31302a3bbf79a16997cf`.
+The original text and complete license are packaged under
+`nadit_physical_compiler/placement/enola_source/`. The adapter supplies private
+RNG functions and a deterministic iteration budget, and handles zero-uphill
+warm-up without division by zero. It does not call the dynamic partial placer.
+
 ## MQT QMAP
 
 The candidate-generation, scoring, IDS, and A* algorithms in

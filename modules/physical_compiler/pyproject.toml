@@ -33,6 +33,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "nadit_physical_compiler.visualization" = ["web/*.html", "web/*.css", "web/*.js"]
+"nadit_physical_compiler.placement" = ["enola_source/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
