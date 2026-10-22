@@ -225,6 +225,14 @@ def search_smarter_schema() -> dict[str, Any]:
     return obj(
         {
             "kind": {"const": "search_smarter"},
+            "cross_layer_reuse": {
+                "type": "boolean",
+                "default": False,
+                "description": (
+                    "QEC only: retain between known CZ layers; "
+                    "restore fixed homes at window boundaries."
+                ),
+            },
             "mode": {
                 "enum": ["adaptive", "qec"],
                 "default": "adaptive",

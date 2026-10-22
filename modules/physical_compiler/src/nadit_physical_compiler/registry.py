@@ -248,12 +248,17 @@ def check_strategy(
         UnsupportedJob: Unsupported stages and reasons, before construction.
     """
     spec = object_at(spec, "strategy")
-    keys_at(spec, set(REGISTRY) | {"mode", "kind"}, "strategy")
+    keys_at(spec, set(REGISTRY) | {"mode", "kind", "cross_layer_reuse"}, "strategy")
     if spec.get("kind", "search_smarter") != "search_smarter":
         raise ValueError("strategy.kind: expected search_smarter.")
     mode = string_at(spec.get("mode", "adaptive"), "strategy.mode")
     if mode not in ("adaptive", "qec"):
         raise ValueError("strategy.mode: expected 'adaptive' or 'qec'.")
+    cross_reuse = boolean_at(
+        spec.get("cross_layer_reuse", False), "strategy.cross_layer_reuse"
+    )
+    if cross_reuse and mode != "qec":
+        raise ValueError("strategy.cross_layer_reuse requires mode=qec.")
     resolved: dict[str, Any] = {}
     for stage, implementations in REGISTRY.items():
         path = f"strategy.{stage}"
@@ -285,7 +290,11 @@ def check_strategy(
         if stage == "placement" and "method" in options and options["method"] != kind:
             raise ValueError(f"{path}.method: must agree with kind {kind!r}.")
         resolved[stage] = {"kind": kind, **options}
-    if mode == "qec":
+    if cross_reuse and resolved["reuse"]["kind"] == "none":
+        raise ValueError(
+            "strategy.cross_layer_reuse requires reuse.kind=matching or source."
+        )
+    if mode == "qec" and not cross_reuse:
         resolved["reuse"] = {"kind": "none"}
     context = StrategyContext(
         dag, device, aod_id, catalog, resolved["placement"], resolved
@@ -300,6 +309,18 @@ def check_strategy(
     if resolved["emitter"].get("coverage") is not None:
         region_coverage(resolved["emitter"]["coverage"], "strategy.emitter.coverage")
     failures = []
+    if cross_reuse and resolved["placement"]["kind"] not in (
+        "ids",
+        "astar",
+        "multipair",
+    ):
+        failures.append(
+            {
+                "stage": "strategy.placement",
+                "kind": resolved["placement"]["kind"],
+                "reason": "cross-layer reuse requires a catalogue execution placer",
+            }
+        )
     for stage, options in resolved.items():
         checked = REGISTRY[stage][options["kind"]].supports(context)
         if not checked.ok:
@@ -312,6 +333,8 @@ def check_strategy(
             )
     if failures:
         raise UnsupportedJob(failures)
+    if "cross_layer_reuse" in spec:
+        resolved["cross_layer_reuse"] = cross_reuse
     return context, resolved
 
 
@@ -372,7 +395,14 @@ def construct_strategy(
             resolved["transport"]["geometry"], stage="transport"
         )
     resolved["kind"] = "search_smarter"
-    return SearchSmarterStrategy(
+    from .strategies.fixed_reuse import FixedReuseStrategy
+
+    constructor = (
+        FixedReuseStrategy
+        if resolved.get("cross_layer_reuse", False)
+        else SearchSmarterStrategy
+    )
+    return constructor(
         objects["scheduler"],
         objects["placement"],
         objects["transport"],

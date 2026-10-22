@@ -1,7 +1,7 @@
 """Compile one measurement case from a native DAG to atom actions."""
 
 from dataclasses import dataclass
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 
 from .atom_ir import AtomProgram, AtomStep, Measure, Wait
 from .contracts import AtomFragment, GateLayer
@@ -106,10 +106,15 @@ def compile_physical(
 
     Entry state is checked once. The loop commits constructed fragments and
     does not replay actions or run full transport checks.
+    A strategy may implement bind_entry(entry_state) to return a fresh instance
+    with immutable reference geometry for this compilation only.
     """
     if len(entry_state.qubit_to_atom) != dag.num_qubits:
         raise ValueError("Entry state must bind every physical qubit to an atom.")
     validate_layout(device, entry_state)
+    bind_entry = getattr(strategy, "bind_entry", None)
+    if bind_entry is not None:
+        strategy = cast(CompilationStrategy, bind_entry(entry_state))
     return _Compilation(
         dag,
         device,

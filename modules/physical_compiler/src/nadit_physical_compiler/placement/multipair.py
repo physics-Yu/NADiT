@@ -20,11 +20,13 @@ class MultiPairPlacer:
         aod_id: Transport device used to reach selected traps.
         catalog: Validated fixed pairs and shared pulse coverage.
         storage_zone_id: Zone containing return sites outside the pulse coverage.
+        return_to_entry: Select execution sites only; a reference adapter owns exits.
     """
 
     aod_id: str
     catalog: GatePairCatalog
     storage_zone_id: str | None = None
+    return_to_entry: bool = False
 
     def place(
         self,
@@ -87,6 +89,12 @@ class MultiPairPlacer:
             layout, storage, self.catalog, participants, retained_atoms
         )
         assignments = self._gate_assignments(dag, layer, prepared, device, anchors)
+        if self.return_to_entry:
+            return PlacementPlan(
+                _replace_atoms(prepared, assignments),
+                layout,
+                prepared if prepared is not layout else None,
+            )
         retained_ids = {
             layout.qubit_to_atom[q] for q in reuse_qubits
         } & assignments.keys()

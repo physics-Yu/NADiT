@@ -4,6 +4,10 @@
 
 ### Added
 
+- Optional Search Smarter QEC cross-layer reuse with immutable homes, separate
+  placement/strategy adapters, safe lookahead boundaries, and a configuration
+  switch. Existing per-layer return and adaptive implementations remain intact.
+
 - Reusable viewer loss attribution and comparison: mean/max atom risk replaces
   all-survive, highlights the highest-risk atom, and compares load/store/move/
   residence contributions for all atoms and the highest-risk atom.

@@ -54,6 +54,33 @@ See [ADR 0032](../../docs/decisions/0032-unified-compiler-interface.md).
 
 ## Search Smarter fixed-reference QEC mode
 
+Opt into cross-layer retention without changing the default per-layer policy:
+
+```json
+{
+  "mode": "qec",
+  "cross_layer_reuse": true,
+  "reuse": {"kind": "matching"}
+}
+```
+
+Add these fields to the existing Search Smarter strategy; set the switch false
+or omit it for the original per-layer return. `source` is also a supported reuse
+analyzer. `ids`, `astar`, and `multipair` provide catalogue execution placement.
+Homes must be SLM sites outside CZ coverage. Example:
+`examples/jobs/search-smarter-qec-reuse.json`.
+
+The new strategy binds immutable homes per compilation, holds reusable atoms
+at gate SLM sites across known CZ layers, and returns other atoms to their own
+homes. It does not optimize new storage locations. Intervening local rotations
+can preserve anchors. Existing lookahead stops at measurement, reset, unknown
+feedback and circuit end; the policy restores homes when no next CZ is known
+and before measurement/reset. Barriers retain circuit order without forcing a
+return. It preserves fixed reference geometry at window boundaries, not exact
+geometry after every gate. Matching maximizes candidate reuse; it does not yet
+optimize symmetry-preserving groups or guarantee shorter transport time.
+See [ADR 0035](../../docs/decisions/0035-fixed-home-cross-layer-reuse.md).
+
 Add `"mode": "qec"` to an existing Search Smarter strategy to restore every
 atom to its initial site after each selected layer. Supply user-defined homes
 through `entry.kind="explicit"`, with `[atom_id, SLM_site_id, physical_qubit]`
