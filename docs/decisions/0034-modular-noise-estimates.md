@@ -107,7 +107,7 @@ in the neutral-atom platform simulation viewer. Clicking a bar seeks playback.
 It does not reschedule actions or infer exclusive resource reservations.
 
 Attach the latest saved noise report after matching its execution hash. Show
-cumulative expected physical loss, all-atom survival, per-atom probability colors,
+cumulative expected physical loss, mean and maximum per-atom loss, probability colors,
 and final fidelity proxy. Book each loss factor at its recorded interval end;
 use prefix log-survival to support exact backward seeking and certain loss.
 Draw a staircase through completion boundaries. This is an estimate timeline,
@@ -118,3 +118,33 @@ Verification: 1750 baseline tests; 1752 final Python tests, 22 JavaScript tests,
 ruff and mypy passed. Browser visual inspection remains pending: the browser
 tool rejected local file URLs. A standalone two-layout d=5 demonstration is
 available in `modules/physical_compiler/artifacts/schedule-loss/index.html`.
+
+### Loss source comparison
+
+Replace the all-survive UI metric with mean per-atom loss and maximum per-atom
+loss. Mark the maximum atom in the layout and allow selecting it. Average over
+all input atoms. Resolve positive-risk ties by lowest atom ID and report the tie
+count; show no maximum atom before risk accumulates.
+
+Use `loss.js` for independent loss indexing/attribution and `loss-panel.js` for
+rendering. For each atom, group factors by recorded completion time. Given
+prior survival S and total group hazard H, allocate the increment
+`S * (1 - exp(-H))` among sources proportionally to their hazards. For multiple
+certain-loss causes at the same boundary, divide the increment equally among
+those causes. This avoids depending on input record order. Prefix snapshots
+retain exact backward queries without resampling.
+
+Compare three additive columns: source expected losses, source mean per-atom
+probability, and source probability for the currently highest-risk atom. Load,
+store, movement and residence are always shown; physical CZ and other sources
+are retained when present. The mean and maximum-atom bars share one probability
+scale. All columns sum to their corresponding total. Attribution follows the
+existing completion-booking convention, not an inferred physical loss trajectory.
+
+Source-comparison verification: 1752 Python tests remain passing; JavaScript
+tests increased from 22 to 26. Ruff and mypy passed. Both retained d=5 traces
+were checked at start, midpoint, end and reverse seek: source totals match
+per-atom probabilities, their mean and expected lost count. Current standalone
+HTML was regenerated from the saved traces; compilation and noise parameters
+were unchanged. Browser visual inspection remains pending under the previously
+reported local-file access restriction.

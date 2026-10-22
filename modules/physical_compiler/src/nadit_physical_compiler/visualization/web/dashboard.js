@@ -8,6 +8,7 @@
   class Dashboard {
     constructor(seek, select) {
       this.seek = seek; this.select = select; this.time = 0;
+      this.lossPanel = new root.AtomReplayLossPanel.Panel(select);
       this.canvas = $('schedule-canvas'); this.ctx = this.canvas.getContext('2d');
       for (const id of ['schedule-mode', 'schedule-span']) $(id).addEventListener('change', () => this.drawSchedule());
       $('risk-atom').addEventListener('change', e => this.select(e.target.value === '' ? null : Number(e.target.value)));
@@ -42,7 +43,7 @@
       this.time = time;
       const risk = this.analysis.riskAt(time);
       $('risk-now').textContent = risk ? fmt(risk.expected, 6) : '—';
-      $('survival-now').textContent = risk ? pct(risk.allSurvive) : '—';
+      this.lossPanel.update(risk);
       $('risk-atom').value = selected === null ? '' : selected;
       $('atom-risk').textContent = risk && selected !== null ? pct(risk.atoms.get(selected)) : 'Select an atom';
       if (this.lastStep !== step) {

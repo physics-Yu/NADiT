@@ -24,8 +24,9 @@
     <aside class="inspector-panel">
       <section class="inspector-section risk-section"><div class="section-heading"><h3>Loss estimate</h3><span id="risk-status" class="count-badge"></span></div>
         <p id="risk-empty" class="empty-state">No noise model attached. Schedule playback remains available.</p>
-        <div id="risk-content"><div class="risk-metrics"><div><strong id="risk-now">0</strong><small>EXPECTED LOST · NOW</small></div><div><strong id="survival-now">100%</strong><small>ALL SURVIVE · NOW</small></div></div>
-        <div class="risk-final"><span>Final expected lost <b id="risk-final"></b></span><span>Final fidelity proxy <b id="fidelity-final"></b></span></div>
+        <div id="risk-content"><div class="risk-metrics"><div><strong id="average-loss-now">0%</strong><small>MEAN ATOM LOSS · NOW</small></div><div><strong id="maximum-loss-now">0%</strong><small>MAX ATOM LOSS · NOW</small></div></div>
+        <button id="maximum-loss-atom" class="maximum-atom-button" disabled>No accumulated loss</button>
+        <div class="risk-final"><span>Expected lost · now <b id="risk-now">0</b></span><span>Final expected lost <b id="risk-final"></b></span><span>Final fidelity proxy <b id="fidelity-final"></b></span></div>
         <p class="section-note risk-note">Independent estimates · booked at event completion. No atom loss is sampled.</p>
         <label class="risk-color"><input id="risk-toggle" type="checkbox"> <span id="risk-scale">Loss color</span></label>
         <label class="risk-selection">ATOM <select id="risk-atom" aria-label="Inspect atom loss"></select></label><div class="risk-selected">Selected atom loss <strong id="atom-risk">Select an atom</strong></div>
@@ -38,6 +39,18 @@
       <section class="inspector-section issues-section"><div class="section-heading"><h3>Boundary observations</h3><span id="issue-count" class="count-badge">0</span></div><p class="section-note">SLM atoms on active AOD intersections. Select an observation to inspect that boundary.</p><div id="issue-list" class="record-list"></div></section>
     </aside>
   </main>
+  <section id="loss-panel" class="loss-panel" hidden>
+    <div class="section-heading"><h3>Loss by source · current time</h3><span id="loss-comparison-scale" class="muted"></span></div>
+    <div class="loss-table-wrap"><table class="loss-table"><thead><tr><th>Source</th><th>Expected lost atoms</th><th>Mean atom · loss</th><th id="loss-maximum-label">Highest-risk atom</th></tr></thead><tbody>
+      <tr id="loss-load-row"><th>Load · SLM → AOD</th><td id="loss-load-expected"></td><td><span id="loss-load-average"></span><div class="loss-bar"><i id="loss-load-average-bar"></i></div></td><td><span id="loss-load-maximum"></span><div class="loss-bar maximum"><i id="loss-load-maximum-bar"></i></div></td></tr>
+      <tr id="loss-store-row"><th>Store · AOD → SLM</th><td id="loss-store-expected"></td><td><span id="loss-store-average"></span><div class="loss-bar"><i id="loss-store-average-bar"></i></div></td><td><span id="loss-store-maximum"></span><div class="loss-bar maximum"><i id="loss-store-maximum-bar"></i></div></td></tr>
+      <tr id="loss-move-row"><th>Move</th><td id="loss-move-expected"></td><td><span id="loss-move-average"></span><div class="loss-bar"><i id="loss-move-average-bar"></i></div></td><td><span id="loss-move-maximum"></span><div class="loss-bar maximum"><i id="loss-move-maximum-bar"></i></div></td></tr>
+      <tr id="loss-residence-row"><th>Residence · AOD + SLM</th><td id="loss-residence-expected"></td><td><span id="loss-residence-average"></span><div class="loss-bar"><i id="loss-residence-average-bar"></i></div></td><td><span id="loss-residence-maximum"></span><div class="loss-bar maximum"><i id="loss-residence-maximum-bar"></i></div></td></tr>
+      <tr id="loss-cz-row" hidden><th>CZ · physical atom loss</th><td id="loss-cz-expected"></td><td><span id="loss-cz-average"></span><div class="loss-bar"><i id="loss-cz-average-bar"></i></div></td><td><span id="loss-cz-maximum"></span><div class="loss-bar maximum"><i id="loss-cz-maximum-bar"></i></div></td></tr>
+      <tr id="loss-other-row" hidden><th>Other / unclassified</th><td id="loss-other-expected"></td><td><span id="loss-other-average"></span><div class="loss-bar"><i id="loss-other-average-bar"></i></div></td><td><span id="loss-other-maximum"></span><div class="loss-bar maximum"><i id="loss-other-maximum-bar"></i></div></td></tr>
+    </tbody><tfoot><tr><th>Total</th><td id="loss-total-expected"></td><td id="loss-total-average"></td><td id="loss-total-maximum"></td></tr></tfoot></table></div>
+    <p class="section-note">Contributions add to each column's total. Prior survival is included; simultaneous causes share new loss in proportion to hazard. Residence is physical loss, not T2 or computational leakage.</p>
+  </section>
   <section class="schedule-panel"><div class="schedule-toolbar"><div><h3>Execution schedule</h3><span id="schedule-range" class="muted"></span></div><div><label>VIEW <select id="schedule-mode"><option value="all">Full run</option><option value="follow">Follow playback</option></select></label><label>WINDOW · µs <input id="schedule-span" type="number" value="1000" min="1"></label></div></div><div class="schedule-chart"><canvas id="schedule-canvas" aria-label="Resource action schedule. Click an action to seek." tabindex="0"></canvas></div><p id="schedule-detail" class="section-note"></p></section>
   <footer><span id="device-name"></span><span>Atom IR replay · coordinates µm · time µs</span><button id="ir-toggle" class="text-button" aria-expanded="false">View Atom IR</button></footer>
   <section id="ir-panel" hidden><div class="section-heading"><h3>Atom IR</h3><button id="ir-close" class="quiet-button">Close</button></div><pre id="ir-source"></pre></section>

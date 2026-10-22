@@ -174,6 +174,11 @@
       if (highlights.has(atom.id)) circle(atom.x, atom.y, radius + 4, highlights.get(atom.id) + '24', highlights.get(atom.id) + 'aa');
       const fill = $('risk-toggle').checked && risk ? `hsl(${175 - 155 * (risk.atoms.get(atom.id) / analysis.maxAtomLoss)} 48% 47%)` : atom.holder.kind === 'aod' ? colors.aod : colors.slm;
       context.lineWidth = 1.2; circle(atom.x, atom.y, radius, fill, '#ffffff');
+      if (risk?.maximum.atom === atom.id) {
+        context.lineWidth = 2; circle(atom.x, atom.y, radius + 9, null, '#b25138');
+        context.fillStyle = '#a3432f'; context.font = 'bold 10px Segoe UI, sans-serif';
+        context.fillText('MAX · ' + atom.id, point[0] + radius + 12, point[1] + 13);
+      }
       if (atom.id === selectedAtom) { context.lineWidth = 1.6; circle(atom.x, atom.y, radius + 6, null, '#143c52'); }
       if ($('labels-toggle').checked || atom.id === selectedAtom) {
         context.fillStyle = '#3b576c'; context.font = '10px Consolas, monospace';

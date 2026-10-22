@@ -4,6 +4,10 @@
 
 ### Added
 
+- Reusable viewer loss attribution and comparison: mean/max atom risk replaces
+  all-survive, highlights the highest-risk atom, and compares load/store/move/
+  residence contributions for all atoms and the highest-risk atom.
+
 - Offline atom replay links a resource/action schedule to playback and optional
   noise reports: cumulative expected loss, per-atom risk coloring, final fidelity
   proxy and current-step leakage/native-channel inspection.

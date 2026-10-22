@@ -22,8 +22,8 @@ test('dashboard displays bound losses and links schedule clicks to playback', ()
   }
   const window = {devicePixelRatio:1};
   const sandbox = {window,document:{getElementById:element},Option:function(){},ResizeObserver:class{observe(){}}};
-  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../src/nadit_physical_compiler/visualization/web/dashboard.js'),'utf8'),sandbox);
-  const trace = {duration_us:10,initial:{atoms:[{id:7,qubit:0}]}, steps:[{start_us:0,duration_us:10,actions:[
+  for (const file of ['loss-panel.js','dashboard.js']) vm.runInNewContext(fs.readFileSync(path.resolve(__dirname,'../../src/nadit_physical_compiler/visualization/web',file),'utf8'),sandbox);
+  const trace = {duration_us:10,initial:{atoms:[{id:7,qubit:0},{id:9,qubit:1}]}, steps:[{start_us:0,duration_us:10,actions:[
     {kind:'Move',duration_us:10,atoms:[7],index:0,source_ids:[],parameters:{aod_id:'a'}}
   ]}],noise_report:{model:'noise',version:'v1.1',params:{},metrics:{fidelity:0.8},noise:{channels:[],gate_diagnostics:[],loss:{events:[{atom:7,start_us:0,duration_us:10,survival_probability:0.8}]}}}};
   let seeked, selected;
@@ -31,17 +31,28 @@ test('dashboard displays bound losses and links schedule clicks to playback', ()
   dashboard.load(trace,new Analysis(trace));
   dashboard.update(10,7,1);
   assert.equal(element('risk-now').textContent,'0.2');
-  assert.equal(element('survival-now').textContent,'80%');
+  assert.equal(element('average-loss-now').textContent,'10%');
+  assert.equal(element('maximum-loss-now').textContent,'20%');
+  assert.match(element('maximum-loss-atom').textContent,/Atom 7/);
+  element('maximum-loss-atom').handlers.click();
+  assert.equal(selected,7);
+  assert.equal(element('loss-other-average').textContent,'10%');
+  assert.equal(element('loss-other-maximum').textContent,'20%');
+  assert.equal(element('loss-other-average-bar').style.width,'50%');
+  assert.equal(element('loss-other-maximum-bar').style.width,'100%');
   assert.equal(element('atom-risk').textContent,'20%');
   element('schedule-canvas').handlers.click({clientX:400,clientY:30});
   assert.equal(seeked,0);assert.equal(selected,7);
   assert.match(element('schedule-detail').textContent,/Move/);
   dashboard.update(0,null,0);
   assert.equal(element('risk-now').textContent,'0');
+  assert.equal(element('maximum-loss-atom').disabled,true);
   element('schedule-mode').value='follow';dashboard.update(5,null,0);
   assert.equal(dashboard.range[1]-dashboard.range[0],4);
   delete trace.noise_report;
   dashboard.load(trace,new Analysis(trace));dashboard.update(0,null,0);
   assert.equal(element('risk-content').hidden,true);
   assert.equal(element('risk-now').textContent,'—');
+  assert.equal(element('loss-panel').hidden,true);
+  assert.equal(element('average-loss-now').textContent,'—');
 });

@@ -161,13 +161,32 @@ parallel steps; lanes describe recorded activity, not inferred exclusive use.
 
 When the result contains a `noise/v1` cost report, the viewer attaches the latest
 one after checking its execution hash. The linked loss panel shows expected lost
-atoms, all-atom survival and selected-atom loss. Colors optionally encode per-atom
+atoms, mean per-atom loss, maximum per-atom loss and selected-atom loss. The
+highest-risk atom is labeled in the layout; its button selects it for inspection.
+Positive-risk ties choose the lowest atom ID and display the tie count.
+Colors optionally encode per-atom
 loss probability. Loss contributions are booked at their recorded interval end;
 no loss is sampled and no atom is removed. The curve and cursor support backward
 seeking. Final fidelity is labeled as a final product proxy. Current-step channels,
 leakage and original upstream records remain separately inspectable; absent noise
 or leakage records are shown as unavailable, not zero. Noise parameters are
 visible in the panel. This extends offline HTML export without recompilation.
+
+The source table compares expected lost atoms, mean per-atom probability
+contributions and the highest-risk atom's contributions at the current time.
+Load, store, movement and holder residence are separate rows. Configured physical
+CZ loss and unclassified sources appear when present. Residence excludes T2 and
+computational leakage. Both probability columns use the same absolute bar scale.
+The mean includes all input atoms, including zero-risk atoms.
+
+At each completion boundary, new loss is weighted by prior atom survival.
+Simultaneous causes share this increment in proportion to `-log(survival)`;
+simultaneous certain-loss causes share it equally and finite causes receive zero
+at that boundary. This is a deterministic attribution convention, not a claim of
+microscopic causal identification. Per-source contributions sum to cumulative
+loss. `loss.js` owns attribution and indexed queries; `loss-panel.js` renders
+the reusable comparison. Raw cost reports retain all-atom survival, but the
+animation no longer displays it.
 
 `noise/v1` exports per-event Stim-style noise channels and simple physical-loss
 estimates. Gate channels, exposure, transport and report assembly are separate
