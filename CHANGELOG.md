@@ -4,6 +4,11 @@
 
 ### Added
 
+- Optional Search Smarter `mode=qec` restores user-supplied or generated storage
+  homes after every layer. Share existing gate placement and transport, disable
+  retention, and skip adaptive storage search. Expose named `search_smarter`
+  selection, Python mode, discovery, JSON Schema, and an explicit-home example.
+
 - Optional `entry.kind=enola_initial` reference placement using the pinned
   ENOLA SAPlacer with a private seed and deterministic budget. Preserve the
   explicit-layout provider and fixed-home execution; expose both in discovery

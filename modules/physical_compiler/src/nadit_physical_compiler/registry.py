@@ -248,7 +248,10 @@ def build_strategy(
         UnsupportedJob: Unsupported stages and reasons, before construction.
     """
     spec = object_at(spec, "strategy")
-    keys_at(spec, set(REGISTRY), "strategy")
+    keys_at(spec, set(REGISTRY) | {"mode"}, "strategy")
+    mode = string_at(spec.get("mode", "adaptive"), "strategy.mode")
+    if mode not in ("adaptive", "qec"):
+        raise ValueError("strategy.mode: expected 'adaptive' or 'qec'.")
     resolved: dict[str, Any] = {}
     for stage, implementations in REGISTRY.items():
         path = f"strategy.{stage}"
@@ -280,6 +283,8 @@ def build_strategy(
         if stage == "placement" and "method" in options and options["method"] != kind:
             raise ValueError(f"{path}.method: must agree with kind {kind!r}.")
         resolved[stage] = {"kind": kind, **options}
+    if mode == "qec":
+        resolved["reuse"] = {"kind": "none"}
     context = StrategyContext(
         dag, device, aod_id, catalog, resolved["placement"], resolved
     )
@@ -322,6 +327,8 @@ def build_strategy(
         resolved["transport"]["geometry"] = resolve_geometry_defaults(
             resolved["transport"]["geometry"], stage="transport"
         )
+    if "mode" in spec:
+        resolved["mode"] = mode
     return SearchSmarterStrategy(
         objects["scheduler"],
         objects["placement"],
@@ -331,6 +338,7 @@ def build_strategy(
         BatchReadout(aod_id)
         if device.readout is not None and device.readout.max_atoms != 1
         else None,
+        mode="qec" if mode == "qec" else "adaptive",
     ), resolved
 
 

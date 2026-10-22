@@ -35,10 +35,17 @@ cells, ENOLA-inspired dual candidates, strict transport batches, one pulse per
 parallel CZ layer, and exact return to the reference layout. Dynamic SA remains
 deferred. Rigid partial-release optimization remains paused under ADR 0028.
 Per-circuit job/Python selection, saved-result semantic validation, and replay
-are verified; the full suite now passes 1,666 tests including ADR 0031.
+are verified; the ADR 0031 baseline passed 1,666 tests.
 ADR 0031 adds optional ENOLA initial SA alongside explicit reference layouts.
 Both feed the same fixed-home execution path; code-block anchor placement is
 future work and atom-level SA does not preserve internal code symmetry.
+
+ADR 0033 adds Search Smarter `mode=qec`: explicit or initial-storage references,
+existing gate placement and transport, exact return after every selected layer,
+and no cross-layer retention or storage search. Omitted mode retains the adaptive
+pipeline. Named job selection, Python selection, discovery, and schema expose
+the option. The full suite passes 1,690 tests including 24 new QEC-mode cases;
+the wider ADR 0032 interface proposal remains separate.
 
 ## Compilation contract
 

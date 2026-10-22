@@ -1,5 +1,44 @@
 # Physical Compiler
 
+## Search Smarter fixed-reference QEC mode
+
+Add `"mode": "qec"` to an existing Search Smarter strategy to restore every
+atom to its initial site after each selected layer. Supply user-defined homes
+through `entry.kind="explicit"`, with `[atom_id, SLM_site_id, physical_qubit]`
+records. `initial_storage` also works. The strategy keeps the reference layout
+at layer boundaries; temporary execution layouts still use the gate zone.
+
+```json
+"strategy": {
+  "kind": "search_smarter",
+  "mode": "qec",
+  "scheduler": {"kind": "ready", "max_cz_gates": "catalog"},
+  "placement": {"kind": "ids"},
+  "transport": {"kind": "staged"},
+  "emitter": {"kind": "whole_layer"},
+  "reuse": {"kind": "none"}
+}
+```
+
+`kind` is optional for the existing stage configuration. Omitted `mode`, or
+`"mode": "adaptive"`, preserves the existing behavior. QEC mode resolves any
+requested reuse policy to `none`, disables lookahead, and skips IDS/A* storage
+search. Gate placement and Device-dependent transport remain configurable.
+Measurement, local rotation, and GlobalRY relocation also return to the input
+layout; measurement identities and feedback timing use the existing controller.
+Python callers pass `mode="qec"` to `SearchSmarterStrategy`.
+
+Run the explicit-home example:
+
+```text
+uv run --locked nadit compile examples/jobs/search-smarter-qec.json --validate -o result.json
+uv run --locked nadit validate result.json
+```
+
+This mode preserves supplied geometry; it does not generate QEC code templates
+or change the reference through deformation. See
+[ADR 0033](../../docs/decisions/0033-search-smarter-qec-mode.md).
+
 ## Fixed-layout non-zoned compiler
 
 The reference layout has two providers: user-supplied `entry.kind="explicit"`,

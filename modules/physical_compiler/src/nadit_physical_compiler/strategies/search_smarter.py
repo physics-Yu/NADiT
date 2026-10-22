@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 from ..contracts import (
     AtomFragment,
@@ -14,6 +15,7 @@ from ..contracts import (
 from ..device import Device
 from ..emission import emit_layer
 from ..physical_ir import PhysicalDAG
+from ..placement.reference import ReferencePlacer
 from ..readout import BatchReadout
 from ..state import AtomLayout, AtomState
 
@@ -31,6 +33,7 @@ class SearchSmarterStrategy:
         emitter: Bind native operations to Atom IR actions and durations.
         reuse_analyzer: Optional matching policy for the next known CZ layer.
         readout: Optional flexible AOD batch-readout lowering component.
+        mode: Adaptive placement or exact per-layer reference restoration (qec).
 
     The compiler supplies lookahead without committing future operations.
     Placement decides which gate sites and holders to retain.
@@ -42,6 +45,15 @@ class SearchSmarterStrategy:
     emitter: Emitter = emit_layer
     reuse_analyzer: ReuseAnalyzer | None = None
     readout: BatchReadout | None = None
+    mode: Literal["adaptive", "qec"] = "adaptive"
+
+    def __post_init__(self) -> None:
+        if self.mode not in ("adaptive", "qec"):
+            raise ValueError("strategy.mode: expected 'adaptive' or 'qec'.")
+        if self.mode == "qec":
+            if not isinstance(self.placer, ReferencePlacer):
+                object.__setattr__(self, "placer", ReferencePlacer(self.placer))
+            object.__setattr__(self, "reuse_analyzer", None)
 
     @property
     def lookahead_enabled(self) -> bool:
@@ -63,6 +75,8 @@ class SearchSmarterStrategy:
         retained_atoms: tuple[AtomState, ...] = (),
     ) -> AtomFragment:
         """Construct a fragment, retaining selected atoms for a known CZ layer."""
+        if self.mode == "qec":
+            following, retained_atoms = None, ()
         if (
             self.readout is not None
             and layer.operation_ids
@@ -101,7 +115,9 @@ class SearchSmarterStrategy:
             preparation.steps + arrival.steps + operation.steps + departure.steps,
             departure.exit_layout,
             operation.completed_operation_ids,
-            _retained_after(
+            ()
+            if self.mode == "qec"
+            else _retained_after(
                 dag,
                 layer,
                 layout,

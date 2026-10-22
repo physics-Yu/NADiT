@@ -32,7 +32,19 @@ def describe() -> dict[str, Any]:
         },
         "compiler_strategies": {
             "search_smarter": {
-                "selection": "scheduler/placement/transport/emitter/reuse stages"
+                "selection": (
+                    "optional kind=search_smarter with "
+                    "scheduler/placement/transport/emitter/reuse stages"
+                ),
+                "modes": {
+                    "adaptive": (
+                        "Default gate/storage placement and optional retention."
+                    ),
+                    "qec": (
+                        "Return every selected layer to the initial reference; "
+                        "reuse disabled; no storage search."
+                    ),
+                },
             },
             "nonzoned": {
                 "options": nonzoned_schema(),

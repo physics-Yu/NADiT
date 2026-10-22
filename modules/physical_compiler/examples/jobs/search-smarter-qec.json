@@ -1,0 +1,31 @@
+{
+  "schema": "nadit.job/1",
+  "circuit": {"qasm": "../multipair_feedback.qasm3"},
+  "device": "../../configs/multipair_flexible.json",
+  "aod": "transport",
+  "gate_zones": [
+    {
+      "zone": "entanglement",
+      "pairs": [["gate_0_left", "gate_0_right"], ["gate_1_left", "gate_1_right"]]
+    }
+  ],
+  "strategy": {
+    "kind": "search_smarter",
+    "mode": "qec",
+    "scheduler": {"kind": "ready", "max_cz_gates": "catalog"},
+    "placement": {"kind": "ids"},
+    "transport": {"kind": "staged"},
+    "emitter": {"kind": "whole_layer"},
+    "reuse": {"kind": "none"}
+  },
+  "entry": {
+    "kind": "explicit",
+    "atoms": [
+      [17, "storage_r2_c3", 0],
+      [3, "storage_r0_c0", 1],
+      [90, "storage_r1_c2", 2],
+      [41, "storage_r2_c0", 3]
+    ]
+  },
+  "case": {"seed": 17, "overrides": {}}
+}

@@ -36,6 +36,7 @@ class HeuristicPlacer:
         storage_zone_id: Region supplying fixed storage traps.
         config: Bounded IDS and source-aligned proxy-score parameters.
         geometry: Explicit SLM arrays; regular Device arrays are inferred if omitted.
+        return_to_entry: Restore the input layout without a storage search.
     """
 
     aod_id: str
@@ -43,6 +44,7 @@ class HeuristicPlacer:
     storage_zone_id: str | tuple[str, ...] | None = None
     config: PlacementConfig = PlacementConfig()
     geometry: PlacementGeometry | None = None
+    return_to_entry: bool = False
 
     def initial_layout(
         self, n_qubits: int, device: Device, *, atom_ids: tuple[int, ...] | None = None
@@ -135,6 +137,10 @@ class HeuristicPlacer:
             geometry,
             qubit_ids,
         )
+        if self.return_to_entry:
+            return PlacementPlan(
+                execution, layout, prepared if prepared is not layout else None
+            )
         reserved = {
             atom.position for atom in execution.atoms if atom.id not in participant_ids
         }

@@ -151,10 +151,19 @@ def job_schema() -> dict[str, Any]:
                 "oneOf": [
                     obj(
                         {
-                            stage: {
-                                "oneOf": [stage_schema(stage, kind) for kind in kinds]
-                            }
-                            for stage, kinds in REGISTRY.items()
+                            "kind": {"const": "search_smarter"},
+                            "mode": {
+                                "enum": ["adaptive", "qec"],
+                                "default": "adaptive",
+                            },
+                            **{
+                                stage: {
+                                    "oneOf": [
+                                        stage_schema(stage, kind) for kind in kinds
+                                    ]
+                                }
+                                for stage, kinds in REGISTRY.items()
+                            },
                         },
                         tuple(REGISTRY),
                     ),

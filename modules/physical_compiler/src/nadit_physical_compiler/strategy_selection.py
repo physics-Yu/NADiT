@@ -41,6 +41,15 @@ def select_strategy(
         UnsupportedJob: Device capabilities cannot implement the chosen strategy.
     """
     spec = object_at(spec, "strategy")
+    if spec.get("kind") == "search_smarter":
+        strategy, resolved = build_strategy(
+            {key: value for key, value in spec.items() if key != "kind"},
+            dag=dag,
+            device=device,
+            aod_id=aod_id,
+            catalog=catalog,
+        )
+        return strategy, {"kind": "search_smarter", **resolved}
     if "kind" not in spec:
         return build_strategy(
             spec, dag=dag, device=device, aod_id=aod_id, catalog=catalog
