@@ -31,6 +31,8 @@ def _gate(
         else p["single_overrides"].get(event.parameters.get("axis", "U"), p["single"])
     )
     effect = gates.evaluate(config, event)
+    if effect.record_id is not None:
+        context = {**context, "upstream_record_id": effect.record_id}
     targets = event.pairs if cz else tuple((a,) for a in event.atoms)
     for atoms in targets:
         report.channel(
@@ -77,7 +79,7 @@ class NoiseModel:
     """Export configurable channels plus independent physical error/loss estimates."""
 
     name = "noise"
-    version = "v1"
+    version = "v1.1"
 
     def evaluate(
         self,
@@ -128,6 +130,7 @@ class NoiseModel:
                     )
         add_exposure(activity, p, report)
         metrics, noise = report.finish()
+        noise["upstream_records"] = gates.records
         return {
             "model": self.name,
             "version": self.version,

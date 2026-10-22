@@ -229,6 +229,23 @@ twirls the conditional computational channel. Initial preparation noise is not
 inferred from the entry layout.
 See [ADR 0034](../../docs/decisions/0034-modular-noise-estimates.md).
 
+Reports at version `v1.1` also save the full upstream `OperationResult` in
+`noise.upstream_records`, once per distinct backend/target/duration request.
+Channels and gate diagnostics reference it by `upstream_record_id`. These records
+retain all error parameters, physical observables, diagnostics, validity limits,
+uncertainty, provenance, coherent matrices and the native quantum instrument.
+Complex matrices use `dtype`, `shape`, `real` and `imag`; superoperators follow
+upstream column vectorization. The quantum action is the actual gate channel,
+not the before-ideal Pauli approximation. Kraus operators retain trace loss and
+input-state dependence. No normalization converts them into a trace-preserving
+channel. The `noise/v1` CLI selector and numerical estimates remain unchanged.
+
+This preserves returned upstream information only. The four-level solver's full
+16-level evolution and individual decay trajectories are not returned by its
+current API. A saved computational Kraus map cannot propagate a leaked atom
+through later gates; it only preserves the computational-space output and its
+missing trace. Detailed AOD/XY8 dynamics are still not run.
+
 Cost evaluation reads a semantically validated `nadit.result/2`; it never
 compiles or samples measurements. `cost.prepare` revalidates content once and
 derives `AtomActivity`. Models share per-atom busy/idle intervals, transfer

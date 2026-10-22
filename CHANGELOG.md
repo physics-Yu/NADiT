@@ -4,6 +4,11 @@
 
 ### Added
 
+- Noise reports retain full upstream gate results, including native Kraus,
+  unitary and superoperator channels, leakage diagnostics and model limitations.
+  Deduplicated records are referenced by event; report revision v1.1 coexists
+  with previous v1 estimates.
+
 - Modular `noise/v1` post-processing: Stim-style per-event channels, pinned hsim
   magnetic/Raman/CZ channel adapters, configurable AOD transport/holder loss,
   exposure dephasing, and independent physical fidelity/loss estimates.

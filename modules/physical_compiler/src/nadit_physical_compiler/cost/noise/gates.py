@@ -1,7 +1,7 @@
 """Gate channel adapters, cached independently of atom/measurement identities."""
 
 import importlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from math import isclose
 from typing import Any
 
@@ -9,6 +9,7 @@ from ...activity import ActivityEvent
 from ...provenance import canonical_hash
 from ..hsim import HSIM_COMMIT, _backend, _cz_model, _single_result
 from .config import probabilities
+from .native import encode_native
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,6 +20,7 @@ class GateEffect:
     fidelity: float
     computational_survival: float = 1.0
     diagnostics: dict[str, Any] = field(default_factory=dict)
+    record_id: str | None = None
 
 
 def _single_operation(uftqc: Any, config: dict[str, Any], event: ActivityEvent) -> Any:
@@ -82,6 +84,7 @@ class GateChannels:
     def __init__(self) -> None:
         """Start an evaluation-local cache; optional dependencies remain lazy."""
         self.cache: dict[str, GateEffect] = {}
+        self.records: dict[str, dict[str, Any]] = {}
         self.uses_hsim = False
 
     def evaluate(self, config: dict[str, Any], event: ActivityEvent) -> GateEffect:
@@ -100,10 +103,12 @@ class GateChannels:
             }
         )
         if key not in self.cache:
-            self.cache[key] = self._upstream(config, event)
+            self.cache[key] = self._upstream(config, event, key)
         return self.cache[key]
 
-    def _upstream(self, config: dict[str, Any], event: ActivityEvent) -> GateEffect:
+    def _upstream(
+        self, config: dict[str, Any], event: ActivityEvent, key: str
+    ) -> GateEffect:
         uftqc = _backend()
         self.uses_hsim = True
         if event.kind == "CZPulse":
@@ -148,7 +153,7 @@ class GateChannels:
             diagnostics["virtual_z_correction_applied"] = operation.diagnostics[
                 "virtual_z_correction_applied"
             ]
-        return GateEffect(
+        effect = GateEffect(
             tuple(
                 probabilities(
                     weights, 15 if event.kind == "CZPulse" else 3, "hsim.pauli"
@@ -158,3 +163,14 @@ class GateChannels:
             survival,
             diagnostics,
         )
+        self.records[key] = {
+            "upstream_commit": HSIM_COMMIT,
+            "request": {
+                "config": config,
+                "kind": event.kind,
+                "parameters": event.parameters,
+                "duration_us": event.duration_us,
+            },
+            "result": encode_native(operation),
+        }
+        return replace(effect, record_id=key)

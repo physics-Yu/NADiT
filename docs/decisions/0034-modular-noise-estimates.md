@@ -50,6 +50,25 @@ Upstream CZ computational leakage/unresolved loss stays a joint pair diagnostic;
 it is not split into independent atom loss and is not exported as HERALDED_ERASE.
 Configured physical loss and upstream computational survival remain separate.
 
+Preserve the complete upstream `OperationResult` alongside the compact channels:
+error-model parameters, diagnostics, physical observables, validity domain,
+uncertainty, provenance, coherent unitary and quantum instrument. Encode matrices
+as shape/dtype plus real/imaginary arrays. Preserve native unitary, Kraus or
+superoperator representation and back-action data. No simulator is executed on
+these saved records during compilation.
+
+Store one `noise.upstream_records` entry per distinct request (backend config,
+target and duration). Event/channel records refer to it with `upstream_record_id`.
+This avoids repeating matrices for every atom pair. Reports use version `v1.1`
+so `cost --into` retains the new record even if an older v1 report exists.
+The public selector remains `noise/v1`; its physical estimator is unchanged.
+
+This records everything the upstream operation returns, not all solver-internal
+state. In particular, the CZ action is a projected computational-space channel;
+the upstream does not return its full 16-level evolution, leakage-resolved
+instrument, or individual spontaneous-emission trajectories. Those require an
+upstream extension before stateful leakage propagation can be implemented.
+
 Report two estimates: a no-fault probability from channel identity weights,
 computational survival and physical survival; and a physical fidelity product
 proxy using average gate fidelity and exponential T2 coherence factors. Average
@@ -74,3 +93,8 @@ optional hsim tests). New tests cover analytic exposure/loss/channel formulas,
 immutable validated-result and CLI exports, both feedback branches, and pinned
 upstream comparisons including CZ leakage, magnetic detuning and Raman channels.
 Ruff formatting/lint and mypy passed across source, tests and examples.
+
+Native-record follow-up: baseline 1743 passed; final 1750 passed. Seven new
+optional-upstream cases cover JSON restoration of coherent/open CZ Kraus maps,
+all four nonideal single-gate backends, record deduplication/references, and
+coexistence with an older v1 report. Ruff and mypy also passed.
