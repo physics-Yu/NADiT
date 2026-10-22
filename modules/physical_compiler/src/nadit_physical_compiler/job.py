@@ -8,11 +8,12 @@ from typing import Any
 
 from .architectures import generate
 from .compiler import CompilationResult, compile_physical
+from .compilers.contracts import InvalidProgramResult, ProgramCompiler, ProgramContext
+from .compilers.registry import entry_for
 from .device import Device, load_device, loads_device
 from .execution import FakeBackend
 from .frontend import DEFAULT_GATE_SET, GateSet, loads_qasm
 from .job_fields import array_at, integer_at, keys_at, object_at, required, string_at
-from .nonzoned.support import require_capabilities
 from .physical_ir import PhysicalDAG, ResultRef
 from .placement import GatePairCatalog, make_initial_layout
 from .provenance import canonical_hash
@@ -103,10 +104,9 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
     except KeyError as error:
         raise ValueError(f"aod: unknown AOD {aod!r}.") from error
     raw_strategy = object_at(required(data, "strategy", "job"), "strategy")
-    if raw_strategy.get("kind") == "nonzoned":
-        require_capabilities(
-            device, aod, readout=any(n.name == "measure" for n in dag.nodes)
-        )
+    raw_entry = entry_for(
+        raw_strategy, None if "entry" not in data else object_at(data["entry"], "entry")
+    )
     catalog, zones = _catalog(
         data.get(
             "gate_zones",
@@ -123,25 +123,12 @@ def loads_job(source: str, *, base_dir: str | Path) -> CompilationJob:
         device=device,
         aod_id=aod,
         catalog=catalog,
+        entry=raw_entry,
     )
     context = StrategyContext(
         dag, device, aod, catalog, strategy_document.get("placement", {})
     )
-    if strategy_document.get("kind") == "nonzoned":
-        raw_entry = object_at(required(data, "entry", "job"), "entry")
-        if raw_entry.get("kind") not in ("explicit", "enola_initial"):
-            raise UnsupportedJob(
-                [
-                    {
-                        "stage": "entry",
-                        "kind": "nonzoned",
-                        "reason": (
-                            "requires an explicit or enola_initial reference layout"
-                        ),
-                    }
-                ]
-            )
-    entry, entry_document = _entry(required(data, "entry", "job"), context)
+    entry, entry_document = _entry(raw_entry, context)
     backend, case = _case(data.get("case", {}), dag)
     document = {
         "schema": JOB_SCHEMA,
@@ -170,6 +157,22 @@ def compile_job(job: CompilationJob) -> CompilationResult:
     Returns:
         The unchanged public compiler result.
     """
+    if isinstance(job.strategy, ProgramCompiler):
+        from .validation import validate_result
+
+        result = job.strategy.compile(
+            ProgramContext(
+                job.dag, job.device, job.document["aod"], job.catalog, job.entry_state
+            ),
+            job.document["strategy"],
+            job.measurement_backend,
+        )
+        report = validate_result(
+            result, entry_state=job.entry_state, device=job.device, dag=job.dag
+        )
+        if not report["ok"]:
+            raise InvalidProgramResult(dict(report))
+        return result
     return compile_physical(
         job.dag,
         job.device,
@@ -255,6 +258,10 @@ def _catalog(
             )
         zones.append((name, tuple(pairs)))
         document.append({"zone": name, "pairs": [list(pair) for pair in pairs]})
+    # A catalogue describes SLM-SLM execution. Other holders are admitted by
+    # the selected compiler rather than rejected as malformed geometry here.
+    if device.cz is None or ("slm", "slm") not in device.cz.holder_pairs:
+        return None, document
     try:
         return (
             GatePairCatalog.from_zones(device, tuple(zones)) if zones else None

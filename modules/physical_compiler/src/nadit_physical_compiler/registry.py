@@ -223,15 +223,15 @@ REGISTRY: dict[str, dict[str, Registration]] = {
 }
 
 
-def build_strategy(
+def check_strategy(
     spec: dict[str, Any],
     *,
     dag: PhysicalDAG,
     device: Device,
     aod_id: str,
     catalog: GatePairCatalog | None,
-) -> tuple[SearchSmarterStrategy, dict[str, Any]]:
-    """Build a strategy and fully resolved stage options, without compiling.
+) -> tuple[StrategyContext, dict[str, Any]]:
+    """Resolve stage options and check admission without constructing stages.
 
     Args:
         spec: Each stage's kind and constructor/PlacementConfig options.
@@ -241,14 +241,16 @@ def build_strategy(
         catalog: Declared gate pairs, or None for a job needing none.
 
     Returns:
-        The existing composed strategy and its JSON configuration with defaults.
+        The shared stage context and normalized options.
 
     Raises:
         ValueError: Invalid kinds, fields, or values, with their job paths.
         UnsupportedJob: Unsupported stages and reasons, before construction.
     """
     spec = object_at(spec, "strategy")
-    keys_at(spec, set(REGISTRY) | {"mode"}, "strategy")
+    keys_at(spec, set(REGISTRY) | {"mode", "kind"}, "strategy")
+    if spec.get("kind", "search_smarter") != "search_smarter":
+        raise ValueError("strategy.kind: expected search_smarter.")
     mode = string_at(spec.get("mode", "adaptive"), "strategy.mode")
     if mode not in ("adaptive", "qec"):
         raise ValueError("strategy.mode: expected 'adaptive' or 'qec'.")
@@ -310,8 +312,50 @@ def build_strategy(
             )
     if failures:
         raise UnsupportedJob(failures)
+    return context, resolved
+
+
+def build_strategy(
+    spec: dict[str, Any],
+    *,
+    dag: PhysicalDAG,
+    device: Device,
+    aod_id: str,
+    catalog: GatePairCatalog | None,
+) -> tuple[SearchSmarterStrategy, dict[str, Any]]:
+    """Build a strategy and fully resolved stage options, without compiling.
+
+    Args:
+        spec: Each stage's kind and constructor/PlacementConfig options.
+        dag: Parsed native circuit, used by the source scheduler.
+        device: Capabilities and geometry from the job.
+        aod_id: Selected transport AOD.
+        catalog: Declared gate pairs, or None for a job needing none.
+
+    Returns:
+        The existing composed strategy and its JSON configuration with defaults.
+
+    Raises:
+        ValueError: Invalid kinds, fields, or values, with their job paths.
+        UnsupportedJob: Unsupported stages and reasons, before construction.
+    """
+    context, resolved = check_strategy(
+        spec, dag=dag, device=device, aod_id=aod_id, catalog=catalog
+    )
+    if "mode" in spec:
+        resolved["mode"] = spec["mode"]
+    return construct_strategy(context, resolved)
+
+
+def construct_strategy(
+    context: StrategyContext, resolved: dict[str, Any]
+) -> tuple[SearchSmarterStrategy, dict[str, Any]]:
+    """Construct previously admitted stages without repeating admission."""
+    aod_id, device = context.aod_id, context.device
+    mode = resolved.get("mode", "adaptive")
     objects: dict[str, Any] = {}
-    for stage, options in resolved.items():
+    for stage in REGISTRY:
+        options = resolved[stage]
         kind = options["kind"]
         try:
             objects[stage] = REGISTRY[stage][kind].factory(
@@ -327,8 +371,7 @@ def build_strategy(
         resolved["transport"]["geometry"] = resolve_geometry_defaults(
             resolved["transport"]["geometry"], stage="transport"
         )
-    if "mode" in spec:
-        resolved["mode"] = mode
+    resolved["kind"] = "search_smarter"
     return SearchSmarterStrategy(
         objects["scheduler"],
         objects["placement"],

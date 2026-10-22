@@ -137,7 +137,10 @@ def summarize(
         raise ValueError("Unknown Pareto minimization objective.")
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
-        grouped[row["architecture_hash"] + ":" + row["strategy_hash"]].append(row)
+        key = row["architecture_hash"] + ":" + row["strategy_hash"]
+        if "compiler" in row:
+            key += ":" + canonical_hash(row["compiler"])
+        grouped[key].append(row)
     comparisons = []
     baseline = spec.get("baseline", {})
     if baseline:
@@ -233,6 +236,9 @@ def summarize(
                 "group_id": key,
                 "architecture_hash": members[0]["architecture_hash"],
                 "strategy": members[0]["strategy"],
+                "compiler": members[0].get(
+                    "compiler", {"kind": "search_smarter", "version": "legacy"}
+                ),
                 "statuses": dict(Counter(row["status"] for row in members)),
                 "statistics": stats,
                 "baseline_ratios": ratios,
@@ -335,6 +341,8 @@ def summarize(
         columns = [
             "group_id",
             "strategy",
+            "compiler_kind",
+            "compiler_version",
             "statuses",
             "duration_us",
             "transfers",
@@ -348,8 +356,10 @@ def summarize(
                 {
                     "group_id": group["group_id"],
                     "strategy": group["strategy"],
+                    "compiler_kind": group["compiler"]["kind"],
+                    "compiler_version": group["compiler"]["version"],
                     "statuses": json.dumps(group["statuses"], sort_keys=True),
-                    **{key: group["statistics"][key]["median"] for key in columns[3:]},
+                    **{key: group["statistics"][key]["median"] for key in columns[5:]},
                 }
             )
     return report

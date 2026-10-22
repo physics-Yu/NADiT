@@ -29,6 +29,7 @@ def prepare(document: Mapping[str, Any]) -> AtomActivity:
         entry_state=decode_layout(document["entry_state"]),
         device=loads_device(json.dumps(document["device"])),
         dag=decode_dag(document["dag"]),
+        stored_metrics=document["metrics"],
     )
     if not checked["ok"]:
         raise UnvalidatedResult(

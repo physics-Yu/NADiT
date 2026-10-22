@@ -148,27 +148,7 @@ def job_schema() -> dict[str, Any]:
                 )
             ),
             "strategy": {
-                "oneOf": [
-                    obj(
-                        {
-                            "kind": {"const": "search_smarter"},
-                            "mode": {
-                                "enum": ["adaptive", "qec"],
-                                "default": "adaptive",
-                            },
-                            **{
-                                stage: {
-                                    "oneOf": [
-                                        stage_schema(stage, kind) for kind in kinds
-                                    ]
-                                }
-                                for stage, kinds in REGISTRY.items()
-                            },
-                        },
-                        tuple(REGISTRY),
-                    ),
-                    nonzoned_schema(),
-                ]
+                "oneOf": [item.options_schema() for item in _compilers().values()]
             },
             "entry": {
                 "oneOf": [
@@ -200,7 +180,7 @@ def job_schema() -> dict[str, Any]:
                 }
             ),
         },
-        ("schema", "circuit", "device", "aod", "strategy", "entry"),
+        ("schema", "circuit", "device", "aod", "strategy"),
     )
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -231,4 +211,28 @@ def enola_initial_schema() -> dict[str, Any]:
             "moves_per_iteration": {"type": "integer", "minimum": 1, "default": 400},
         },
         ("kind",),
+    )
+
+
+def _compilers() -> dict[str, Any]:
+    from ..compilers.registry import COMPILERS
+
+    return COMPILERS
+
+
+def search_smarter_schema() -> dict[str, Any]:
+    """Describe named or legacy stage-based compilation including QEC mode."""
+    return obj(
+        {
+            "kind": {"const": "search_smarter"},
+            "mode": {
+                "enum": ["adaptive", "qec"],
+                "default": "adaptive",
+            },
+            **{
+                stage: {"oneOf": [stage_schema(stage, kind) for kind in kinds]}
+                for stage, kinds in REGISTRY.items()
+            },
+        },
+        tuple(REGISTRY),
     )

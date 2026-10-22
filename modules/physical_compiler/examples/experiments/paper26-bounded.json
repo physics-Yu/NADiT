@@ -48,7 +48,7 @@
   ],
   "budget": {
     "timeout_s": 5,
-    "placement.max_nodes": 1000000
+    "search_nodes": 1000000
   },
   "validate": "required",
   "store": "all",

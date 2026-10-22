@@ -7,6 +7,7 @@
 
 from collections.abc import Callable, Iterable
 
+from ..errors import SearchExhausted
 from .queue import _BoundedQueue
 
 
@@ -19,6 +20,7 @@ def iterative_diving_search[Node](
     heuristic: Callable[[Node], float],
     trials: int = 4,
     queue_capacity: int = 100,
+    max_nodes: int | None = None,
 ) -> Node:
     """Dive into best children and restart from bounded queued alternatives.
 
@@ -30,6 +32,7 @@ def iterative_diving_search[Node](
         heuristic: Estimated remaining score; placement goals have zero.
         trials: Maximum number of completed goals to compare.
         queue_capacity: Base alternative capacity; initially add the trial count.
+        max_nodes: Optional visited-node limit; return an existing goal at the limit.
 
     Returns:
         The completed node with lowest cost plus heuristic among visited goals.
@@ -46,7 +49,15 @@ def iterative_diving_search[Node](
     queue = _BoundedQueue[Node](queue_capacity + trials)
     current = (heuristic(initial), initial)
     goal: tuple[float, Node] | None = None
+    visited = 0
+    if max_nodes is not None and max_nodes <= 0:
+        raise ValueError("IDS max_nodes must be greater than zero.")
     while True:
+        if max_nodes is not None and visited >= max_nodes:
+            if goal is not None:
+                return goal[1]
+            raise SearchExhausted("IDS reached max_nodes without a completed goal.")
+        visited += 1
         priority, node = current
         if is_goal(node):
             trials -= 1
@@ -73,5 +84,5 @@ def iterative_diving_search[Node](
         else:
             break
     if goal is None:
-        raise ValueError("IDS found no completed goal within its bounded search.")
+        raise SearchExhausted("IDS found no completed goal within its bounded search.")
     return goal[1]

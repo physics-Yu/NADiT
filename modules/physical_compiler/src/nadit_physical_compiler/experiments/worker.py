@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from ..activity import _area
+from ..compilers.contracts import InvalidProgramResult
+from ..compilers.registry import identity as compiler_identity
+from ..errors import SearchExhausted
 from ..job import compile_job, loads_job
 from ..serialization import encode_result
 from ..support import UnsupportedJob
@@ -46,6 +49,7 @@ def execute(run: dict[str, Any]) -> dict[str, Any]:
     except (ValueError, OSError, KeyError, TypeError) as error:
         record["reason"] = f"{type(error).__name__}: {error}"
     else:
+        record["compiler"] = compiler_identity(job.document["strategy"])
         aod = job.device.aod(job.document["aod"])
         record["hardware"] = {
             "slm_sites": len(job.device.slm_sites),
@@ -56,15 +60,17 @@ def execute(run: dict[str, Any]) -> dict[str, Any]:
         compile_start = time.perf_counter()
         try:
             result = compile_job(job)
+        except InvalidProgramResult as error:
+            record.update(
+                status="validation_failed", reason=str(error), validation=error.report
+            )
+        except SearchExhausted as error:
+            record.update(status="search_exhausted", reason=str(error))
+            record["compile"]["budget_hit"] = True
         except Exception as error:
             record.update(
                 status="compile_error", reason=f"{type(error).__name__}: {error}"
             )
-            if (
-                isinstance(error, ValueError)
-                and str(error) == "A* reached max_nodes in its open set."
-            ):
-                record["compile"]["budget_hit"] = True
         else:
             record["compile"]["wall_s"] = time.perf_counter() - compile_start
             try:

@@ -81,7 +81,10 @@ def collect_provenance(
         identity["device"] = inputs["device_sha256"]
     job_hash = canonical_hash(identity)
     git_commit, git_dirty = _git_state()
+    from .compilers.registry import identity as compiler_identity
+
     return {
+        "compiler": compiler_identity(dict(job.get("strategy", {}))),
         "package_version": _package_version("nadit-physical-compiler"),
         "git_commit": git_commit,
         "git_dirty": git_dirty,

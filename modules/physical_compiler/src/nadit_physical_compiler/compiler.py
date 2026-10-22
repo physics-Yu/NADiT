@@ -34,7 +34,7 @@ class CompilationStrategy(Protocol):
         following: GateLayer | None = None,
         retained_atoms: tuple[AtomState, ...] = (),
     ) -> AtomFragment:
-        """Construct a fragment using an optional known following CZ layer."""
+        """Construct a fragment; following/retention are optional hints to ignore."""
         ...
 
 

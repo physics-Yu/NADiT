@@ -1,0 +1,72 @@
+{
+  "schema": "nadit.experiment/1",
+  "name": "compiler-comparison",
+  "suite": "feedback",
+  "architectures": [
+    {
+      "family": "zoned/v1",
+      "base": "../architectures/multipair_flexible.json"
+    },
+    {
+      "family": "shared/v1",
+      "base": "../architectures/nonzoned.json"
+    }
+  ],
+  "strategies": {
+    "search_qec": {
+      "strategy": {
+        "scheduler": {
+          "kind": "ready",
+          "max_cz_gates": "catalog"
+        },
+        "placement": {
+          "kind": "ids"
+        },
+        "transport": {
+          "kind": "strict"
+        },
+        "emitter": {
+          "kind": "whole_layer"
+        },
+        "reuse": {
+          "kind": "matching"
+        },
+        "kind": "search_smarter",
+        "mode": "qec"
+      },
+      "entry": {
+        "kind": "initial_storage"
+      }
+    },
+    "nonzoned": {
+      "strategy": {
+        "kind": "nonzoned"
+      },
+      "entry": {
+        "kind": "enola_initial",
+        "seed": 0,
+        "iterations": 10,
+        "moves_per_iteration": 40
+      }
+    }
+  },
+  "cases": {
+    "seeds": [
+      17
+    ],
+    "overrides": [
+      {
+        "12": 0
+      },
+      {
+        "12": 1
+      }
+    ]
+  },
+  "budget": {
+    "timeout_s": 30,
+    "search_nodes": 1000000
+  },
+  "validate": "required",
+  "store": "all"
+}

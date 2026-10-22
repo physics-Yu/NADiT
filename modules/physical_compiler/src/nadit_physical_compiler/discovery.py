@@ -4,9 +4,10 @@ from copy import deepcopy
 from typing import Any
 
 from .architectures import describe_families
+from .compilers.registry import describe_compilers
 from .job import JOB_SCHEMA
 from .registry import REGISTRY
-from .schemas.job import enola_initial_schema, nonzoned_schema, stage_schema
+from .schemas.job import enola_initial_schema, stage_schema
 from .serialization import RESULT_SCHEMA, RESULT_SCHEMA_V2
 
 
@@ -30,31 +31,8 @@ def describe() -> dict[str, Any]:
                 ),
             },
         },
-        "compiler_strategies": {
-            "search_smarter": {
-                "selection": (
-                    "optional kind=search_smarter with "
-                    "scheduler/placement/transport/emitter/reuse stages"
-                ),
-                "modes": {
-                    "adaptive": (
-                        "Default gate/storage placement and optional retention."
-                    ),
-                    "qec": (
-                        "Return every selected layer to the initial reference; "
-                        "reuse disabled; no storage search."
-                    ),
-                },
-            },
-            "nonzoned": {
-                "options": nonzoned_schema(),
-                "supports": (
-                    "fixed SLM reference, isolated double-trap cells, flexible AOD, "
-                    "global SLM-SLM CZ with isolated spectators; retained AOD readout"
-                ),
-                "return_boundary": "parallel CZ layer",
-            },
-        },
+        "compilers": describe_compilers(),
+        "compiler_strategies": describe_compilers(),
         "cost_models": {
             "additive/v1": {
                 "defaults": deepcopy(DEFAULTS),
@@ -78,6 +56,7 @@ def describe() -> dict[str, Any]:
                 "unsupported",
                 "invalid_job",
                 "compile_error",
+                "search_exhausted",
                 "timeout",
                 "validation_failed",
             ],

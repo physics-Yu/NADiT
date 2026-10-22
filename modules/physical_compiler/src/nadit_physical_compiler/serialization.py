@@ -338,7 +338,7 @@ def encode_result(
             "Version-two results require dag, device, and inputs together."
         )
     job_snapshot = deepcopy(dict(job))
-    document = {
+    document: dict[str, Any] = {
         "schema": RESULT_SCHEMA_V2 if all(snapshots) else RESULT_SCHEMA,
         "job": job_snapshot,
         "provenance": deepcopy(dict(provenance))
@@ -357,6 +357,11 @@ def encode_result(
     if validation is not None:
         document["validation"] = deepcopy(dict(validation))
     if dag is not None and device is not None and inputs is not None:
+        from .compilers.registry import identity as compiler_identity
+
+        document["provenance"].setdefault(
+            "compiler", compiler_identity(dict(job_snapshot.get("strategy", {})))
+        )
         document["dag"] = encode_dag(dag)
         document["device"] = encode_device(device)
         document["inputs"] = deepcopy(dict(inputs))

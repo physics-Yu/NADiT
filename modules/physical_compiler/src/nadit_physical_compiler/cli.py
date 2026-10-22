@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from .compiler import CompilationResult
+from .compilers.contracts import InvalidProgramResult
 from .device import load_device, loads_device
+from .errors import SearchExhausted
 from .job import compile_job, load_job
 from .serialization import (
     RESULT_SCHEMA_V2,
@@ -86,6 +88,8 @@ def _compile(args: argparse.Namespace) -> tuple[dict[str, Any], int]:
     job = load_job(args.job)
     try:
         result = compile_job(job)
+    except (SearchExhausted, InvalidProgramResult):
+        raise
     except Exception as error:
         raise _CompilationError(f"{type(error).__name__}: {error}") from error
     validation = (
@@ -150,6 +154,7 @@ def _validate(
         device=device,
         dag=decode_dag(document["dag"]) if version_two else None,
         detailed=True,
+        stored_metrics=document["metrics"],
     )
     report_document: dict[str, Any] = dict(report)
     if device_override is not None:
@@ -279,6 +284,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     except UnsupportedJob as error:
         print(_json(error.document()), end="")
         return 4
+    except SearchExhausted as error:
+        print(
+            _json(
+                {"status": "search_exhausted", "budget_hit": True, "reason": str(error)}
+            ),
+            end="",
+        )
+        return 2
+    except InvalidProgramResult as error:
+        print(_json(error.report), end="")
+        return 3
     except _CompilationError as error:
         print(f"nadit: compilation failed: {error}", file=sys.stderr)
         return 2

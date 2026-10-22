@@ -1,0 +1,92 @@
+{
+  "family": "shared/v1",
+  "params": {
+    "name": "shared-array-fixed-home",
+    "cz": {
+      "channel": "rydberg",
+      "radius_um": 4.6,
+      "duration_us": 0.5,
+      "holder_pairs": [
+        [
+          "slm",
+          "slm"
+        ]
+      ],
+      "allow_spectators": true
+    },
+    "local": {
+      "channel": "local",
+      "rotation_us": 1,
+      "reset_us": 5,
+      "holders": [
+        "slm",
+        "aod"
+      ]
+    },
+    "timing": {
+      "load_us": 10,
+      "store_us": 10,
+      "move_us_per_um": 1
+    },
+    "shared_arrays": [
+      {
+        "id": "shared",
+        "array_id": "cells",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "rows": 2,
+        "pairs_per_row": 4,
+        "separation": 2,
+        "pitch": {
+          "x": 10,
+          "y": 10
+        },
+        "bounds": {
+          "x_min": -2,
+          "y_min": -2,
+          "x_max": 35,
+          "y_max": 15
+        },
+        "left_prefix": "home",
+        "right_prefix": "guest"
+      }
+    ],
+    "measurement": {
+      "id": "readout",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "bounds": {
+        "x_min": -2,
+        "y_min": 30,
+        "x_max": 35,
+        "y_max": 40
+      },
+      "readout": {
+        "channel": "camera",
+        "duration_us": 10,
+        "latency_us": 500,
+        "min_spacing_um": 5,
+        "max_atoms": null,
+        "retain_atoms": true,
+        "holders": [
+          "aod"
+        ]
+      }
+    },
+    "aod": {
+      "id": "transport",
+      "workspace": {
+        "x_min": -5,
+        "y_min": -5,
+        "x_max": 40,
+        "y_max": 45
+      },
+      "min_spacing": 1,
+      "motion": "flexible"
+    }
+  }
+}

@@ -34,7 +34,7 @@ class PlacementConfig:
         window_ratio: Window height divided by width.
         window_share: Candidate target count relative to the number of jobs.
         method: Select IDS or A* with the same candidate tree and score.
-        max_nodes: A* open-set size limit, checked after each expansion.
+        max_nodes: A* open-set limit or IDS visited-node limit per search call.
 
     Raises:
         ValueError: If window dimensions or the candidate share are invalid.
@@ -354,5 +354,6 @@ def search_placement(
             heuristic=search.heuristic,
             trials=config.trials,
             queue_capacity=config.queue_capacity,
+            max_nodes=config.max_nodes,
         )
     return result.chosen

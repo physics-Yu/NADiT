@@ -19,7 +19,7 @@ def test_description_covers_every_registration_without_shared_mutable_defaults()
         "result": "nadit.result/2",
         "readable_results": ["nadit.result/1", "nadit.result/2"],
     }
-    assert set(document["architectures"]) == {"zoned/v1"}
+    assert set(document["architectures"]) == {"zoned/v1", "shared/v1"}
     for stage, kinds in REGISTRY.items():
         assert set(document["strategies"][stage]) == set(kinds)
         for kind, registered in kinds.items():

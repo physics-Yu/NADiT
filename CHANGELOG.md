@@ -4,6 +4,14 @@
 
 ### Added
 
+- Unified compiler registrations, canonical strategy kinds, per-compiler entry
+  defaults, neutral experiment budgets, direct strategy overrides, compiler
+  identity in provenance/run records/summaries, and registry-derived discovery.
+- `shared/v1` reproduces the non-zoned example device and supports parameter
+  sweeps. Whole-program adapters share admission and mandatory result validation.
+- Device duration and saved-metrics validation; structured `search_exhausted`
+  outcomes for IDS/A*, with a visited-node limit for IDS.
+
 - Optional Search Smarter `mode=qec` restores user-supplied or generated storage
   homes after every layer. Share existing gate placement and transport, disable
   retention, and skip adaptive storage search. Expose named `search_smarter`

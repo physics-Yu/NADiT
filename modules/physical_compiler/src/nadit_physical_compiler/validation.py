@@ -1,7 +1,8 @@
 """Optional reference checks for a compiled or decoded result document."""
 
 from collections import defaultdict
-from typing import NotRequired, TypedDict
+from collections.abc import Mapping
+from typing import Any, NotRequired, TypedDict
 
 from .atom_ir import (
     AtomAction,
@@ -18,11 +19,13 @@ from .atom_ir import (
 )
 from .compiler import CompilationResult
 from .device import Device
+from .metrics import collect_metrics
 from .motion import ConstraintResult, check_load, check_move, check_store
 from .physical_ir import PhysicalDAG
 from .replay import apply_step
 from .semantic_actions import check_action_semantics
 from .state import AtomLayout, validate_layout
+from .validation_durations import check_duration, metrics_equal
 from .validation_timing import TIME_TOLERANCE_US as TIME_TOLERANCE_US
 from .validation_timing import check_timing
 
@@ -70,6 +73,7 @@ def validate_result(
     device: Device,
     dag: PhysicalDAG | None = None,
     detailed: bool = False,
+    stored_metrics: Mapping[str, Any] | None = None,
 ) -> ValidationReport:
     """Check saved actions independently of compiler construction.
 
@@ -88,9 +92,9 @@ def validate_result(
         If replay cannot produce a state, independent timing and coverage checks
         continue; subsequent spatial checks cannot use an invented layout.
     """
-    if dag is None and not detailed:
+    if dag is None and not detailed and stored_metrics is None:
         return _validate_legacy(result, entry_state=entry_state, device=device)
-    return _validate_detailed(result, entry_state, device, dag)
+    return _validate_detailed(result, entry_state, device, dag, stored_metrics)
 
 
 def _validate_legacy(
@@ -204,6 +208,7 @@ def _validate_detailed(
     entry: AtomLayout,
     device: Device,
     dag: PhysicalDAG | None,
+    stored_metrics: Mapping[str, Any] | None = None,
 ) -> ValidationReport:
     failures = _Failures()
     layout: AtomLayout | None = entry
@@ -321,6 +326,16 @@ def _validate_detailed(
             "exit_state_mismatch",
             "Replayed layout does not equal the recorded exit state.",
         )
+    if stored_metrics is not None and not metrics_equal(
+        stored_metrics, collect_metrics(result)
+    ):
+        failures.record(
+            None,
+            None,
+            "RESULT",
+            "metrics_mismatch",
+            "Stored metrics differ from recomputed program metrics.",
+        )
     checks = ["motion", "coverage"]
     if spatial_checks_ran:
         checks.append("replay")
@@ -341,6 +356,9 @@ def _validate_detailed(
 def _check_action(
     device: Device, layout: AtomLayout, action: AtomAction
 ) -> ConstraintResult:
+    duration = check_duration(device, layout, action)
+    if not duration.ok:
+        return duration
     if isinstance(action, Load):
         return check_load(
             device,

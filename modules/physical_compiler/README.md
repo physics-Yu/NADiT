@@ -1,5 +1,57 @@
 # Physical Compiler
 
+## Unified compiler interface
+
+`strategy.kind` selects a registration in `compilers/registry.py`. Existing
+stage-only jobs resolve to `search_smarter`; resolved jobs always contain kind.
+`nadit describe` exposes registry-derived `compilers`, options, versions,
+supported entry providers, and budget mappings. `compiler_strategies` remains
+an alias. Job JSON Schema uses the same registrations.
+
+Omitted `entry` selects `initial_storage` for Search Smarter and `enola_initial`
+for nonzoned. Both accept `explicit`. Search Smarter does not accept ENOLA's
+shared-array entry provider. Admission collects unsupported reasons before
+construction and returns exit 4. QEC mode remains an option of Search Smarter.
+
+An experiment strategy can be a file, an inline strategy, or
+`{"strategy": {...}, "entry": {...}}`. Without a per-strategy entry it uses the
+compiler default. A global `entry` overrides these choices; `experiment plan`
+lists changes to defaults under `entry_overrides`. Budgets use `timeout_s` and
+`search_nodes`; unsupported budgets are recorded as `not_applicable`.
+Search Smarter maps search_nodes to `placement.max_nodes`: an IDS visited-node
+limit or the original A* open-set limit, applied per placement search call.
+IDS can return an already found goal at the limit; without one, both searches
+report `search_exhausted` with `budget_hit=true`. These limits are not equal
+work budgets across algorithms.
+
+Use `strategy_overrides: {"label": {"placement.trials": 8}}` for direct option
+paths. Overrides apply before neutral budgets. Old budget paths such as
+`placement.max_nodes` move to `search_nodes` or strategy_overrides.
+
+`shared/v1` generates shared double-trap arrays and readout regions using
+absolute positions and local bounds. Its
+`examples/architectures/nonzoned.json` reproduces the expanded hand-written
+device exactly. `examples/experiments/compiler-comparison.json` demonstrates
+mixed families/compilers; unsupported cross-product cells remain recorded.
+
+Results and run records include `compiler.kind/version` (results in provenance).
+Summaries group by compiler identity as well as strategy, and export both to
+CSV. Old records keep their group IDs and use an inferred Search Smarter legacy
+identity. Fixed action durations are checked against Device timing; Move must
+meet its endpoint-distance lower bound. Saved metrics are recomputed by
+`nadit validate` and cost evaluation, producing `duration_mismatch` or
+`metrics_mismatch` on inconsistent results.
+
+Layer compilers retain `CompilationStrategy`; following/retention are optional
+hints. Whole-program adapters implement `ProgramCompiler.compile(context,
+options, case) -> CompilationResult` and register through the same catalogue.
+Their output always passes semantic validation before serialization/metrics;
+invalid output returns exit 3. Static adapters declare supports_feedback=false
+and reject conditioned DAGs. The file-backed test adapter verifies this boundary;
+production ZAC/QMAP/ENOLA whole-program adapters remain future work.
+
+See [ADR 0032](../../docs/decisions/0032-unified-compiler-interface.md).
+
 ## Search Smarter fixed-reference QEC mode
 
 Add `"mode": "qec"` to an existing Search Smarter strategy to restore every

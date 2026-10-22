@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..compilers.budgets import apply_budget
+from ..compilers.registry import entry_for
+from ..compilers.registry import identity as compiler_identity
 from ..job import loads_job
 from ..job_fields import array_at, keys_at, object_at
 from ..provenance import canonical_hash
@@ -25,7 +28,7 @@ class Experiment:
     cases: tuple[dict[str, Any], ...]
     cost: tuple[dict[str, Any], ...]
     budget: dict[str, Any]
-    entry: dict[str, Any]
+    entry: dict[str, Any] | None
     store: str
 
 
@@ -53,6 +56,7 @@ def load_spec(path: str | Path) -> Experiment:
             "cases",
             "cost",
             "budget",
+            "strategy_overrides",
             "entry",
             "validate",
             "store",
@@ -93,6 +97,15 @@ def load_spec(path: str | Path) -> Experiment:
     strategies = {
         name: _json(value, path.parent) for name, value in raw["strategies"].items()
     }
+    overrides_by_strategy = object_at(
+        raw.get("strategy_overrides", {}), "strategy_overrides"
+    )
+    for name, overrides in overrides_by_strategy.items():
+        if name not in strategies:
+            raise ValueError(f"strategy_overrides.{name}: unknown strategy label")
+        target = strategies[name].get("strategy", strategies[name])
+        for key, value in object_at(overrides, f"strategy_overrides.{name}").items():
+            set_path(target, key, value, field=f"strategy_overrides.{name}")
     cases = object_at(raw.get("cases", {"seeds": [0]}), "cases")
     keys_at(cases, {"seeds", "overrides"}, "cases")
     seeds = cases.get("seeds", [0])
@@ -114,6 +127,11 @@ def load_spec(path: str | Path) -> Experiment:
         for item in raw.get("cost", [{"model": "additive", "params": {}}])
     )
     budget = {"timeout_s": 900, **raw.get("budget", {})}
+    keys_at(budget, {"timeout_s", "search_nodes"}, "budget")
+    if "search_nodes" in budget and (
+        type(budget["search_nodes"]) is not int or budget["search_nodes"] < 1
+    ):
+        raise ValueError("budget.search_nodes: expected a positive integer.")
     if type(budget["timeout_s"]) not in (int, float) or budget["timeout_s"] <= 0:
         raise ValueError("budget.timeout_s: expected a positive duration.")
     document = {
@@ -124,7 +142,7 @@ def load_spec(path: str | Path) -> Experiment:
         "cases": list(case_values),
         "cost": list(costs),
         "budget": budget,
-        "entry": raw.get("entry", {"kind": "initial_storage"}),
+        "entry": raw.get("entry"),
         "store": store,
     }
     return Experiment(
@@ -147,21 +165,26 @@ def runs(spec: Experiment, version: dict[str, Any]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     for architecture in spec.architectures:
         for name, original in spec.strategies.items():
-            strategy = json.loads(json.dumps(original))
-            for key, value in spec.budget.items():
-                if key != "timeout_s":
-                    set_path(strategy, key, value)
+            raw_strategy = original.get("strategy", original)
+            strategy, budgets = apply_budget(raw_strategy, spec.budget)
+            entry = entry_for(
+                strategy,
+                spec.entry if spec.entry is not None else original.get("entry"),
+            )
+            compiler = compiler_identity(strategy)
+            default_entry = entry_for(strategy, None)
             for circuit in spec.suite.circuits:
                 for case in spec.cases:
                     identity = {
                         "architecture": architecture,
                         "strategy": strategy,
+                        "compiler": compiler,
                         "circuit_sha256": circuit.sha256,
                         "gate_set": spec.suite.gate_set,
                         "case": case,
                         "budget": spec.budget,
                         "code": version,
-                        "entry": spec.entry,
+                        "entry": entry,
                     }
                     run_id = canonical_hash(identity)
                     if run_id in seen:
@@ -181,12 +204,20 @@ def runs(spec: Experiment, version: dict[str, Any]) -> list[dict[str, Any]]:
                         },
                         "aod": architecture["aod"],
                         "strategy": strategy,
-                        "entry": spec.entry,
+                        "entry": entry,
                         "case": case,
                     }
                     result.append(
                         {
                             "run_id": run_id,
+                            "compiler": compiler,
+                            "budgets": budgets,
+                            "entry_override": {
+                                "default": default_entry,
+                                "selected": entry,
+                            }
+                            if spec.entry is not None and entry != default_entry
+                            else None,
                             "architecture": architecture["params"],
                             "architecture_hash": canonical_hash(architecture),
                             "strategy": name,
@@ -228,4 +259,9 @@ def plan(spec: Experiment, version: dict[str, Any]) -> dict[str, Any]:
         "suite_hash": spec.suite.sha256,
         "code": version,
         "rejected": rejected,
+        "entry_overrides": [
+            {"run_id": run["run_id"], **run["entry_override"]}
+            for run in expanded
+            if run["entry_override"]
+        ],
     }

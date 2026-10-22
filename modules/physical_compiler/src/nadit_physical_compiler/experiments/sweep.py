@@ -24,7 +24,9 @@ def get_path(value: Any, path: str) -> Any:
     return value
 
 
-def set_path(value: dict[str, Any], path: str, replacement: Any) -> None:
+def set_path(
+    value: dict[str, Any], path: str, replacement: Any, *, field: str = "sweep"
+) -> None:
     """Set one parameter, requiring its parent path to exist."""
     parts = tokens(path)
     target: Any = value
@@ -33,7 +35,7 @@ def set_path(value: dict[str, Any], path: str, replacement: Any) -> None:
             target = target[key]
         target[parts[-1]] = deepcopy(replacement)
     except (KeyError, IndexError, TypeError) as error:
-        raise ValueError(f"sweep.{path}: parent path does not exist.") from error
+        raise ValueError(f"{field}.{path}: parent path does not exist.") from error
 
 
 def expand(

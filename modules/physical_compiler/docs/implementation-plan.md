@@ -45,7 +45,13 @@ existing gate placement and transport, exact return after every selected layer,
 and no cross-layer retention or storage search. Omitted mode retains the adaptive
 pipeline. Named job selection, Python selection, discovery, and schema expose
 the option. The full suite passes 1,690 tests including 24 new QEC-mode cases;
-the wider ADR 0032 interface proposal remains separate.
+ADR 0032 now unifies compiler registration, entry selection, budgets, metadata,
+shared/v1, and whole-program admission. Duration/metric validation and structured
+search exhaustion precede cross-compiler experiments. External production
+compiler wrappers remain separate from the saved-schedule interface test.
+ADR 0032 verification: 1,719 tests pass; the eight-cell mixed compiler CLI
+example finishes with four validated results and four expected unsupported
+records. Formatting, lint, and type checks pass.
 
 ## Compilation contract
 

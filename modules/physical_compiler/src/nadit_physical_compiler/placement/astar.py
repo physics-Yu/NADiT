@@ -9,6 +9,8 @@ from collections.abc import Callable, Iterable
 from heapq import heappop, heappush
 from itertools import count
 
+from ..errors import SearchExhausted
+
 
 def a_star_tree_search[Node](
     initial: Node,
@@ -51,5 +53,5 @@ def a_star_tree_search[Node](
         for child in expand(node):
             heappush(queue, (cost(child) + heuristic(child), next(serials), child))
         if len(queue) >= max_nodes:
-            raise ValueError("A* reached max_nodes in its open set.")
-    raise ValueError("A* found no completed goal in the candidate tree.")
+            raise SearchExhausted("A* reached max_nodes in its open set.")
+    raise SearchExhausted("A* found no completed goal in the candidate tree.")
