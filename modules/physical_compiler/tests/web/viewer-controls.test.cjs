@@ -1,0 +1,126 @@
+/* Viewer interaction tests with a DOM/canvas adapter, not browser rendering. */
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const assets = path.resolve(__dirname, '../../src/nadit_physical_compiler/visualization/web');
+
+function viewer({native = false, reject = false, height = 600} = {}) {
+  const nodes = new Map(), timers = new Map(), frames = new Map(), rectangles = [];
+  let serial = 0;
+  const context = new Proxy({fillRect(...args) { rectangles.push([this.fillStyle, ...args]); }},
+    {get: (obj, key) => obj[key] ?? (() => {})});
+  const document = {handlers: {}, fullscreenElement: null, activeElement: null,
+    addEventListener(name, fn) { this.handlers[name] = fn; }};
+  function element(id, tag = 'DIV') {
+    if (!nodes.has(id)) {
+      const classes = new Set();
+      nodes.set(id, {id, tagName: tag, value: '', textContent: '', hidden: false,
+        checked: false, style: {}, dataset: {}, handlers: {}, attributes: {}, children: [],
+        classList: {add: c => classes.add(c), remove: c => classes.delete(c),
+          contains: c => classes.has(c), toggle(c, on) { if (on) classes.add(c); else classes.delete(c); }},
+        addEventListener(name, fn) { this.handlers[name] = fn; },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        append(...children) { this.children.push(...children); },
+        replaceChildren() { this.children = []; },
+        focus() { document.activeElement = this; },
+        click() { return this.handlers.click?.({target: this}); },
+        getContext() { return context; },
+        getBoundingClientRect() { return {left: 0, top: 0, width: 800, height: id === 'step-strip' ? 12 : height}; },
+        parentElement: {clientWidth: 800}, setPointerCapture() {}});
+    }
+    return nodes.get(id);
+  }
+  const html = fs.readFileSync(path.join(assets, 'viewer.html'), 'utf8');
+  for (const match of html.matchAll(/<([\w-]+)[^>]*\bid="([^"]+)"/g)) element(match[2], match[1].toUpperCase());
+  document.getElementById = id => nodes.get(id) || null;
+  document.createElement = tag => element('new-' + serial++, tag.toUpperCase());
+  document.body = element('body');
+  const action = kind => ({kind, index: 0, duration_us: 10, text: kind, atoms: [], pairs: [], source_ids: [], patch: {atoms: []}});
+  const trace = {title: 'Example', description: '', atom_ir: '', issues: [], duration_us: 45, program_duration_us: 40,
+    device: {name: 'device', zones: [{id: 'storage', bounds: [0, 0, 20, 20], operations: ['load', 'store']}], slm_sites: [], aods: []},
+    initial: {atoms: []}, steps: ['Load', 'Move', 'Store', 'CZPulse'].map((kind, i) => ({start_us: i * 10, duration_us: 10, actions: [action(kind)]}))};
+  element('atom-replay-data').textContent = JSON.stringify({traces: [trace, {...trace, steps: [], duration_us: 0, program_duration_us: 0}]});
+  for (const [id, value] of Object.entries({'path-select': 'direct', 'speed-select': '1', 'timing-select': 'step'})) element(id).value = value;
+  class Replay {
+    constructor(trace) { this.trace = trace; this.motion = 'direct'; }
+    frame(step, fraction) {
+      const s = this.trace.steps[step];
+      return {actions: s?.actions || [], time_us: s ? s.start_us + fraction * 10 : this.trace.program_duration_us + fraction * 5,
+        elapsed_us: fraction * 10, fraction, atoms: new Map(), grids: new Map(), measurements: [], movePaths: new Map()};
+    }
+  }
+  const sandbox = {document, window: {devicePixelRatio: 1},
+    AtomReplayModel: {Replay, actionProgress: () => 0},
+    AtomReplayAnalysis: {Analysis: class {}},
+    AtomReplayDashboard: {Dashboard: class {load() {} update() {return null;}}},
+    ResizeObserver: class {observe() {}},
+    requestAnimationFrame(fn) { const id = ++serial; frames.set(id, fn); return id; },
+    cancelAnimationFrame(id) { frames.delete(id); },
+    setTimeout(fn) {const id = ++serial; timers.set(id, fn); return id;},
+    clearTimeout(id) {timers.delete(id);}};
+  if (native) element('stage').requestFullscreen = async () => {
+    if (reject) throw Error('Not allowed');
+    document.fullscreenElement = element('stage'); document.handlers.fullscreenchange();
+  };
+  document.exitFullscreen = async () => { document.fullscreenElement = null; document.handlers.fullscreenchange(); };
+  vm.runInNewContext(fs.readFileSync(path.join(assets, 'viewer.js'), 'utf8'), sandbox);
+  return {nodes, element, document, rectangles, frames, timers,
+    key(key, target = element('atom-canvas')) { document.handlers.keydown({key, code: key === ' ' ? 'Space' : key, target, preventDefault() {}}); },
+    flush() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(0)); }};
+}
+
+test('step strip distinguishes transfers, previews CZ and feedback tail without seeking', () => {
+  const v = viewer(), slider = v.element('step-slider');
+  assert.match(v.element('step-preview').textContent, /Load.*SLM.*AOD/);
+  slider.handlers.pointermove({clientX: 600});
+  assert.match(v.element('step-preview').textContent, /Step 4.*CZ.*30.*40/);
+  assert.equal(Number(slider.value), 0);
+  slider.handlers.pointermove({clientX: 800});
+  assert.match(v.element('step-preview').textContent, /feedback|measurement results/i);
+  slider.value = 3; slider.handlers.input({target: slider});
+  assert.match(slider.attributes['aria-valuetext'], /CZ/);
+  assert.match(v.element('hud-kind').textContent, /CZ/);
+  const colors = v.rectangles.filter(r => r[4] === 12).map(r => r[0]);
+  assert.ok(new Set(colors).size >= 4, 'Load, Move, Store and CZ have distinct colours');
+});
+
+test('presentation fallback preserves playback and Escape works from an input', async () => {
+  const v = viewer();
+  v.element('play-button').click();
+  await v.element('present-button').click(); v.flush();
+  assert.ok(v.element('stage').classList.contains('is-presenting'));
+  assert.equal(v.element('play-button').textContent, 'Pause');
+  assert.equal(v.element('present-button').attributes['aria-pressed'], 'true');
+  v.key('Escape', v.element('time-input')); v.flush();
+  assert.ok(!v.element('stage').classList.contains('is-presenting'));
+  assert.equal(v.element('play-button').textContent, 'Pause');
+});
+
+test('native fullscreen exit and rejected requests restore usable controls', async () => {
+  const v = viewer({native: true});
+  await v.element('present-button').click(); v.flush();
+  assert.equal(v.document.fullscreenElement, v.element('stage'));
+  await v.document.exitFullscreen(); v.flush();
+  assert.ok(!v.element('stage').classList.contains('is-presenting'));
+  assert.equal(v.element('present-button').attributes['aria-pressed'], 'false');
+  const blocked = viewer({native: true, reject: true});
+  await blocked.element('present-button').click(); blocked.flush();
+  assert.ok(blocked.element('stage').classList.contains('is-presenting'));
+  blocked.key('Escape'); blocked.flush();
+  assert.ok(!blocked.element('stage').classList.contains('is-presenting'));
+});
+
+test('idle controls wake, empty traces and short presentation viewports remain usable', async () => {
+  const v = viewer({height: 200});
+  await v.element('present-button').click(); v.flush();
+  v.element('play-button').click();
+  for (const fn of v.timers.values()) fn();
+  assert.ok(v.element('stage').classList.contains('is-idle'));
+  v.element('stage').handlers.pointermove();
+  assert.ok(!v.element('stage').classList.contains('is-idle'));
+  v.element('trace-select').handlers.change({target: {value: '1'}});
+  assert.match(v.element('step-preview').textContent, /Final layout/);
+  assert.ok(v.rectangles.every(r => r.slice(1).every(Number.isFinite)));
+});

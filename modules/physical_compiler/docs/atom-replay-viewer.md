@@ -27,6 +27,39 @@ inspect transfers and simultaneous motion. The time field seeks in microseconds.
 Paced playback gives each step visible time; proportional playback preserves
 the relative durations. Neither mode changes the exported program times.
 
+## Program strip and presentation
+
+The step slider has one colour segment per Atom IR step, plus the end/feedback
+tail position. Load, Move, Store, CZ, local control, readout and wait have a
+labelled colour key. Hover over the strip to preview a step's actions, atom
+count and recorded time interval without seeking; drag or use the range control
+to select it. Mixed steps list every action kind; their colour prioritizes CZ,
+readout, transport, local control, then wait. Segments represent steps, not
+elapsed-time proportions; the execution schedule below remains time-scaled.
+
+Storage regions use a faint neutral fill and light empty-site markers. Active
+atoms, AOD lines, gates and readout retain the existing functional colours.
+
+Click **Present** or press **F** to show the stage full screen. Press **Esc**,
+**F**, or **Exit full screen** to return. Playback position and play/pause state
+are preserved. If the host denies or lacks browser fullscreen, the same stage
+fills the application window. The HUD displays the current step, action, time,
+and mean/maximum atom loss when a noise report is available. Marks and text
+increase in size; the camera refits around the HUD and controls.
+
+During presentation playback, controls fade after 2.5 seconds without input.
+Pointer movement, keyboard input or focus restores them; paused playback keeps
+them visible. Space toggles playback, arrow keys step, and L toggles loss colour.
+Editable fields keep their native keyboard behavior; Esc still exits presentation.
+The browser's native fullscreen gesture/permissions remain in effect.
+
+This is packaged in the common viewer, adapted from the supplied
+`prototypes/atom-replay-redesign` layout. It does not change trace data, motion
+endpoints, timing, loss attribution or compiler algorithms. DOM/canvas tests
+cover controls and fullscreen transitions; they do not establish browser visual
+acceptance. Browser review of local file URLs is currently blocked by the tool's
+URL policy, so public-display visual acceptance remains a manual check.
+
 `Path: Lanes` is the default display: a small diagonal departure, vertical
 travel in an offset column, horizontal alignment in an offset row, and vertical
 arrival. The AOD lines and all carried atoms share segment progress, including

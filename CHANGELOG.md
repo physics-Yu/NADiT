@@ -4,6 +4,10 @@
 
 ### Added
 
+- A reusable replay program strip with step/action/time previews, quieter storage
+  geometry, and full-screen presentation with enlarged HUD, playback controls,
+  keyboard shortcuts and in-window fallback, based on the supplied redesign.
+
 - A physical-compiler configuration reference for external projects, people, and
   AI clients, covering architecture, Device, compiler, and experiment fields,
   defaults, supported combinations, complete examples, and invocation contracts.
