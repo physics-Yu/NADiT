@@ -4,6 +4,10 @@
 
 ### Added
 
+- Independent replay size sliders for atoms, SLM sites and AOD spots (25–300%),
+  with reset and fullscreen access; display multipliers preserve scene scaling
+  and leave compilation, trace data and playback position unchanged.
+
 - A reusable replay program strip with step/action/time previews, quieter storage
   geometry, and full-screen presentation with a HUD, playback controls,
   keyboard shortcuts and in-window fallback, based on the supplied redesign.

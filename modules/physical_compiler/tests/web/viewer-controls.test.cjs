@@ -8,7 +8,7 @@ const assets = path.resolve(__dirname, '../../src/nadit_physical_compiler/visual
 
 function viewer({native = false, reject = false, height = 600, withAtoms = false} = {}) {
   const nodes = new Map(), timers = new Map(), frames = new Map(), rectangles = [];
-  const circles = [], texts = [], resizeObservers = [];
+  const circles = [], texts = [], resizeObservers = [], loadedTraces = [];
   let serial = 0;
   const context = new Proxy({fillRect(...args) { rectangles.push([this.fillStyle, ...args]); },
     arc(x, y, radius) { circles.push({x, y, radius, lineWidth: this.lineWidth}); },
@@ -56,7 +56,7 @@ function viewer({native = false, reject = false, height = 600, withAtoms = false
   element('atom-replay-data').textContent = JSON.stringify({traces: [trace, {...trace, steps: [], duration_us: 0, program_duration_us: 0}]});
   for (const [id, value] of Object.entries({'path-select': 'direct', 'speed-select': '1', 'timing-select': 'step'})) element(id).value = value;
   class Replay {
-    constructor(trace) { this.trace = trace; this.motion = 'direct'; }
+    constructor(trace) { this.trace = trace; this.motion = 'direct'; loadedTraces.push(trace); }
     frame(step, fraction) {
       const s = this.trace.steps[step];
       return {actions: s?.actions || [], time_us: s ? s.start_us + fraction * 10 : this.trace.program_duration_us + fraction * 5,
@@ -78,7 +78,7 @@ function viewer({native = false, reject = false, height = 600, withAtoms = false
   };
   document.exitFullscreen = async () => { document.fullscreenElement = null; document.handlers.fullscreenchange(); };
   vm.runInNewContext(fs.readFileSync(path.join(assets, 'viewer.js'), 'utf8'), sandbox);
-  return {nodes, element, document, rectangles, frames, timers, circles, texts,
+  return {nodes, element, document, rectangles, frames, timers, circles, texts, loadedTraces,
     resize(nextHeight) {height = nextHeight; resizeObservers.forEach(fn => fn()); element('fit-button').click();},
     key(key, target = element('atom-canvas')) { document.handlers.keydown({key, code: key === ' ' ? 'Space' : key, target, preventDefault() {}}); },
     flush() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(0)); }};
@@ -138,6 +138,53 @@ test('presentation fallback preserves playback and Escape works from an input', 
   v.key('Escape', v.element('time-input')); v.flush();
   assert.ok(!v.element('stage').classList.contains('is-presenting'));
   assert.equal(v.element('play-button').textContent, 'Pause');
+});
+
+test('size controls independently change display radii and reset without editing the trace', () => {
+  const v = viewer({withAtoms: true});
+  const radii = () => v.circles.slice(-3).map(c => c.radius);
+  const initial = radii(), data = JSON.stringify(v.loadedTraces[0]);
+  const adjust = (kind, value) => {
+    const slider = v.element(kind + '-size'); slider.value = String(value);
+    slider.handlers.input({target: slider});
+  };
+  v.element('play-button').click();
+  adjust('atom', 2);
+  assert.deepEqual(radii(), [initial[0], initial[1], initial[2] * 2]);
+  adjust('site', .5);
+  assert.deepEqual(radii(), [initial[0] * .5, initial[1], initial[2] * 2]);
+  adjust('aod', 3);
+  assert.deepEqual(radii(), [initial[0] * .5, initial[1] * 3, initial[2] * 2]);
+  assert.equal(v.element('atom-size-value').textContent, '200%');
+  assert.equal(v.element('site-size-value').textContent, '50%');
+  assert.equal(v.element('aod-size').attributes['aria-valuetext'], '300%');
+  assert.equal(v.element('play-button').textContent, 'Pause');
+  assert.equal(Number(v.element('time-input').value), 0);
+  v.element('reset-sizes').click();
+  assert.deepEqual(radii(), initial);
+  for (const kind of ['atom', 'site', 'aod']) {
+    assert.equal(v.element(kind + '-size').value, '1');
+    assert.equal(v.element(kind + '-size-value').textContent, '100%');
+  }
+  assert.equal(JSON.stringify(v.loadedTraces[0]), data);
+});
+
+test('custom sizes persist across traces and fullscreen and still scale with zoom', async () => {
+  const v = viewer({withAtoms: true});
+  const slider = v.element('atom-size'); slider.value = '1.5'; slider.handlers.input({target: slider});
+  v.element('trace-select').handlers.change({target: {value: '1'}});
+  v.element('trace-select').handlers.change({target: {value: '0'}});
+  assert.equal(slider.value, '1.5');
+  await v.element('present-button').click(); v.flush();
+  const before = v.circles.slice(-3).map(c => c.radius);
+  const width = () => v.rectangles.findLast(r => r[0] === '#24374802')[3];
+  const previousWidth = width();
+  v.element('atom-canvas').handlers.wheel({deltaY: 100, clientX: 400, clientY: 300, preventDefault() {}});
+  v.circles.slice(-3).forEach((c, i) => assert.ok(Math.abs(c.radius / before[i] - width() / previousWidth) < 1e-9));
+  v.element('site-size').value = '.25';
+  v.element('site-size').handlers.input({target: v.element('site-size')});
+  assert.equal(v.element('site-size-value').textContent, '25%');
+  assert.equal(slider.value, '1.5');
 });
 
 test('native fullscreen exit and rejected requests restore usable controls', async () => {

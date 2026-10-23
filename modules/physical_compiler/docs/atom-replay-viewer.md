@@ -52,6 +52,15 @@ are schematic scene sizes, not physical atom sizes or calibrated beam waists.
 Display radii are 0.95 for atoms, 0.65 for SLM sites and 0.4 for AOD spots in
 scene units; AOD lines use a 0.2 scene-unit width. These presentation constants
 do not change the Device geometry or interaction radius.
+The **Display size** row provides independent Atoms, SLM sites and AOD spots
+sliders, from 25% to 300% in 5% increments. 100% uses these default radii.
+**Reset sizes** restores all three to 100%. Radii combine the selected display
+multiplier with camera scaling, so zoom remains proportional at every setting.
+Atom outlines/highlights follow atom size; AOD beam line width is independent
+of the spot slider. Controls are available during fullscreen presentation too.
+Adjustments do not seek, pause, resample or modify the trace. They persist when
+switching traces or entering/exiting fullscreen in the current page; reloading
+the page restores defaults. Exported Device/Atom IR/result data are unchanged.
 Buttons, labels and HUD text keep their CSS-pixel sizes. Browser/OS accessibility
 zoom still scales the page normally.
 

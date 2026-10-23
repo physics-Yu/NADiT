@@ -42,7 +42,9 @@
   // Schematic radii use scene units, not physical atom/beam calibration.
   // Every spatial mark scales with the traps; controls and text use CSS pixels.
   const MARK_RADIUS = { atom: .95, site: .65, aod: .4, destination: .65 };
+  const displayScale = {atom: 1, site: 1, aod: 1};
   const sceneSize = value => value * camera.scale;
+  const markRadius = kind => sceneSize(MARK_RADIUS[kind]) * displayScale[kind];
   const FONT = 'Bahnschrift, "DIN Alternate", Barlow, "Segoe UI", sans-serif';
 
   function element(tag, className, text) {
@@ -93,7 +95,7 @@
     // In presentation the HUD (top) and control overlay (bottom) cover the field;
     // fit the layout into the band between them.
     const top = Math.min(presenting ? 110 : 60, camera.height * .2);
-    const bottom = Math.min(presenting ? 290 : 50, camera.height * .45);
+    const bottom = Math.min(presenting ? Math.max(290, $('playback-controls').getBoundingClientRect().height + 20) : 50, camera.height * .45);
     const padX = Math.min(presenting ? 260 : 200, camera.width * .4);
     camera.x = (bounds[0] + bounds[2]) / 2;
     camera.scale = Math.max(.001, Math.min((camera.width - padX) / Math.max(10, bounds[2] - bounds[0]), (camera.height - top - bottom) / Math.max(10, bounds[3] - bounds[1])));
@@ -150,8 +152,8 @@
       context.textAlign = 'start'; context.textBaseline = 'alphabetic';
     }
     if ($('sites-toggle').checked) {
-      context.lineWidth = sceneSize(.14);
-      const radius = sceneSize(MARK_RADIUS.site);
+      context.lineWidth = sceneSize(.14 * displayScale.site);
+      const radius = markRadius('site');
       for (const site of trace.device.slm_sites) circle(site.x, site.y, radius, null, colors.site);
     }
   }
@@ -164,7 +166,7 @@
       for (const row of grid.rows) line(bounds[0], row.coordinate, bounds[2], row.coordinate);
       for (const column of grid.columns) line(column.coordinate, bounds[1], column.coordinate, bounds[3]);
       for (const row of grid.rows) {
-        for (const column of grid.columns) circle(column.coordinate, row.coordinate, sceneSize(MARK_RADIUS.aod), alpha(colors.aod, .45));
+        for (const column of grid.columns) circle(column.coordinate, row.coordinate, markRadius('aod'), alpha(colors.aod, .45));
       }
       if ($('labels-toggle').checked) {
         context.font = 11 + 'px ' + FONT; context.fillStyle = alpha(colors.aod, .8);
@@ -213,7 +215,7 @@
   }
   function drawAtoms() {
     const highlights = actionHighlights();
-    const radius = sceneSize(MARK_RADIUS.atom);
+    const radius = markRadius('atom');
     const margin = Math.max(40, radius * 3);
     for (const atom of frame.atoms.values()) {
       const point = toScreen(atom.x, atom.y);
@@ -224,23 +226,23 @@
       if (highlights.has(atom.id)) {
         const tint = highlights.get(atom.id);
         circle(atom.x, atom.y, radius * 2.4, alpha(tint, .16));
-        context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius * 1.9, null, tint);
+        context.lineWidth = sceneSize(.2 * displayScale.atom); circle(atom.x, atom.y, radius * 1.9, null, tint);
       }
-      context.lineWidth = sceneSize(.14); circle(atom.x, atom.y, radius, core, '#ffffff');
+      context.lineWidth = sceneSize(.14 * displayScale.atom); circle(atom.x, atom.y, radius, core, '#ffffff');
       if (risk?.maximum.atom === atom.id) {
-        context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius + sceneSize(.8), null, colors.risk);
+        context.lineWidth = sceneSize(.2 * displayScale.atom); circle(atom.x, atom.y, radius + sceneSize(.8 * displayScale.atom), null, colors.risk);
         context.fillStyle = colors.risk; context.font = 600 + ' ' + 11 + 'px ' + FONT;
         context.fillText('Highest loss, atom ' + atom.id, point[0] + radius + 6, point[1] - radius - 10);
       }
-      if (atom.id === selectedAtom) { context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius + sceneSize(.6), null, colors.ink); }
+      if (atom.id === selectedAtom) { context.lineWidth = sceneSize(.2 * displayScale.atom); circle(atom.x, atom.y, radius + sceneSize(.6 * displayScale.atom), null, colors.ink); }
       if ($('labels-toggle').checked || atom.id === selectedAtom) {
         context.fillStyle = colors.ink; context.font = 12 + 'px ' + FONT;
         context.fillText(String(atom.id), point[0] + radius + 5, point[1] - radius - 3);
       }
     }
     if (selectedIssue) {
-      context.lineWidth = sceneSize(.2);
-      circle(selectedIssue.x, selectedIssue.y, radius + sceneSize(1.4), null, colors.warn);
+      context.lineWidth = sceneSize(.2 * displayScale.atom);
+      circle(selectedIssue.x, selectedIssue.y, radius + sceneSize(1.4 * displayScale.atom), null, colors.warn);
     }
   }
   function drawScale() {
@@ -488,6 +490,25 @@
   stage.addEventListener('focusin', markActive);
 
   // Events --------------------------------------------------------------
+  function syncSizeControls() {
+    for (const [kind, value] of Object.entries(displayScale)) {
+      const percent = Math.round(value * 100) + '%';
+      $(kind + '-size').value = String(value);
+      $(kind + '-size').setAttribute('aria-valuetext', percent);
+      $(kind + '-size-value').textContent = percent;
+    }
+  }
+  for (const kind of Object.keys(displayScale)) {
+    $(kind + '-size').addEventListener('input', event => {
+      displayScale[kind] = Number(event.target.value);
+      syncSizeControls(); markActive(); render();
+    });
+  }
+  $('reset-sizes').addEventListener('click', () => {
+    for (const kind of Object.keys(displayScale)) displayScale[kind] = 1;
+    syncSizeControls(); markActive(); render();
+  });
+  syncSizeControls();
   data.traces.forEach((record, index) => { const option = element('option', null, record.title); option.value = index; $('trace-select').append(option); });
   $('trace-select').addEventListener('change', event => loadTrace(Number(event.target.value)));
   $('path-select').addEventListener('change', event => {
@@ -540,7 +561,7 @@
     if (!drag) return;
     if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) {
       const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
-      let nearest = null, distance = Math.max(16, sceneSize(MARK_RADIUS.atom) + 4);
+      let nearest = null, distance = Math.max(16, markRadius('atom') + 4);
       for (const atom of frame.atoms.values()) { const p = toScreen(atom.x, atom.y), d = Math.hypot(x - p[0], y - p[1]); if (d < distance) { nearest = atom.id; distance = d; } }
       selectedAtom = nearest; selectedIssue = null; render();
     }
