@@ -4,6 +4,10 @@
 
 ### Added
 
+- A physical-compiler configuration reference for external projects, people, and
+  AI clients, covering architecture, Device, compiler, and experiment fields,
+  defaults, supported combinations, complete examples, and invocation contracts.
+
 - Optional Search Smarter QEC cross-layer reuse with immutable homes, separate
   placement/strategy adapters, safe lookahead boundaries, and a configuration
   switch. Existing per-layer return and adaptive implementations remain intact.

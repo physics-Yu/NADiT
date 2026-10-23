@@ -1,5 +1,10 @@
 # Physical Compiler
 
+For configuration by external projects, people, and AI clients, start with the
+[configuration reference](docs/configuration-reference.md): architecture families,
+Device fields, compiler options, experiment controls, defaults, combination
+restrictions, complete examples, and CLI/Python invocation.
+
 ## Unified compiler interface
 
 `strategy.kind` selects a registration in `compilers/registry.py`. Existing

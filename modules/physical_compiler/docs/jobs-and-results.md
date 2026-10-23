@@ -1,5 +1,9 @@
 # Jobs and saved results
 
+See the [configuration reference](configuration-reference.md) for the complete
+architecture, Device, compiler, and experiment field catalogue, including entry
+providers, defaults, supported combinations, and complete caller examples.
+
 Run these commands from `modules/physical_compiler`:
 
 ```text
