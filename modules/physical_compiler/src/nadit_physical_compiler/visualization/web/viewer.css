@@ -482,22 +482,10 @@ details summary { cursor: pointer; font-size: 13px; color: var(--accent-ink); }
 .stage.is-presenting .legend,
 .stage.is-presenting .transport { border-top: 0; }
 .stage.is-presenting .transport, .stage.is-presenting .fine-controls { background: transparent; }
-.stage.is-presenting .hud-now strong { font-size: 26px; }
-.stage.is-presenting .hud-now span, .stage.is-presenting .hud-time { font-size: 22px; }
-.stage.is-presenting .hud-time span { font-size: 26px; }
-.stage.is-presenting .hud-loss { font-size: 20px; }
 .stage.is-presenting .hud { top: 22px; left: 32px; right: 220px; }
 .stage.is-presenting .caption-hint { display: none; }
-.stage.is-presenting .legend { font-size: 18px; padding: 12px 32px; gap: 10px 28px; }
-.stage.is-presenting .swatch:not(.beam):not(.risk) { width: 14px; height: 14px; }
-.stage.is-presenting .swatch.risk { width: 26px; height: 14px; }
-.stage.is-presenting .swatch.beam { width: 22px; height: 3px; }
+.stage.is-presenting .legend { padding: 12px 32px; gap: 10px 28px; }
 .stage.is-presenting .transport, .stage.is-presenting .fine-controls { padding-left: 32px; padding-right: 32px; }
-.stage.is-presenting .scrubber-meta { font-size: 17px; }
-.stage.is-presenting .step-preview { font-size: 16px; }
-.stage.is-presenting .strip-legend { font-size: 14px; }
-.stage.is-presenting .play-button, .stage.is-presenting .icon-button { height: 44px; font-size: 17px; }
-.stage.is-presenting .icon-button { width: 44px; }
 .stage.is-presenting .controls,
 .stage.is-presenting .exit-present { transition: opacity .35s ease; }
 .stage.is-presenting.is-idle .controls,
@@ -530,9 +518,7 @@ body.presenting { overflow: hidden; }
 }
 @media (max-width: 760px) {
   .stage.is-presenting .hud { right: 16px; left: 16px; top: 54px; flex-direction: column; gap: 2px; }
-  .stage.is-presenting .hud-now strong, .stage.is-presenting .hud-time span { font-size: 20px; }
-  .stage.is-presenting .hud-now span, .stage.is-presenting .hud-time { font-size: 16px; }
-  .stage.is-presenting .legend { font-size: 14px; padding: 8px 16px; gap: 6px 14px; }
+  .stage.is-presenting .legend { padding: 8px 16px; gap: 6px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stage.is-presenting .controls,

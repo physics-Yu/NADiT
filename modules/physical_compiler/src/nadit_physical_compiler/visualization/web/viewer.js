@@ -39,7 +39,8 @@
     atom => { selectedAtom = atom; render(); }
   );
   const pct = value => numeric(value * 100, 3) + '%';
-  const ui = () => presenting ? 1.7 : 1;  // presentation scale for marks and text
+  // Glyph sizes are CSS pixels; only world coordinates follow camera.scale.
+  const MARK_RADIUS = { atom: 5, site: 2 };
   const FONT = 'Bahnschrift, "DIN Alternate", Barlow, "Segoe UI", sans-serif';
 
   function element(tag, className, text) {
@@ -118,7 +119,7 @@
     const interval = [1, 2, 5, 10].find(value => value * exponent >= target) * exponent;
     const bottomLeft = toWorld(0, camera.height), topRight = toWorld(camera.width, 0);
     context.strokeStyle = colors.grid; context.lineWidth = 1;
-    context.fillStyle = alpha(colors.muted, .8); context.font = 11 * ui() + 'px ' + FONT;
+    context.fillStyle = alpha(colors.muted, .8); context.font = 11 + 'px ' + FONT;
     for (let x = Math.ceil(bottomLeft[0] / interval) * interval; x <= topRight[0]; x += interval) {
       line(x, bottomLeft[1], x, topRight[1]);
       const sx = toScreen(x, 0)[0];
@@ -141,14 +142,14 @@
       context.setLineDash([]);
       // Label sits left of the zone, vertically centred, so it never covers atoms.
       const left = toScreen(zone.bounds[0], (zone.bounds[1] + zone.bounds[3]) / 2);
-      context.fillStyle = alpha(tint, .9); context.font = 600 + ' ' + 12 * ui() + 'px ' + FONT;
+      context.fillStyle = alpha(tint, .9); context.font = 600 + ' ' + 12 + 'px ' + FONT;
       context.textAlign = 'right'; context.textBaseline = 'middle';
-      context.fillText(zone.id, left[0] - 12 * ui(), left[1]);
+      context.fillText(zone.id, left[0] - 12, left[1]);
       context.textAlign = 'start'; context.textBaseline = 'alphabetic';
     }
     if ($('sites-toggle').checked) {
       context.lineWidth = 1;
-      const radius = clamp(camera.scale * .45, 1.2, 4) * ui();
+      const radius = MARK_RADIUS.site;
       for (const site of trace.device.slm_sites) circle(site.x, site.y, radius, null, colors.site);
     }
   }
@@ -157,14 +158,14 @@
     for (const grid of frame.grids.values()) {
       const device = trace.device.aods.find(aod => aod.id === grid.aod_id);
       const bounds = device ? device.workspace : worldBounds();
-      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = 1.2 * ui();
+      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = 1.2;
       for (const row of grid.rows) line(bounds[0], row.coordinate, bounds[2], row.coordinate);
       for (const column of grid.columns) line(column.coordinate, bounds[1], column.coordinate, bounds[3]);
       for (const row of grid.rows) {
-        for (const column of grid.columns) circle(column.coordinate, row.coordinate, 2 * ui(), alpha(colors.aod, .45));
+        for (const column of grid.columns) circle(column.coordinate, row.coordinate, 2, alpha(colors.aod, .45));
       }
       if ($('labels-toggle').checked) {
-        context.font = 11 * ui() + 'px ' + FONT; context.fillStyle = alpha(colors.aod, .8);
+        context.font = 11 + 'px ' + FONT; context.fillStyle = alpha(colors.aod, .8);
         for (const row of grid.rows) { const p = toScreen(bounds[0], row.coordinate); context.fillText('r' + row.id, p[0] + 3, p[1] - 3); }
         for (const column of grid.columns) { const p = toScreen(column.coordinate, bounds[3]); context.fillText('c' + column.id, p[0] + 3, p[1] - 4); }
       }
@@ -174,11 +175,11 @@
     if (!$('trails-toggle').checked) return;
     for (const action of frame.actions) {
       if (action.kind !== 'Move') continue;
-      context.strokeStyle = alpha(colors.aod, .55); context.lineWidth = 1.4 * ui(); context.setLineDash([5 * ui(), 5 * ui()]);
+      context.strokeStyle = alpha(colors.aod, .55); context.lineWidth = 1.4; context.setLineDash([5, 5]);
       for (const points of frame.movePaths.get(action).atoms.values()) {
         const destination = points[points.length - 1];
         for (let i = 1; i < points.length; i++) line(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
-        circle(destination.x, destination.y, 5 * ui(), null, alpha(colors.aod, .55));
+        circle(destination.x, destination.y, 5, null, alpha(colors.aod, .55));
       }
       context.setLineDash([]);
     }
@@ -187,14 +188,14 @@
     for (const action of frame.actions) {
       if (!action.coverage || actionProgress(action) === 1) continue;
       const color = action.kind === 'CZPulse' ? colors.cz : colors.local;
-      context.lineWidth = 1.5 * ui();
+      context.lineWidth = 1.5;
       for (const bounds of action.coverage.regions) rectangle(bounds, alpha(color, .08), alpha(color, .55));
       context.save();
-      context.shadowColor = alpha(color, .5); context.shadowBlur = 6 * ui();
+      context.shadowColor = alpha(color, .5); context.shadowBlur = 6;
       for (const pair of action.pairs) {
         const a = frame.atoms.get(pair[0]), b = frame.atoms.get(pair[1]);
         if (!a || !b) continue;
-        context.strokeStyle = color; context.lineWidth = 3 * ui(); line(a.x, a.y, b.x, b.y);
+        context.strokeStyle = color; context.lineWidth = 3; line(a.x, a.y, b.x, b.y);
       }
       context.restore();
     }
@@ -210,7 +211,7 @@
   }
   function drawAtoms() {
     const highlights = actionHighlights();
-    const radius = clamp(camera.scale * .7, 3.2, 7) * ui();
+    const radius = MARK_RADIUS.atom;
     for (const atom of frame.atoms.values()) {
       const point = toScreen(atom.x, atom.y);
       if (point[0] < -40 || point[0] > camera.width + 40 || point[1] < -40 || point[1] > camera.height + 40) continue;
@@ -220,23 +221,23 @@
       if (highlights.has(atom.id)) {
         const tint = highlights.get(atom.id);
         circle(atom.x, atom.y, radius * 2.4, alpha(tint, .16));
-        context.lineWidth = 2 * ui(); circle(atom.x, atom.y, radius * 1.9, null, tint);
+        context.lineWidth = 2; circle(atom.x, atom.y, radius * 1.9, null, tint);
       }
-      context.lineWidth = 1.4 * ui(); circle(atom.x, atom.y, radius, core, '#ffffff');
+      context.lineWidth = 1.4; circle(atom.x, atom.y, radius, core, '#ffffff');
       if (risk?.maximum.atom === atom.id) {
-        context.lineWidth = 2 * ui(); circle(atom.x, atom.y, radius + 8 * ui(), null, colors.risk);
-        context.fillStyle = colors.risk; context.font = 600 + ' ' + 11 * ui() + 'px ' + FONT;
-        context.fillText('Highest loss, atom ' + atom.id, point[0] + radius + 6 * ui(), point[1] - radius - 10 * ui());
+        context.lineWidth = 2; circle(atom.x, atom.y, radius + 8, null, colors.risk);
+        context.fillStyle = colors.risk; context.font = 600 + ' ' + 11 + 'px ' + FONT;
+        context.fillText('Highest loss, atom ' + atom.id, point[0] + radius + 6, point[1] - radius - 10);
       }
-      if (atom.id === selectedAtom) { context.lineWidth = 2 * ui(); circle(atom.x, atom.y, radius + 6 * ui(), null, colors.ink); }
+      if (atom.id === selectedAtom) { context.lineWidth = 2; circle(atom.x, atom.y, radius + 6, null, colors.ink); }
       if ($('labels-toggle').checked || atom.id === selectedAtom) {
-        context.fillStyle = colors.ink; context.font = 12 * ui() + 'px ' + FONT;
+        context.fillStyle = colors.ink; context.font = 12 + 'px ' + FONT;
         context.fillText(String(atom.id), point[0] + radius + 5, point[1] - radius - 3);
       }
     }
     if (selectedIssue) {
-      context.lineWidth = 2 * ui();
-      circle(selectedIssue.x, selectedIssue.y, radius + 14 * ui(), null, colors.warn);
+      context.lineWidth = 2;
+      circle(selectedIssue.x, selectedIssue.y, radius + 14, null, colors.warn);
     }
   }
   function drawScale() {
@@ -246,9 +247,9 @@
     const width = distance * camera.scale;
     // In presentation the bottom band belongs to the controls; keep the bar under the HUD.
     const y = presenting ? 96 : camera.height - 40, right = camera.width - (presenting ? 32 : 20);
-    context.strokeStyle = colors.ink; context.lineWidth = 2 * ui();
+    context.strokeStyle = colors.ink; context.lineWidth = 2;
     context.beginPath(); context.moveTo(right - width, y); context.lineTo(right, y); context.stroke();
-    context.font = 12 * ui() + 'px ' + FONT; context.fillStyle = colors.ink;
+    context.font = 12 + 'px ' + FONT; context.fillStyle = colors.ink;
     context.fillText(numeric(distance) + ' µm', right - width, y - 8);
   }
   function draw() {
@@ -536,7 +537,7 @@
     if (!drag) return;
     if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) {
       const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
-      let nearest = null, distance = 16 * ui();
+      let nearest = null, distance = 16;
       for (const atom of frame.atoms.values()) { const p = toScreen(atom.x, atom.y), d = Math.hypot(x - p[0], y - p[1]); if (d < distance) { nearest = atom.id; distance = d; } }
       selectedAtom = nearest; selectedIssue = null; render();
     }

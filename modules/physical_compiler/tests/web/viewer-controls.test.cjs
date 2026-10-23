@@ -6,10 +6,13 @@ const path = require('node:path');
 const vm = require('node:vm');
 const assets = path.resolve(__dirname, '../../src/nadit_physical_compiler/visualization/web');
 
-function viewer({native = false, reject = false, height = 600} = {}) {
+function viewer({native = false, reject = false, height = 600, withAtoms = false} = {}) {
   const nodes = new Map(), timers = new Map(), frames = new Map(), rectangles = [];
+  const circles = [], texts = [], resizeObservers = [];
   let serial = 0;
-  const context = new Proxy({fillRect(...args) { rectangles.push([this.fillStyle, ...args]); }},
+  const context = new Proxy({fillRect(...args) { rectangles.push([this.fillStyle, ...args]); },
+    arc(x, y, radius) { circles.push({x, y, radius, lineWidth: this.lineWidth}); },
+    fillText(text) { texts.push({text, font: this.font}); }},
     {get: (obj, key) => obj[key] ?? (() => {})});
   const document = {handlers: {}, fullscreenElement: null, activeElement: null,
     addEventListener(name, fn) { this.handlers[name] = fn; }};
@@ -41,6 +44,12 @@ function viewer({native = false, reject = false, height = 600} = {}) {
   const trace = {title: 'Example', description: '', atom_ir: '', issues: [], duration_us: 45, program_duration_us: 40,
     device: {name: 'device', zones: [{id: 'storage', bounds: [0, 0, 20, 20], operations: ['load', 'store']}], slm_sites: [], aods: []},
     initial: {atoms: []}, steps: ['Load', 'Move', 'Store', 'CZPulse'].map((kind, i) => ({start_us: i * 10, duration_us: 10, actions: [action(kind)]}))};
+  if (withAtoms) {
+    trace.initial.atoms = [{id: 0, qubit: 0, x: 5, y: 5, holder: {kind: 'slm', site_id: 's'}}];
+    trace.device.slm_sites = [{id: 's', x: 5, y: 5}];
+    element('sites-toggle').checked = true;
+    element('labels-toggle').checked = true;
+  }
   element('atom-replay-data').textContent = JSON.stringify({traces: [trace, {...trace, steps: [], duration_us: 0, program_duration_us: 0}]});
   for (const [id, value] of Object.entries({'path-select': 'direct', 'speed-select': '1', 'timing-select': 'step'})) element(id).value = value;
   class Replay {
@@ -48,14 +57,14 @@ function viewer({native = false, reject = false, height = 600} = {}) {
     frame(step, fraction) {
       const s = this.trace.steps[step];
       return {actions: s?.actions || [], time_us: s ? s.start_us + fraction * 10 : this.trace.program_duration_us + fraction * 5,
-        elapsed_us: fraction * 10, fraction, atoms: new Map(), grids: new Map(), measurements: [], movePaths: new Map()};
+        elapsed_us: fraction * 10, fraction, atoms: new Map(this.trace.initial.atoms.map(a => [a.id, a])), grids: new Map(), measurements: [], movePaths: new Map()};
     }
   }
   const sandbox = {document, window: {devicePixelRatio: 1},
     AtomReplayModel: {Replay, actionProgress: () => 0},
     AtomReplayAnalysis: {Analysis: class {}},
     AtomReplayDashboard: {Dashboard: class {load() {} update() {return null;}}},
-    ResizeObserver: class {observe() {}},
+    ResizeObserver: class {constructor(fn) {resizeObservers.push(fn);} observe() {}},
     requestAnimationFrame(fn) { const id = ++serial; frames.set(id, fn); return id; },
     cancelAnimationFrame(id) { frames.delete(id); },
     setTimeout(fn) {const id = ++serial; timers.set(id, fn); return id;},
@@ -66,7 +75,8 @@ function viewer({native = false, reject = false, height = 600} = {}) {
   };
   document.exitFullscreen = async () => { document.fullscreenElement = null; document.handlers.fullscreenchange(); };
   vm.runInNewContext(fs.readFileSync(path.join(assets, 'viewer.js'), 'utf8'), sandbox);
-  return {nodes, element, document, rectangles, frames, timers,
+  return {nodes, element, document, rectangles, frames, timers, circles, texts,
+    resize(nextHeight) {height = nextHeight; resizeObservers.forEach(fn => fn()); element('fit-button').click();},
     key(key, target = element('atom-canvas')) { document.handlers.keydown({key, code: key === ' ' ? 'Space' : key, target, preventDefault() {}}); },
     flush() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(0)); }};
 }
@@ -84,6 +94,27 @@ test('step strip distinguishes transfers, previews CZ and feedback tail without 
   assert.match(v.element('hud-kind').textContent, /CZ/);
   const colors = v.rectangles.filter(r => r[4] === 12).map(r => r[0]);
   assert.ok(new Set(colors).size >= 4, 'Load, Move, Store and CZ have distinct colours');
+});
+
+test('zoom, viewport resizing and fullscreen preserve screen-space marks and labels', async () => {
+  const v = viewer({withAtoms: true}), canvas = v.element('atom-canvas');
+  const sizes = () => ({
+    marks: v.circles.slice(-2).map(({radius, lineWidth}) => ({radius, lineWidth})),
+    atomFont: v.texts.findLast(t => t.text === '0').font,
+    zoneFont: v.texts.findLast(t => t.text === 'storage').font
+  });
+  const original = sizes(), initialPosition = v.circles.at(-1).x;
+  canvas.handlers.wheel({deltaY: 1000, clientX: 400, clientY: 300, preventDefault() {}});
+  assert.deepEqual(sizes(), original, 'zoom out must not shrink atom/site symbols');
+  assert.notEqual(v.circles.at(-1).x, initialPosition, 'world positions must still zoom');
+  canvas.handlers.wheel({deltaY: -1000, clientX: 400, clientY: 300, preventDefault() {}});
+  assert.deepEqual(sizes(), original, 'zoom in must not enlarge symbols');
+  v.resize(300);
+  assert.deepEqual(sizes(), original, 'fit after viewport resize must preserve symbol sizes');
+  await v.element('present-button').click(); v.flush();
+  assert.deepEqual(sizes(), original, 'fullscreen must use the same sizes and fonts');
+  v.key('Escape'); v.flush();
+  assert.deepEqual(sizes(), original);
 });
 
 test('presentation fallback preserves playback and Escape works from an input', async () => {
