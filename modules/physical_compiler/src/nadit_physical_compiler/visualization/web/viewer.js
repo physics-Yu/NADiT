@@ -41,7 +41,7 @@
   const pct = value => numeric(value * 100, 3) + '%';
   // Schematic radii use scene units, not physical atom/beam calibration.
   // Every spatial mark scales with the traps; controls and text use CSS pixels.
-  const MARK_RADIUS = { atom: .7, site: .45, aod: .2, destination: .5 };
+  const MARK_RADIUS = { atom: .95, site: .65, aod: .4, destination: .65 };
   const sceneSize = value => value * camera.scale;
   const FONT = 'Bahnschrift, "DIN Alternate", Barlow, "Segoe UI", sans-serif';
 
@@ -150,7 +150,7 @@
       context.textAlign = 'start'; context.textBaseline = 'alphabetic';
     }
     if ($('sites-toggle').checked) {
-      context.lineWidth = sceneSize(.1);
+      context.lineWidth = sceneSize(.14);
       const radius = sceneSize(MARK_RADIUS.site);
       for (const site of trace.device.slm_sites) circle(site.x, site.y, radius, null, colors.site);
     }
@@ -160,7 +160,7 @@
     for (const grid of frame.grids.values()) {
       const device = trace.device.aods.find(aod => aod.id === grid.aod_id);
       const bounds = device ? device.workspace : worldBounds();
-      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = sceneSize(.12);
+      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = sceneSize(.2);
       for (const row of grid.rows) line(bounds[0], row.coordinate, bounds[2], row.coordinate);
       for (const column of grid.columns) line(column.coordinate, bounds[1], column.coordinate, bounds[3]);
       for (const row of grid.rows) {

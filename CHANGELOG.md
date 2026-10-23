@@ -10,6 +10,7 @@
 
 - Proportional scene scaling for replay atoms, trap spots and spatial highlights,
   without pixel-radius clamps; controls and labels retain their screen sizes.
+  Atom/SLM/AOD marks and AOD lines are enlarged for easier presentation viewing.
 
 - A physical-compiler configuration reference for external projects, people, and
   AI clients, covering architecture, Device, compiler, and experiment fields,

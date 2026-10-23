@@ -49,6 +49,9 @@ around the HUD and controls. Atoms, SLM sites, AOD spots, spatial line widths an
 halos scale proportionally with the scene, including after viewport fitting or
 presentation changes. They have no minimum/maximum pixel radius. Their radii
 are schematic scene sizes, not physical atom sizes or calibrated beam waists.
+Display radii are 0.95 for atoms, 0.65 for SLM sites and 0.4 for AOD spots in
+scene units; AOD lines use a 0.2 scene-unit width. These presentation constants
+do not change the Device geometry or interaction radius.
 Buttons, labels and HUD text keep their CSS-pixel sizes. Browser/OS accessibility
 zoom still scales the page normally.
 
