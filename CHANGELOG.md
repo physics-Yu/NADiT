@@ -8,8 +8,8 @@
   geometry, and full-screen presentation with a HUD, playback controls,
   keyboard shortcuts and in-window fallback, based on the supplied redesign.
 
-- Fixed screen-space sizes for replay atoms, sites, labels and highlights during
-  scene zoom and viewport resizing; fullscreen uses the same control/text sizes.
+- Proportional scene scaling for replay atoms, trap spots and spatial highlights,
+  without pixel-radius clamps; controls and labels retain their screen sizes.
 
 - A physical-compiler configuration reference for external projects, people, and
   AI clients, covering architecture, Device, compiler, and experiment fields,

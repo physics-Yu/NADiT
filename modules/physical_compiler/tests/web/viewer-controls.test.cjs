@@ -47,7 +47,10 @@ function viewer({native = false, reject = false, height = 600, withAtoms = false
   if (withAtoms) {
     trace.initial.atoms = [{id: 0, qubit: 0, x: 5, y: 5, holder: {kind: 'slm', site_id: 's'}}];
     trace.device.slm_sites = [{id: 's', x: 5, y: 5}];
+    trace.initial.grids = [{aod_id: 'a', rows: [{id: 0, coordinate: 6}], columns: [{id: 0, coordinate: 6}]}];
+    trace.device.aods = [{id: 'a', workspace: [0, 0, 20, 20]}];
     element('sites-toggle').checked = true;
+    element('grid-toggle').checked = true;
     element('labels-toggle').checked = true;
   }
   element('atom-replay-data').textContent = JSON.stringify({traces: [trace, {...trace, steps: [], duration_us: 0, program_duration_us: 0}]});
@@ -57,7 +60,7 @@ function viewer({native = false, reject = false, height = 600, withAtoms = false
     frame(step, fraction) {
       const s = this.trace.steps[step];
       return {actions: s?.actions || [], time_us: s ? s.start_us + fraction * 10 : this.trace.program_duration_us + fraction * 5,
-        elapsed_us: fraction * 10, fraction, atoms: new Map(this.trace.initial.atoms.map(a => [a.id, a])), grids: new Map(), measurements: [], movePaths: new Map()};
+        elapsed_us: fraction * 10, fraction, atoms: new Map(this.trace.initial.atoms.map(a => [a.id, a])), grids: new Map((this.trace.initial.grids || []).map(g => [g.aod_id, g])), measurements: [], movePaths: new Map()};
     }
   }
   const sandbox = {document, window: {devicePixelRatio: 1},
@@ -96,25 +99,33 @@ test('step strip distinguishes transfers, previews CZ and feedback tail without 
   assert.ok(new Set(colors).size >= 4, 'Load, Move, Store and CZ have distinct colours');
 });
 
-test('zoom, viewport resizing and fullscreen preserve screen-space marks and labels', async () => {
+test('atoms, SLM sites and AOD spots scale with scene geometry while labels remain fixed', async () => {
   const v = viewer({withAtoms: true}), canvas = v.element('atom-canvas');
   const sizes = () => ({
-    marks: v.circles.slice(-2).map(({radius, lineWidth}) => ({radius, lineWidth})),
+    marks: v.circles.slice(-3).map(({radius}) => radius),
+    zoneWidth: v.rectangles.findLast(r => r[0] === '#24374802')[3],
     atomFont: v.texts.findLast(t => t.text === '0').font,
     zoneFont: v.texts.findLast(t => t.text === 'storage').font
   });
   const original = sizes(), initialPosition = v.circles.at(-1).x;
+  function proportional() {
+    const current = sizes(), ratio = current.zoneWidth / original.zoneWidth;
+    current.marks.forEach((radius, i) => assert.ok(Math.abs(radius / original.marks[i] - ratio) < 1e-9));
+    assert.equal(current.atomFont, original.atomFont);
+    assert.equal(current.zoneFont, original.zoneFont);
+  }
   canvas.handlers.wheel({deltaY: 1000, clientX: 400, clientY: 300, preventDefault() {}});
-  assert.deepEqual(sizes(), original, 'zoom out must not shrink atom/site symbols');
+  proportional();
+  assert.ok(sizes().marks.every((radius, i) => radius < original.marks[i]));
   assert.notEqual(v.circles.at(-1).x, initialPosition, 'world positions must still zoom');
   canvas.handlers.wheel({deltaY: -1000, clientX: 400, clientY: 300, preventDefault() {}});
-  assert.deepEqual(sizes(), original, 'zoom in must not enlarge symbols');
+  proportional();
   v.resize(300);
-  assert.deepEqual(sizes(), original, 'fit after viewport resize must preserve symbol sizes');
+  proportional();
   await v.element('present-button').click(); v.flush();
-  assert.deepEqual(sizes(), original, 'fullscreen must use the same sizes and fonts');
+  proportional();
   v.key('Escape'); v.flush();
-  assert.deepEqual(sizes(), original);
+  proportional();
 });
 
 test('presentation fallback preserves playback and Escape works from an input', async () => {

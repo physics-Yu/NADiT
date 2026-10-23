@@ -39,8 +39,10 @@
     atom => { selectedAtom = atom; render(); }
   );
   const pct = value => numeric(value * 100, 3) + '%';
-  // Glyph sizes are CSS pixels; only world coordinates follow camera.scale.
-  const MARK_RADIUS = { atom: 5, site: 2 };
+  // Schematic radii use scene units, not physical atom/beam calibration.
+  // Every spatial mark scales with the traps; controls and text use CSS pixels.
+  const MARK_RADIUS = { atom: .7, site: .45, aod: .2, destination: .5 };
+  const sceneSize = value => value * camera.scale;
   const FONT = 'Bahnschrift, "DIN Alternate", Barlow, "Segoe UI", sans-serif';
 
   function element(tag, className, text) {
@@ -148,8 +150,8 @@
       context.textAlign = 'start'; context.textBaseline = 'alphabetic';
     }
     if ($('sites-toggle').checked) {
-      context.lineWidth = 1;
-      const radius = MARK_RADIUS.site;
+      context.lineWidth = sceneSize(.1);
+      const radius = sceneSize(MARK_RADIUS.site);
       for (const site of trace.device.slm_sites) circle(site.x, site.y, radius, null, colors.site);
     }
   }
@@ -158,11 +160,11 @@
     for (const grid of frame.grids.values()) {
       const device = trace.device.aods.find(aod => aod.id === grid.aod_id);
       const bounds = device ? device.workspace : worldBounds();
-      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = 1.2;
+      context.strokeStyle = alpha(colors.aod, .3); context.lineWidth = sceneSize(.12);
       for (const row of grid.rows) line(bounds[0], row.coordinate, bounds[2], row.coordinate);
       for (const column of grid.columns) line(column.coordinate, bounds[1], column.coordinate, bounds[3]);
       for (const row of grid.rows) {
-        for (const column of grid.columns) circle(column.coordinate, row.coordinate, 2, alpha(colors.aod, .45));
+        for (const column of grid.columns) circle(column.coordinate, row.coordinate, sceneSize(MARK_RADIUS.aod), alpha(colors.aod, .45));
       }
       if ($('labels-toggle').checked) {
         context.font = 11 + 'px ' + FONT; context.fillStyle = alpha(colors.aod, .8);
@@ -175,11 +177,11 @@
     if (!$('trails-toggle').checked) return;
     for (const action of frame.actions) {
       if (action.kind !== 'Move') continue;
-      context.strokeStyle = alpha(colors.aod, .55); context.lineWidth = 1.4; context.setLineDash([5, 5]);
+      context.strokeStyle = alpha(colors.aod, .55); context.lineWidth = sceneSize(.14); context.setLineDash([sceneSize(.5), sceneSize(.5)]);
       for (const points of frame.movePaths.get(action).atoms.values()) {
         const destination = points[points.length - 1];
         for (let i = 1; i < points.length; i++) line(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
-        circle(destination.x, destination.y, 5, null, alpha(colors.aod, .55));
+        circle(destination.x, destination.y, sceneSize(MARK_RADIUS.destination), null, alpha(colors.aod, .55));
       }
       context.setLineDash([]);
     }
@@ -188,14 +190,14 @@
     for (const action of frame.actions) {
       if (!action.coverage || actionProgress(action) === 1) continue;
       const color = action.kind === 'CZPulse' ? colors.cz : colors.local;
-      context.lineWidth = 1.5;
+      context.lineWidth = sceneSize(.15);
       for (const bounds of action.coverage.regions) rectangle(bounds, alpha(color, .08), alpha(color, .55));
       context.save();
-      context.shadowColor = alpha(color, .5); context.shadowBlur = 6;
+      context.shadowColor = alpha(color, .5); context.shadowBlur = sceneSize(.6);
       for (const pair of action.pairs) {
         const a = frame.atoms.get(pair[0]), b = frame.atoms.get(pair[1]);
         if (!a || !b) continue;
-        context.strokeStyle = color; context.lineWidth = 3; line(a.x, a.y, b.x, b.y);
+        context.strokeStyle = color; context.lineWidth = sceneSize(.3); line(a.x, a.y, b.x, b.y);
       }
       context.restore();
     }
@@ -211,33 +213,34 @@
   }
   function drawAtoms() {
     const highlights = actionHighlights();
-    const radius = MARK_RADIUS.atom;
+    const radius = sceneSize(MARK_RADIUS.atom);
+    const margin = Math.max(40, radius * 3);
     for (const atom of frame.atoms.values()) {
       const point = toScreen(atom.x, atom.y);
-      if (point[0] < -40 || point[0] > camera.width + 40 || point[1] < -40 || point[1] > camera.height + 40) continue;
+      if (point[0] < -margin || point[0] > camera.width + margin || point[1] < -margin || point[1] > camera.height + margin) continue;
       const lossColour = $('risk-toggle').checked && risk;
       const core = lossColour ? `hsl(${175 - 155 * (risk.atoms.get(atom.id) / analysis.maxAtomLoss)} 48% 47%)`
         : atom.holder.kind === 'aod' ? colors.aod : colors.slm;
       if (highlights.has(atom.id)) {
         const tint = highlights.get(atom.id);
         circle(atom.x, atom.y, radius * 2.4, alpha(tint, .16));
-        context.lineWidth = 2; circle(atom.x, atom.y, radius * 1.9, null, tint);
+        context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius * 1.9, null, tint);
       }
-      context.lineWidth = 1.4; circle(atom.x, atom.y, radius, core, '#ffffff');
+      context.lineWidth = sceneSize(.14); circle(atom.x, atom.y, radius, core, '#ffffff');
       if (risk?.maximum.atom === atom.id) {
-        context.lineWidth = 2; circle(atom.x, atom.y, radius + 8, null, colors.risk);
+        context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius + sceneSize(.8), null, colors.risk);
         context.fillStyle = colors.risk; context.font = 600 + ' ' + 11 + 'px ' + FONT;
         context.fillText('Highest loss, atom ' + atom.id, point[0] + radius + 6, point[1] - radius - 10);
       }
-      if (atom.id === selectedAtom) { context.lineWidth = 2; circle(atom.x, atom.y, radius + 6, null, colors.ink); }
+      if (atom.id === selectedAtom) { context.lineWidth = sceneSize(.2); circle(atom.x, atom.y, radius + sceneSize(.6), null, colors.ink); }
       if ($('labels-toggle').checked || atom.id === selectedAtom) {
         context.fillStyle = colors.ink; context.font = 12 + 'px ' + FONT;
         context.fillText(String(atom.id), point[0] + radius + 5, point[1] - radius - 3);
       }
     }
     if (selectedIssue) {
-      context.lineWidth = 2;
-      circle(selectedIssue.x, selectedIssue.y, radius + 14, null, colors.warn);
+      context.lineWidth = sceneSize(.2);
+      circle(selectedIssue.x, selectedIssue.y, radius + sceneSize(1.4), null, colors.warn);
     }
   }
   function drawScale() {
@@ -537,7 +540,7 @@
     if (!drag) return;
     if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) {
       const rect = canvas.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
-      let nearest = null, distance = 16;
+      let nearest = null, distance = Math.max(16, sceneSize(MARK_RADIUS.atom) + 4);
       for (const atom of frame.atoms.values()) { const p = toScreen(atom.x, atom.y), d = Math.hypot(x - p[0], y - p[1]); if (d < distance) { nearest = atom.id; distance = d; } }
       selectedAtom = nearest; selectedIssue = null; render();
     }

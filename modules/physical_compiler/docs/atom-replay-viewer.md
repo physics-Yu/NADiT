@@ -45,10 +45,12 @@ Click **Present** or press **F** to show the stage full screen. Press **Esc**,
 are preserved. If the host denies or lacks browser fullscreen, the same stage
 fills the application window. The HUD displays the current step, action, time,
 and mean/maximum atom loss when a noise report is available. The camera refits
-around the HUD and controls. Atom/site markers, labels, line widths, highlights,
-buttons and text keep the same CSS-pixel sizes during scene zoom, viewport
-resizing and presentation. Zoom changes world positions and spatial extents,
-not glyph sizes. Browser/OS accessibility zoom still scales the page normally.
+around the HUD and controls. Atoms, SLM sites, AOD spots, spatial line widths and
+halos scale proportionally with the scene, including after viewport fitting or
+presentation changes. They have no minimum/maximum pixel radius. Their radii
+are schematic scene sizes, not physical atom sizes or calibrated beam waists.
+Buttons, labels and HUD text keep their CSS-pixel sizes. Browser/OS accessibility
+zoom still scales the page normally.
 
 During presentation playback, controls fade after 2.5 seconds without input.
 Pointer movement, keyboard input or focus restores them; paused playback keeps
