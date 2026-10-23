@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <style>{{STYLE}}</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wordmark">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="9" cy="16" r="3.4"/><circle cx="23" cy="16" r="3.4"/>
+        <path d="M12.8 16h6.4" />
+        <circle class="halo" cx="16" cy="16" r="12.5"/>
+      </svg>
+      <div><h1>Atom replay</h1><p>NADiT physical compiler</p></div>
+    </div>
+    <label class="trace-choice"><span>Trace</span><select id="trace-select" aria-label="Select trace"></select></label>
+    <button id="present-button" class="present-button" type="button" title="Present full screen (F)">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg>
+      Present
+    </button>
+  </header>
+
+  <section class="trace-heading">
+    <div class="trace-text"><h2 id="trace-title"></h2><p id="trace-description"></p></div>
+    <dl class="trace-stats">
+      <div><dt>Atoms</dt><dd id="atom-count">0</dd></div>
+      <div><dt>Steps</dt><dd id="step-count">0</dd></div>
+      <div><dt>Duration</dt><dd><span id="duration-total">0</span><small> µs</small></dd></div>
+    </dl>
+  </section>
+
+  <main class="workspace">
+    <section class="stage-column" aria-label="Atom layout and replay">
+      <div id="stage" class="stage">
+        <div class="stage-toolbar">
+          <div class="view-options">
+            <label><input id="sites-toggle" type="checkbox" checked> SLM sites</label>
+            <label><input id="grid-toggle" type="checkbox" checked> AOD beams</label>
+            <label><input id="trails-toggle" type="checkbox" checked> Move paths</label>
+            <label><input id="labels-toggle" type="checkbox"> Atom IDs</label>
+            <label class="path-choice">Path <select id="path-select" aria-label="Display path"><option value="lanes">Lanes</option><option value="direct">Direct</option></select></label>
+          </div>
+          <button id="fit-button" class="ghost-button" type="button">Fit view</button>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="atom-canvas" aria-label="Atom position map. Drag to pan, scroll to zoom, click an atom to inspect." tabindex="0"></canvas>
+          <div class="hud hud-top">
+            <div class="hud-now"><strong id="hud-step">Step 0</strong><span id="hud-kind">Initial layout</span></div>
+            <div class="hud-side">
+              <span id="hud-loss" class="hud-loss" hidden></span>
+              <span class="hud-time"><span id="hud-time">0</span> µs</span>
+            </div>
+          </div>
+          <div id="selection-chip" hidden></div>
+          <div class="canvas-caption"><span id="view-position">x / y µm</span><span class="caption-hint">Drag to pan, scroll to zoom, click an atom</span></div>
+          <button id="exit-present" class="exit-present" type="button" hidden>Exit full screen <kbd>Esc</kbd></button>
+        </div>
+        <div class="controls">
+        <div class="legend">
+          <span><i class="swatch slm"></i>SLM atom</span>
+          <span><i class="swatch aod"></i>AOD atom</span>
+          <span><i class="swatch beam"></i>AOD beams</span>
+          <span><i class="swatch cz"></i>Rydberg CZ</span>
+          <span><i class="swatch local"></i>Local gate</span>
+          <span><i class="swatch readout"></i>Readout</span>
+          <span id="legend-risk" class="legend-risk" hidden><i class="swatch risk"></i>Loss colour on</span>
+          <span id="path-note" class="path-note" title="Display-only interpolation. Atom IR endpoints and recorded durations are unchanged.">Lane preview, recorded timing</span>
+        </div>
+        <div class="transport">
+          <div class="transport-buttons">
+            <button id="previous-step" class="icon-button" type="button" aria-label="Previous step" title="Previous step (←)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 4 7 10l8 6z"/></svg></button>
+            <button id="play-button" class="play-button" type="button" aria-label="Play">Play</button>
+            <button id="next-step" class="icon-button" type="button" aria-label="Next step" title="Next step (→)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 4l8 6-8 6z"/></svg></button>
+          </div>
+          <div class="scrubber">
+            <div class="scrubber-meta"><label for="step-slider">Step <strong id="step-position">0 / 0</strong></label><span id="step-kind">Initial layout</span></div>
+            <div class="strip-wrap">
+              <canvas id="step-strip" class="step-strip" aria-hidden="true"></canvas>
+              <input id="step-slider" type="range" min="0" max="0" step="1" value="0" aria-label="Step">
+            </div>
+          </div>
+          <label class="compact-field">Speed<select id="speed-select"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select></label>
+        </div>
+        <div class="fine-controls">
+          <label class="fraction-field" for="fraction-slider">Within step <output id="fraction-value">0%</output><input id="fraction-slider" type="range" min="0" max="1000" value="0" step="1"></label>
+          <label class="compact-field" for="time-input">Time (µs)<input id="time-input" type="number" min="0" step="any" value="0"></label>
+          <label class="compact-field" for="timing-select">Playback<select id="timing-select"><option value="paced">0.8 s per step</option><option value="proportional">Real-time ratio, 30 s total</option></select></label>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <section class="inspector-section"><div class="section-heading"><h3>Current step</h3><span id="action-count" class="count">0 actions</span></div><div id="action-list" class="action-list"></div></section>
+
+      <section class="inspector-section risk-section"><div class="section-heading"><h3>Atom loss estimate</h3><span id="risk-status" class="count"></span></div>
+        <p id="risk-empty" class="empty-state">No noise report attached. Schedule playback still works.</p>
+        <div id="risk-content">
+          <div class="risk-metrics">
+            <div><small>Mean atom loss so far</small><strong id="average-loss-now">0%</strong></div>
+            <div><small>Highest atom loss so far</small><strong id="maximum-loss-now">0%</strong></div>
+          </div>
+          <button id="maximum-loss-atom" class="maximum-atom-button" type="button" disabled>No accumulated loss</button>
+          <dl class="risk-final">
+            <div><dt>Expected lost atoms now</dt><dd id="risk-now">0</dd></div>
+            <div><dt>Expected lost atoms at end</dt><dd id="risk-final"></dd></div>
+            <div><dt>Final fidelity proxy</dt><dd id="fidelity-final"></dd></div>
+          </dl>
+          <label class="risk-color"><input id="risk-toggle" type="checkbox"> <span id="risk-scale">Loss colour</span> <kbd>L</kbd></label>
+          <label class="risk-selection">Atom <select id="risk-atom" aria-label="Inspect atom loss"></select></label>
+          <p class="risk-selected">Selected atom loss <strong id="atom-risk">Select an atom</strong></p>
+          <p class="section-note">Independent estimates, booked when each event completes. No loss is sampled.</p>
+          <details><summary>Noise parameters</summary><pre id="noise-params" class="noise-json"></pre></details>
+        </div>
+      </section>
+
+      <section class="inspector-section"><div class="section-heading"><h3>Noise in this step</h3><span id="noise-count" class="count"></span></div><p id="leakage-summary" class="section-note pre-line"></p><details><summary>Channels and upstream records</summary><pre id="noise-step" class="noise-json"></pre></details></section>
+      <section class="inspector-section"><div class="section-heading"><h3>Atom</h3><span id="selected-atom-label" class="count">No selection</span></div><div id="atom-inspector" class="empty-state">Click an atom on the stage to see its qubit, position and trap.</div></section>
+      <section class="inspector-section"><div class="section-heading"><h3>Measurement results</h3><span id="measurement-count" class="count">0 available</span></div><div id="measurement-list" class="record-list"></div></section>
+      <section class="inspector-section"><div class="section-heading"><h3>Boundary observations</h3><span id="issue-count" class="count">0</span></div><p class="section-note">SLM atoms sitting on an active AOD intersection. Click one to jump to that moment.</p><div id="issue-list" class="record-list"></div></section>
+    </aside>
+  </main>
+
+  <section class="analysis">
+    <section class="schedule-panel">
+      <div class="schedule-toolbar">
+        <div class="section-heading"><h3>Execution schedule</h3><span id="schedule-range" class="count"></span></div>
+        <div class="schedule-options">
+          <label class="compact-field">View<select id="schedule-mode"><option value="all">Full run</option><option value="follow">Follow playback</option></select></label>
+          <label class="compact-field">Window (µs)<input id="schedule-span" type="number" value="1000" min="1"></label>
+        </div>
+      </div>
+      <div class="schedule-chart"><canvas id="schedule-canvas" aria-label="Resource action schedule. Click an action to seek." tabindex="0"></canvas></div>
+      <p id="schedule-detail" class="section-note"></p>
+    </section>
+
+    <section id="loss-panel" class="loss-panel" hidden>
+      <div class="section-heading"><h3>Loss by source, up to the current time</h3><span id="loss-comparison-scale" class="count"></span></div>
+      <div class="loss-table-wrap"><table class="loss-table"><thead><tr><th>Source</th><th>Expected lost atoms</th><th>Mean atom loss</th><th id="loss-maximum-label">Highest-risk atom</th></tr></thead><tbody>
+        <tr id="loss-load-row"><th>Load, SLM to AOD</th><td id="loss-load-expected"></td><td><span id="loss-load-average"></span><div class="loss-bar"><i id="loss-load-average-bar"></i></div></td><td><span id="loss-load-maximum"></span><div class="loss-bar maximum"><i id="loss-load-maximum-bar"></i></div></td></tr>
+        <tr id="loss-store-row"><th>Store, AOD to SLM</th><td id="loss-store-expected"></td><td><span id="loss-store-average"></span><div class="loss-bar"><i id="loss-store-average-bar"></i></div></td><td><span id="loss-store-maximum"></span><div class="loss-bar maximum"><i id="loss-store-maximum-bar"></i></div></td></tr>
+        <tr id="loss-move-row"><th>Move</th><td id="loss-move-expected"></td><td><span id="loss-move-average"></span><div class="loss-bar"><i id="loss-move-average-bar"></i></div></td><td><span id="loss-move-maximum"></span><div class="loss-bar maximum"><i id="loss-move-maximum-bar"></i></div></td></tr>
+        <tr id="loss-residence-row"><th>Residence in AOD or SLM</th><td id="loss-residence-expected"></td><td><span id="loss-residence-average"></span><div class="loss-bar"><i id="loss-residence-average-bar"></i></div></td><td><span id="loss-residence-maximum"></span><div class="loss-bar maximum"><i id="loss-residence-maximum-bar"></i></div></td></tr>
+        <tr id="loss-cz-row" hidden><th>CZ physical atom loss</th><td id="loss-cz-expected"></td><td><span id="loss-cz-average"></span><div class="loss-bar"><i id="loss-cz-average-bar"></i></div></td><td><span id="loss-cz-maximum"></span><div class="loss-bar maximum"><i id="loss-cz-maximum-bar"></i></div></td></tr>
+        <tr id="loss-other-row" hidden><th>Other or unclassified</th><td id="loss-other-expected"></td><td><span id="loss-other-average"></span><div class="loss-bar"><i id="loss-other-average-bar"></i></div></td><td><span id="loss-other-maximum"></span><div class="loss-bar maximum"><i id="loss-other-maximum-bar"></i></div></td></tr>
+      </tbody><tfoot><tr><th>Total</th><td id="loss-total-expected"></td><td id="loss-total-average"></td><td id="loss-total-maximum"></td></tr></tfoot></table></div>
+      <p class="section-note">Each column's contributions add to its total. Prior survival is included; simultaneous causes share new loss in proportion to hazard. Residence is physical loss, not T2 or computational leakage.</p>
+    </section>
+  </section>
+
+  <footer class="footer"><span id="device-name"></span><span class="footer-units">Coordinates in µm, time in µs</span><button id="ir-toggle" class="link-button" type="button" aria-expanded="false">Show Atom IR</button></footer>
+  <section id="ir-panel" hidden><div class="section-heading"><h3>Atom IR</h3><button id="ir-close" class="ghost-button" type="button">Close</button></div><pre id="ir-source"></pre></section>
+  <script id="atom-replay-data" type="application/json">{{DATA}}</script>
+  <script>{{MODEL}}</script>
+  <script>{{SCRIPT}}</script>
+</body>
+</html>

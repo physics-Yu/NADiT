@@ -1,6 +1,8 @@
 # 0032: Unified compiler selection and conformance
 
-Status: Implemented and verified on 2026-10-22.
+Status: Core interfaces implemented; consolidation remains open. Validation
+scope clarified on 2026-10-22. Test results below are historical evidence,
+not a claim that every interface requirement is complete.
 
 Implementation baseline: ADR 0033 already accepts named Search Smarter and
 adds optional fixed-reference QEC mode. Preserve that mode and its 1,690-test
@@ -102,6 +104,31 @@ When compilers are compared on duration, the first item decides the
 comparison: an incorrect compiler can win.
 
 ## Decision
+
+### Construction and validation boundary
+
+Built-in compilers construct legal actions through shared movement rules,
+conflict maps, capacity, and occupancy constraints. Normal compilation trusts
+those construction guarantees. Do not add a second full legality pass inside
+layer lowering or transport generation. Full checkers serve tests, debugging,
+and explicitly requested result audits.
+
+The compiler consumes the supplied measurement backend and selects the branch
+from that result. Do not resample or call the backend again at runtime merely
+to verify its answer. Same-input output comparison tests determinism; fixed
+override cases test that an adapter consumes the supplied measurement case.
+
+The subsequent audit's case-mismatch and conflicting-parallel-transport
+concerns are external-adapter conformance test cases. They were not observed
+failures of the built-in constructors and do not require new mandatory runtime
+checks on their output. Keep the existing whole-program import validation
+boundary distinct from the built-in construction path; this clarification
+does not change its current implementation.
+
+Consolidation should address concrete interface issues: entry-aware summary
+grouping, entry-optimization timing, duplicate capability admission, budget-hit
+reporting, and compiler-independent conformance fixtures. Correct those issues
+without expanding runtime validation to cover hypothetical adapter mistakes.
 
 ### Compiler registry
 
@@ -234,8 +261,9 @@ Existing jobs without `kind` keep working, and resolved jobs gain an explicit
 `kind`. Results compiled after this change carry compiler identity, so older
 results summarise under `search_smarter` by inference. Experiments that set a
 global `entry` keep their behaviour, with a plan-time notice. Adding compilers
-becomes a registration plus a conformance run, and cross-compiler studies no
-longer mix in entry-provider or budget artefacts.
+is intended to become a registration plus a conformance run. Current entry
+providers and conformance fixtures still contain built-in-specific code;
+summary grouping and timing still need to distinguish entry choices and cost.
 
 ## Implementation order
 
