@@ -514,11 +514,12 @@ the study rather than silently disappearing from a comparison.
 | plan/run `--allow-dirty` | false | Permit a dirty initial snapshot; code still cannot drift during the run |
 | run `--new-version` | false | Use a separate versions/<version-hash> subdirectory |
 | summarize `--cost-id` | Omitted | Choose a cost evaluation for comparison |
+| summarize `--viewers` | false | Export saved anomaly results through the packaged viewer |
 | summarize `--objectives` | duration_us quality_loss slm_sites | Pareto dimensions |
 
-Available summary dimensions also include `transfers`, `compile_wall_s`, and
-`log_fidelity`. Pareto coordinates are minimized, so use `quality_loss`
-(negative log-fidelity), not raw log_fidelity, to prefer better fidelity.
+Available additional Pareto dimensions are `transfers` and `compile_wall_s`.
+`log_fidelity` is reported as a statistic but is not an accepted Pareto objective.
+Pareto coordinates are minimized; `quality_loss` is negative log-fidelity.
 Summaries produce paired baseline comparisons, Pareto results, anomalies and
 viewer commands. A missing/failed baseline is not a successful comparison.
 
@@ -744,6 +745,7 @@ For the complete jobs above, saved in docs/:
 ```text
 uv run --locked nadit compile docs/reference-zoned.job.json --validate -o artifacts/reference-result.json --text artifacts/reference.atom_ir.txt
 uv run --locked nadit validate artifacts/reference-result.json
+uv run --locked nadit view artifacts/reference-result.json -o artifacts/reference-viewer.html
 uv run --locked nadit compile docs/reference-nonzoned.job.json --validate -o artifacts/reference-nonzoned-result.json
 ```
 
@@ -773,6 +775,7 @@ uv run --locked nadit experiment plan docs/reference.experiment.json
 uv run --locked nadit experiment run docs/reference.experiment.json --output artifacts/reference-study --workers 1
 uv run --locked nadit experiment status artifacts/reference-study
 uv run --locked nadit experiment summarize artifacts/reference-study --objectives duration_us transfers compile_wall_s
+uv run --locked nadit experiment summarize artifacts/reference-study --viewers
 ```
 
 Repeating the run command resumes the same locked study. Reevaluate saved

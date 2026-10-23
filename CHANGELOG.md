@@ -4,6 +4,10 @@
 
 ### Added
 
+- Packaged `nadit view` for saved results and `experiment summarize --viewers`
+  for anomaly exports, without depending on examples or rerunning compilation.
+  Demo compilation now uses job/registry and delegates export to the same CLI.
+
 - Independent replay size sliders for atoms, SLM sites and AOD spots (25–300%),
   with reset and fullscreen access; display multipliers preserve scene scaling
   and leave compilation, trace data and playback position unchanged.

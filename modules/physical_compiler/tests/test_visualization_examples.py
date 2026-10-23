@@ -8,6 +8,7 @@ import pytest
 from examples.viewer_cases import compile_feedback, compile_static
 from examples.visualize_compilation import example_trace, main
 from nadit_physical_compiler import CZPulse, Measure, Move, replay
+from nadit_physical_compiler.visualization import build_result_trace
 
 
 @pytest.mark.parametrize("bit", [0, 1])
@@ -91,7 +92,10 @@ def test_cli_writes_actual_compilation_as_html_and_json(
     destination = tmp_path / "viewer" / "index.html"
     main(["--output", str(destination)])
     data = json.loads(destination.with_name("traces.json").read_text(encoding="utf-8"))
-    assert data == {"schema_version": 1, "traces": [example_trace(example)]}
+    assert data == {
+        "schema_version": 1,
+        "traces": [build_result_trace(example.document, title=example.title)],
+    }
     html = destination.read_text(encoding="utf-8")
     assert 'id="atom-replay-data"' in html
     assert example.title in html

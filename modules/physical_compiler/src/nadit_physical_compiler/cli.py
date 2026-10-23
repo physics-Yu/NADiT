@@ -59,6 +59,11 @@ def _parser() -> argparse.ArgumentParser:
     cost_command.add_argument("--params", type=Path)
     cost_command.add_argument("--into", type=Path)
     from .experiments.cli import configure
+    from .visualization.cli import configure as configure_view
+
+    configure_view(
+        commands.add_parser("view", help="Export offline replay from saved results.")
+    )
 
     configure(
         commands.add_parser(
@@ -254,6 +259,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         args = _parser().parse_args(argv)
         if args.command == "compile":
             document, status = _compile(args)
+        elif args.command == "view":
+            from .visualization.cli import view_results
+
+            document, status = (
+                view_results(
+                    args.results,
+                    args.output,
+                    device_override=args.device,
+                    json_output=args.json_output,
+                ),
+                0,
+            )
         elif args.command == "validate":
             document, status = _validate(args.result, args.device)
         elif args.command == "describe":

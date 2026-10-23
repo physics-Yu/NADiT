@@ -29,6 +29,11 @@ def configure(parser: argparse.ArgumentParser) -> None:
     summary.add_argument("directory", type=Path)
     summary.add_argument("--cost-id")
     summary.add_argument(
+        "--viewers",
+        action="store_true",
+        help="Export saved anomaly results as offline HTML.",
+    )
+    summary.add_argument(
         "--objectives", nargs="+", default=["duration_us", "quality_loss", "slm_sites"]
     )
     cost = commands.add_parser("cost")
@@ -46,6 +51,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             args.directory.resolve(),
             cost_id=args.cost_id,
             objectives=tuple(args.objectives),
+            viewers=args.viewers,
         )
     if args.experiment_command == "cost":
         params = json.loads(args.params.read_text(encoding="utf-8-sig"))

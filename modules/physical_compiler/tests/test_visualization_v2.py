@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from test_result_v2 import _copied_job, _document
 
-from examples.visualize_compilation import main
+from nadit_physical_compiler.cli import main
 from nadit_physical_compiler.job import load_job
 from nadit_physical_compiler.visualization import build_result_trace
 
@@ -51,11 +51,16 @@ def test_v2_viewer_cli_needs_no_original_inputs_or_compilation(
     def unexpected_compile() -> Any:
         pytest.fail("Saved-result playback must not invoke compilation.")
 
-    monkeypatch.setattr(
-        "examples.visualize_compilation.compile_examples", unexpected_compile
-    )
+    monkeypatch.setattr("nadit_physical_compiler.cli.compile_job", unexpected_compile)
     destination = tmp_path / "viewer" / "index.html"
-    arguments = ["--result", str(result_path), "--output", str(destination)]
+    arguments = [
+        "view",
+        str(result_path),
+        "--output",
+        str(destination),
+        "--json",
+        str(destination.with_name("traces.json")),
+    ]
     expected_device = deepcopy(document["device"])
     if override:
         expected_device["name"] = "Explicit alternate device"
@@ -63,7 +68,7 @@ def test_v2_viewer_cli_needs_no_original_inputs_or_compilation(
         override_path.write_text(json.dumps(expected_device), encoding="utf-8")
         arguments += ["--device", str(override_path)]
 
-    main(arguments)
+    assert main(arguments) == 0
 
     exported = json.loads(
         destination.with_name("traces.json").read_text(encoding="utf-8")

@@ -584,7 +584,7 @@ and remaining hardware questions.
 View a saved result without recompilation:
 
 ```text
-uv run --locked python -m examples.visualize_compilation --result RESULT.json --output artifacts/result-viewer/index.html
+uv run --locked nadit view RESULT.json -o artifacts/result-viewer/index.html
 ```
 
 Version-2 results supply their embedded Device, so the input files may be
@@ -598,9 +598,17 @@ uv run --locked python -m examples.visualize_compilation
 ```
 
 Open `artifacts/atom-replay/index.html` in a browser. The adjacent `traces.json`
-contains the same replay data, input QASM, and compiler configuration. The
+contains the same replay data and resolved compiler configuration. Portable
+results are saved under `artifacts/atom-replay/results/`. Demo compilation uses
+job/registry and rendering delegates to `nadit view`. The
 examples cover both forced measurement outcomes and a local 60-atom parallel
 circuit. The latter is a demonstration circuit, not a paper benchmark input.
+
+An installed wheel provides `nadit view RESULT.json [RESULT2.json ...] -o
+viewer.html [--device DEVICE.json] [--json traces.json]` from any directory.
+`nadit experiment summarize RUN_DIRECTORY --viewers` generates the selected
+anomalies' HTML files and records per-run missing/error statuses. See the
+[viewer guide](docs/atom-replay-viewer.md) for offline exports and the MSD scale boundary.
 
 The viewer supports playback, step and time seeking, zoom/pan, atom inspection,
 AOD lines, SLM sites, pulse coverage, and measurement availability. It reads

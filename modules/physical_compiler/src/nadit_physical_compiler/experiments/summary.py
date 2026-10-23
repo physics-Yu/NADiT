@@ -12,6 +12,7 @@ from typing import Any
 from ..provenance import canonical_hash
 from .journal import read_records, write_json
 from .sweep import get_path, set_path
+from .viewers import viewer_record
 
 
 def statistics(values: list[float]) -> dict[str, float | None]:
@@ -106,6 +107,7 @@ def summarize(
     *,
     cost_id: str | None = None,
     objectives: tuple[str, ...] = ("duration_us", "quality_loss", "slm_sites"),
+    viewers: bool = False,
 ) -> dict[str, Any]:
     """Write summary JSON/CSV, preserving failed runs and unmatched baselines."""
     spec = json.loads((directory / "experiment.json").read_text(encoding="utf-8"))
@@ -276,29 +278,12 @@ def summarize(
     outliers = []
     for run_id in sorted(outlier_ids):
         row = by_id[run_id]
-        result_path = row["provenance"].get("result_path")
-        command = None
-        if result_path:
-            command = shlex.join(
-                [
-                    "uv",
-                    "run",
-                    "--locked",
-                    "python",
-                    "-m",
-                    "examples.visualize_compilation",
-                    "--result",
-                    str(directory / result_path),
-                    "--output",
-                    str(directory / "viewers" / run_id / "index.html"),
-                ]
-            )
         outliers.append(
             {
                 "run_id": run_id,
                 "status": row["status"],
                 "reason": row.get("reason"),
-                "viewer_command": command,
+                **viewer_record(directory, row, generate=viewers),
                 "reproduce_command": shlex.join(
                     [
                         "uv",

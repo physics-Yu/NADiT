@@ -11,14 +11,14 @@ uv run --locked nadit compile examples/jobs/multipair.json -o result.json --vali
 uv run --locked nadit validate result.json
 uv run --locked nadit validate result.json --device configs/multipair_flexible.json
 uv run --locked nadit compare result.json another-result.json
-uv run --locked python -m examples.visualize_compilation --result result.json --output artifacts/result-viewer/index.html
+uv run --locked nadit view result.json -o artifacts/result-viewer/index.html
 ```
 
 `compile` prints the result JSON and optionally saves the same document with
 `-o`. `--text` exports the Stim-style display. Version-2 results embed the
 Device and native DAG: validation and playback need neither input file.
 `validate --device` explicitly replaces the Device snapshot and records the
-absolute path in `device_override`. The viewer accepts repeated `--result`
+absolute path in `device_override`. The viewer accepts multiple positional result
 arguments and its own optional `--device` JSON override.
 
 ## Job inputs

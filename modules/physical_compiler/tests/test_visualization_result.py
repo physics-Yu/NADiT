@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from examples.viewer_cases import compile_feedback
-from examples.visualize_compilation import main
+from nadit_physical_compiler.cli import main
 from nadit_physical_compiler.serialization import encode_device, encode_result
 from nadit_physical_compiler.visualization import build_result_trace, build_trace
 
@@ -77,14 +77,19 @@ def test_viewer_cli_reads_saved_result_without_qasm_or_compiler(
     def unexpected_compile() -> Any:
         pytest.fail("Saved-result viewing must not compile an example.")
 
-    monkeypatch.setattr(
-        "examples.visualize_compilation.compile_examples", unexpected_compile
-    )
+    monkeypatch.setattr("nadit_physical_compiler.cli.compile_job", unexpected_compile)
     destination = tmp_path / "viewer" / "index.html"
-    arguments = ["--result", str(result_file), "--output", str(destination)]
+    arguments = [
+        "view",
+        str(result_file),
+        "--output",
+        str(destination),
+        "--json",
+        str(destination.with_name("traces.json")),
+    ]
     if device_source == "override":
         arguments += ["--device", str(device_file)]
-    main(arguments)
+    assert main(arguments) == 0
     exported = json.loads(
         destination.with_name("traces.json").read_text(encoding="utf-8")
     )

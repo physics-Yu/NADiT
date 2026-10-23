@@ -1,7 +1,9 @@
 """Compile reproducible circuits for the Atom IR replay viewer."""
 
-from dataclasses import asdict, dataclass
+import json
+from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from nadit_physical_compiler import (
@@ -10,7 +12,6 @@ from nadit_physical_compiler import (
     CompilationResult,
     CZCapability,
     Device,
-    FakeBackend,
     LocalControl,
     PhysicalDAG,
     Position,
@@ -18,24 +19,14 @@ from nadit_physical_compiler import (
     SLMSite,
     Timing,
     Zone,
-    compile_physical,
     load_device,
     loads_qasm,
     replay,
     slm_grid,
 )
-from nadit_physical_compiler.emission import WholeLayerEmitter
-from nadit_physical_compiler.placement import (
-    GatePairCatalog,
-    HeuristicPlacer,
-    PlacementConfig,
-    PlacementGeometry,
-    make_initial_layout,
-)
-from nadit_physical_compiler.reuse import MatchingReuseAnalyzer
-from nadit_physical_compiler.scheduling import ReadyScheduler
-from nadit_physical_compiler.strategies import SearchSmarterStrategy
-from nadit_physical_compiler.transport import RelaxedTransport
+from nadit_physical_compiler.job import compile_job, loads_job
+from nadit_physical_compiler.serialization import encode_device, encode_result
+from nadit_physical_compiler.validation import validate_result
 
 MODULE = Path(__file__).resolve().parents[1]
 SEED = 17
@@ -55,6 +46,7 @@ class CompiledExample:
     device: Device
     entry: AtomLayout
     result: CompilationResult
+    document: dict[str, Any]
 
 
 def _compile(
@@ -66,56 +58,66 @@ def _compile(
     bit: int | None = None,
 ) -> CompiledExample:
     dag = loads_qasm(source_qasm)
-    catalog = GatePairCatalog.from_device(device, "entanglement", pairs)
-    geometry = PlacementGeometry.from_device(device, "transport", catalog)
-    config = PlacementConfig()
-    entry = make_initial_layout(
-        dag.num_qubits,
-        geometry,
-        atom_ids=tuple(7 + qubit * 3 for qubit in range(dag.num_qubits)),
-    )
     overrides = {
-        reference: bit
+        str(node.result.measurement_id): bit
         for node in dag.nodes
-        if (reference := node.result) is not None and bit is not None
+        if node.result is not None and bit is not None
     }
-    result = compile_physical(
-        dag,
-        device,
-        entry_state=entry,
-        strategy=SearchSmarterStrategy(
-            ReadyScheduler(max_cz_gates=catalog.capacity),
-            HeuristicPlacer("transport", catalog, config=config, geometry=geometry),
-            RelaxedTransport("transport"),
-            WholeLayerEmitter(catalog.coverage),
-            reuse_analyzer=MatchingReuseAnalyzer(),
-        ),
-        measurement_backend=FakeBackend(SEED, overrides),
+    with TemporaryDirectory(prefix="nadit-viewer-example-") as directory:
+        qasm = Path(directory) / "circuit.qasm3"
+        qasm.write_text(source_qasm, encoding="utf-8")
+        specification = {
+            "schema": "nadit.job/1",
+            "circuit": {"qasm": str(qasm)},
+            "device": encode_device(device),
+            "aod": "transport",
+            "gate_zones": [{"zone": "entanglement", "pairs": pairs}],
+            "strategy": {
+                "kind": "search_smarter",
+                "scheduler": {"kind": "ready", "max_cz_gates": "catalog"},
+                "placement": {"kind": "ids"},
+                "transport": {"kind": "relaxed"},
+                "emitter": {"kind": "whole_layer"},
+                "reuse": {"kind": "matching"},
+            },
+            "entry": {
+                "kind": "initial_storage",
+                "atom_ids": [7 + q * 3 for q in range(dag.num_qubits)],
+            },
+            "case": {"seed": SEED, "overrides": overrides},
+        }
+        job = loads_job(json.dumps(specification), base_dir=directory)
+        result = compile_job(job)
+    validation = validate_result(
+        result, entry_state=job.entry_state, device=job.device, dag=job.dag
     )
-    if replay(result.program, entry, device) != result.exit_state:
+    if not validation["ok"]:
+        raise AssertionError(f"{title}: {validation}")
+    if replay(result.program, job.entry_state, job.device) != result.exit_state:
         raise AssertionError(f"{title}: Atom IR replay differs from compiler exit.")
+    document = encode_result(
+        result,
+        entry_state=job.entry_state,
+        job=job.document,
+        dag=job.dag,
+        device=job.device,
+        inputs=job.inputs,
+        validation=validation,
+    )
+    metadata = {
+        key: document[key]
+        for key in ("job", "provenance", "metrics", "validation", "inputs")
+    }
     return CompiledExample(
-        title,
+        title.replace("|", "-"),
         description,
         source_qasm,
-        {
-            "scheduler": "ReadyScheduler",
-            "placement": asdict(config),
-            "transport": "RelaxedTransport",
-            "prefer_split": 1.0,
-            "reuse": "MatchingReuseAnalyzer",
-            "pair_capacity": catalog.capacity,
-            "measurement_seed": SEED,
-            "measurement_overrides": {
-                str(reference.measurement_id): value
-                for reference, value in overrides.items()
-            },
-            "replay_matches_exit_state": True,
-        },
-        dag,
-        device,
-        entry,
+        metadata,
+        job.dag,
+        job.device,
+        job.entry_state,
         result,
+        document,
     )
 
 
